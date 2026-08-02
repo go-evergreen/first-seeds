@@ -61,11 +61,15 @@ button{font-family:inherit;cursor:pointer}
 .timeline.compact .tl-when{font-size:13px}
 .timeline.compact .tl-what{font-size:12.5px;line-height:1.45;color:var(--bark)}
 .timeline.compact .tl-what strong{color:var(--green)}
-.topbar-account{border:1.5px solid var(--sand);background:var(--white);border-radius:14px;padding:10px 14px;font-size:12px;font-weight:700;color:var(--green);font-family:inherit;cursor:pointer;transition:all .2s}
-.topbar-account:hover{border-color:var(--moss);background:#eef2ec}
-.topbar-settings{border:1.5px solid var(--sand);background:var(--white);border-radius:14px;padding:10px 14px;font-size:12px;font-weight:700;color:var(--green-mid);font-family:inherit;cursor:pointer;transition:all .2s}
-.topbar-settings:hover{border-color:var(--moss);background:#eef2ec}
-.topbar-settings.on{border-color:var(--moss);background:#eef2ec;color:var(--green)}
+.rail-brand{display:flex;flex-direction:column;gap:0}
+.rail-brand-top{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
+.rail-brand-copy{min-width:0;flex:1}
+.rail-actions{display:flex;align-items:center;gap:8px;flex-shrink:0;padding-top:2px}
+.rail-settings{width:40px;height:40px;border-radius:12px;border:1.5px solid rgba(61,69,60,.22);background:rgba(245,246,242,.62);color:var(--green);display:grid;place-items:center;padding:0;font:inherit;cursor:pointer;transition:all .2s;flex-shrink:0}
+.rail-settings:hover,.rail-settings.on{border-color:rgba(61,69,60,.4);background:rgba(245,246,242,.92);color:#1f2a22}
+.rail-settings svg{display:block}
+.rail-account{border:1.5px solid rgba(61,69,60,.22);background:rgba(245,246,242,.85);border-radius:12px;padding:9px 12px;font-size:12px;font-weight:700;color:var(--green);font-family:inherit;cursor:pointer;transition:all .2s;white-space:nowrap}
+.rail-account:hover{border-color:rgba(61,69,60,.4);background:rgba(245,246,242,.98)}
 
 .cheer-banner{margin:0 56px;margin-top:14px;background:linear-gradient(135deg,#eef2ec,#fbf6e6);border:1.5px solid var(--moss);border-radius:14px;padding:14px 18px;display:flex;flex-wrap:wrap;gap:12px;align-items:center}
 .cheer-banner[hidden]{display:none!important}
@@ -867,7 +871,11 @@ body.overlay-open{overflow:hidden}
     -webkit-box-orient:vertical;
   }
   .timeline.compact .tl-row{grid-template-columns:1fr}
-  .topbar-account,.topbar-settings{padding:8px 12px;flex:1 1 auto;text-align:center}
+  .rail-brand-top{align-items:center;gap:10px}
+  .rail-settings{width:36px;height:36px;border-radius:10px}
+  .rail-settings svg{width:16px;height:16px}
+  .rail-account{padding:8px 10px;font-size:11px;border-radius:10px}
+  .brand-sub{max-width:none;margin-top:10px;font-size:12.5px}
   .today-card{padding:18px 16px 14px;margin-bottom:18px;border-radius:16px;max-width:100%}
   .today-title{font-size:22px}
   .today-body{font-size:14.5px}

@@ -11,7 +11,7 @@ window.FS.CONFIG = {
   teamName: "THE FRESH GROVE",
   teamDisplayName: "The Fresh Grove",
 
-  tagline: "Fresh products. Clear facts. Roots before launch.",
+  tagline: "Fresh products. Clear facts. Laying solid roots before launch.",
 
   preRegDate:  { month: 10, day: 1, label: "Pre-Reg Opens" },
   launchDate:  { month: 11, day: 1, label: "Products Launch" },
