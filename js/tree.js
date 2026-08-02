@@ -1,9 +1,6 @@
 /* ═══════════════════════════════════════════════════════════
    FIRST SEEDS — FAMILY TREE
-   Build your ideal team as a living tree: branches within
-   branches, each person marked hopeful 🌱 or committed 🌳.
-   Data shape: { name, status: "hopeful"|"committed", children: [] }
-   The tree lives in state.data.tree (an array = your front line).
+   Clean front-line builder. Add people. Nest branches. Toggle status.
    ═══════════════════════════════════════════════════════════ */
 
 window.FS = window.FS || {};
@@ -19,7 +16,6 @@ window.FS = window.FS || {};
     return { name: "", status: "hopeful", children: [] };
   }
 
-  /* Resolve an index path like "0.2.1" to {parentArr, index, node} */
   function resolve(tree, path) {
     var parts = path.split(".").map(Number);
     var arr = tree, node = null, idx = -1;
@@ -49,13 +45,13 @@ window.FS = window.FS || {};
     var isCommitted = node.status === "committed";
     var html = '<div class="tnode" data-depth="' + depth + '">';
     html += '<div class="tnode-row' + (isCommitted ? " committed" : " hopeful") + '">';
-    html += '<span class="tnode-leaf">' + (isCommitted ? "🌳" : "🌱") + '</span>';
-    html += '<input class="tnode-name" type="text" value="' + esc(node.name) + '" placeholder="name…" data-tname="' + path + '" maxlength="40">';
-    html += '<button class="tnode-status" data-tstatus="' + path + '" title="Tap to switch status">' + (isCommitted ? "committed" : "hopeful") + '</button>';
-    html += '<button class="tnode-add" data-tadd="' + path + '" title="Add a branch under ' + esc(node.name || "them") + '">＋ branch</button>';
-    html += '<button class="tnode-del" data-tdel="' + path + '" title="Remove">×</button>';
+    html += '<button type="button" class="tnode-status" data-tstatus="' + path + '" title="Tap to flip hopeful / committed" aria-label="Status">' +
+      (isCommitted ? "🌳" : "🌱") + '</button>';
+    html += '<input class="tnode-name" type="text" value="' + esc(node.name) + '" placeholder="Name" data-tname="' + path + '" maxlength="40" aria-label="Name">';
+    html += '<button type="button" class="tnode-add" data-tadd="' + path + '" title="Add someone under them">＋</button>';
+    html += '<button type="button" class="tnode-del" data-tdel="' + path + '" title="Remove" aria-label="Remove">×</button>';
     html += '</div>';
-    if (node.children.length) {
+    if (node.children && node.children.length) {
       html += '<div class="tnode-kids">';
       for (var i = 0; i < node.children.length; i++) {
         html += renderNode(node.children[i], path + "." + i, depth + 1);
@@ -82,26 +78,26 @@ window.FS = window.FS || {};
 
       var c = countAll(tree);
       if (stats) {
-        stats.innerHTML =
-          '<span class="tstat"><strong>' + c.total + '</strong> in your tree</span>' +
-          '<span class="tstat hopeful-c">🌱 <strong>' + c.hopeful + '</strong> hopeful</span>' +
-          '<span class="tstat committed-c">🌳 <strong>' + c.committed + '</strong> committed</span>' +
-          (c.depth > 1 ? '<span class="tstat">' + c.depth + ' levels deep</span>' : '');
+        stats.innerHTML = c.total
+          ? ('<strong>' + c.total + '</strong> · 🌱 ' + c.hopeful + ' · 🌳 ' + c.committed)
+          : "";
       }
 
-      var html = '<div class="tnode-row root-row"><span class="tnode-leaf">🌿</span><span class="tnode-root">You</span>';
-      html += '<button class="tnode-add root-add" data-tadd="root">＋ add to your front line</button></div>';
-      if (tree.length) {
+      var html = "";
+      if (!tree.length) {
+        html += '<div class="tree-empty-state">';
+        html += '<button type="button" class="tree-primary-add" data-tadd="root">＋ Add someone</button>';
+        html += '</div>';
+      } else {
+        html += '<div class="tree-you">You</div>';
         html += '<div class="tnode-kids root-kids">';
         for (var i = 0; i < tree.length; i++) html += renderNode(tree[i], String(i), 1);
         html += '</div>';
-      } else {
-        html += '<div class="tree-empty">Your tree starts with one name. Who do you dream of building this with?</div>';
+        html += '<button type="button" class="tree-primary-add ghost" data-tadd="root">＋ Add to front line</button>';
       }
       wrap.innerHTML = html;
     },
 
-    /* Event handlers — return true if state changed */
     add: function (state, path) {
       var tree = this.ensure(state);
       if (path === "root") {
@@ -110,6 +106,7 @@ window.FS = window.FS || {};
       }
       var r = resolve(tree, path);
       if (!r) return false;
+      if (!r.node.children) r.node.children = [];
       r.node.children.push(newPerson());
       return true;
     },
@@ -132,29 +129,26 @@ window.FS = window.FS || {};
       var r = resolve(this.ensure(state), path);
       if (!r) return false;
       var kids = r.node.children.length;
-      if (kids > 0 && !confirm("Remove " + (r.node.name || "this person") + " and the " + kids + " branch" + (kids === 1 ? "" : "es") + " under them?")) {
+      if (kids > 0 && !confirm("Remove " + (r.node.name || "this person") + " and " + kids + " under them?")) {
         return false;
       }
       r.parentArr.splice(r.index, 1);
       return true;
     },
 
-    /* Flatten for the text export */
     exportLines: function (state) {
       var tree = this.ensure(state);
       var lines = [];
       (function walk(arr, indent) {
         for (var i = 0; i < arr.length; i++) {
           var n = arr[i];
-          lines.push(indent + (n.status === "committed" ? "🌳 " : "🌱 ") + (n.name || "(unnamed)") + "  [" + n.status + "]");
-          walk(n.children, indent + "    ");
+          lines.push(indent + (n.status === "committed" ? "🌳 " : "🌱 ") + (n.name || "(unnamed)"));
+          walk(n.children || [], indent + "    ");
         }
       })(tree, "");
       return lines.length ? lines : ["—"];
     },
 
-    /* Merge live join-link people into the dream tree as committed 🌳.
-       Returns { added, updated } counts. Does not remove hopeful dream names. */
     mergeLiveTeam: function (state, roots) {
       var tree = this.ensure(state);
       var added = 0;
@@ -182,15 +176,9 @@ window.FS = window.FS || {};
           if (!existing.liveId) existing.liveId = person.id;
           return existing;
         }
-        var node = {
-          name: name,
-          status: "committed",
-          children: [],
-          liveId: person.id
-        };
-        arr.push(node);
+        arr.push({ name: name, status: "committed", children: [], liveId: person.id });
         added++;
-        return node;
+        return arr[arr.length - 1];
       }
 
       roots.forEach(function (front) {

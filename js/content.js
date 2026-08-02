@@ -1,0 +1,368 @@
+/* ═══════════════════════════════════════════════════════════
+   FIRST SEEDS — SHAREABLE CONTENT + KNOW Ringana REFERENCE
+   Curiosity copy → calendar soft doors / Post Studio
+   Product & business story posts → calendar gives / Post Studio
+   Pillars · fun facts · FAQs → Know Ringana
+   ═══════════════════════════════════════════════════════════ */
+
+window.FS = window.FS || {};
+
+window.FS.CONTENT = {
+
+  /* ── Calendar / Post Studio: soft doors (curiosity) ── */
+  curiosity: [
+    {
+      id: "hinting",
+      title: "They've noticed the hints",
+      body: "I wasn't planning on saying anything yet… but enough people have noticed I've been hinting at something. So here's the deal — I've been researching a wellness company that has genuinely impressed me. Not because someone told me to be excited. Because the deeper I looked, the more questions they answered.\n\nIf you'd like to follow along as I share what I've been learning over the next couple of months, drop a 🌱 below. I'd love to bring you along."
+    },
+    {
+      id: "quieter",
+      title: "A little quieter than usual",
+      body: "Some of you have noticed I've been a little quieter than usual… Truthfully, I've been spending my time researching something that's had me genuinely excited to learn again.\n\nIf you know me, you know I don't make recommendations quickly. I ask a lot of questions, read a lot of labels, and usually take my sweet time before I ever talk publicly about something. That's exactly what I've been doing these last several weeks.\n\nI'm still keeping a few details under wraps for now, but if you'd enjoy following along as I share what I've been learning before everything officially launches this fall, I'd love to include you. Just comment \"curious\" below, and I'll reach out personally. 🌿"
+    },
+    {
+      id: "quietly_following",
+      title: "Quietly following → U.S. this fall",
+      body: "There's a company I've been quietly following that officially opens its doors in the U.S. this fall… I've had the chance to learn a lot behind the scenes, and honestly — it's been refreshing.\n\nIf you'd like to follow along before everything officially launches, let me know and I'll make sure you don't miss the updates."
+    },
+    {
+      id: "before_household",
+      title: "Before it's a household name",
+      body: "I have a feeling the next few months are going to be really interesting. Not because of hype — because I genuinely think we're about to watch something unique unfold in the U.S.\n\nIf you're someone who enjoys discovering companies before they're household names, I'd love to share why I've been so intrigued. Just leave a 🌱 if you'd like the details."
+    },
+    {
+      id: "rabbit_hole",
+      title: "Curiosity list (no buy / no join)",
+      body: "I'm looking for a handful of naturally curious people… Not to buy anything. Not to join anything. Just people who enjoy learning about companies doing things differently.\n\nOver the next couple of months I'll be sharing what I've discovered — from fresh production and formulation philosophy to sustainability and some fascinating business decisions.\n\nIf that sounds like your kind of rabbit hole, I'll add you to my little curiosity list."
+    },
+    {
+      id: "painfully_slow",
+      title: "I move painfully slow",
+      body: "If you've followed me for any length of time, you know I'm not someone who jumps from one \"favorite\" thing to the next. If anything… I move painfully slow.\n\nSo when I tell you I've spent weeks genuinely excited about what I'm learning, that's probably saying something. I'm putting together a small list of people who want the inside scoop as everything unfolds over the next couple of months.\n\nIf you'd like to be on it, just drop any emoji below. No pressure — just info."
+    },
+    {
+      id: "almost_never",
+      title: "I almost never get excited about companies",
+      body: "I don't get excited about companies very often. Actually… almost never. But every once in a while, something comes along that makes me stop and say… \"Wait — why isn't everyone talking about this?\"\n\nI've spent the last several weeks asking questions, reading, comparing, and honestly just enjoying the process of learning. If you're naturally curious like I am and want a little behind-the-scenes look at what I've been diving into, leave a 👀 below and I'll send it your way."
+    },
+    {
+      id: "status_quo",
+      title: "Challenging the status quo",
+      body: "Over the last month, I've been learning about a company that has genuinely challenged the way I think about wellness products. Not because it's trendy. Not because it's new. Because they do a lot of things… very differently.\n\nI'm not quite ready to share all the details publicly yet, but if you're someone who geeks out over ingredient quality, sustainability, and companies willing to challenge the status quo, I think you're going to find it as fascinating as I have. Drop a 🌿 below if you want me to send you what I've been learning."
+    }
+  ],
+
+  /* ── Short open loops / scroll-stoppers ── */
+  openLoops: [
+    "The average person has no idea how long a product sat before they bought it… Neither did I. Now I can't stop thinking about it.",
+    "I wonder how many products we've all used that were already a year old before we ever opened them… oof. Now THAT'S a weird thing to think about.",
+    "I've been reading ingredient labels more carefully. One brand from Austria made me pause on the word fresh…",
+    "Okay so I'm learning about cosmetics made without synthetic preservatives as the shortcut — and the expiry date is kind of the point.",
+    "Tiny thing I noticed: a lot of \"clean\" labels still don't tell me who made it or why each ingredient is there.",
+    "Not selling anything today — just sharing what I'm learning about freshness, glass packaging, and in-house production.",
+    "If you've ever stood in a store aisle wondering what's actually in the bottle… same.",
+    "Honest question I've been asking: would I put this on my own skin if I knew how it was made?"
+  ],
+
+  /* ── Product sparks — curious, conversational noticing ── */
+  productSparks: [
+    {
+      id: "foam_wash_wipes",
+      icon: "🫧",
+      title: "Foam wash → wet wipe",
+      body: "I'm so curious if you've ever used a product like this because I have never.\n\nIt basically turns toilet paper into a wet wipe. For feminine hygiene. For babies. For camping.\n\n(It's a fresh foam wash — so simple I keep thinking about how many plastic wipe packs this could replace.)"
+    },
+    {
+      id: "cleanser_no_foam",
+      icon: "🧴",
+      title: "Cleanser that isn't foamy",
+      body: "Okay weird question — do you actually need a cleanser to foam to feel clean?\n\nI've been trying one that feels more like a milk than a bubble bath… and my skin doesn't feel tight after. Still figuring out if I miss the foam or if that was just a habit."
+    },
+    {
+      id: "glass_bottle",
+      icon: "🫙",
+      title: "Glass on purpose",
+      body: "Tiny thing that made me pause: a brand that puts body care in glass on purpose — and will actually pay you to ship the empties back so they can sanitize them into new bottles.\n\nHave you ever used something with a real return loop like that? Or is that just me geeking out?"
+    },
+    {
+      id: "short_shelf",
+      icon: "⏳",
+      title: "Short shelf life = feature?",
+      body: "Unpopular-ish thought: what if a shorter expiry date was a good sign?\n\nI've been looking at fresh-made products that aren't built to sit in a warehouse for a year… and now I can't unsee the dates on everything else in my bathroom."
+    },
+    {
+      id: "one_roof",
+      icon: "🏡",
+      title: "Made under one roof",
+      body: "Random curiosity: how many brands actually make their own stuff under one roof vs. shipping ingredients and packaging all over the place?\n\nI learned about one that does almost everything in-house — and now I'm weirdly obsessed with asking that question."
+    },
+    {
+      id: "camping_kit",
+      icon: "🏕️",
+      title: "Camping / travel hack",
+      body: "Camping people — what's your wipe situation?\n\nI just learned about a foam wash that turns regular toilet paper into a wet wipe. Feminine hygiene, babies, trail bathrooms… I'm curious if anyone's already doing something like this or if I'm late to the party."
+    }
+  ],
+
+  /* ── Product story sequence (gives / in-depth posts) ── */
+  productStory: {
+    intro: "If you've been around wellness for a while, you've probably noticed something… Most companies compete by adding another trendy ingredient. But I stumbled upon a brand that was far more interested in asking a different question: \"What if the entire way products are made could be improved?\" These are a few of the things that made me stop in my tracks…",
+    posts: [
+      {
+        id: "freshness",
+        icon: "🌱",
+        title: "Freshness actually matters",
+        body: "🌱 Freshness actually matters\n\nMost supplements and skincare are designed to survive warehouses, shipping containers, and store shelves. That means stability often comes before freshness.\n\nThese products are made in small batches, every other day, and have intentionally shorter shelf lives so they spend less time sitting around before they reach you. It's a completely different philosophy — surprisingly rare — with patented processes behind it."
+      },
+      {
+        id: "in_house",
+        icon: "🏡",
+        title: "They make (almost) everything themselves",
+        body: "🏡 They make (almost) everything themselves\n\nMost wellness companies source packaging from one place… ship it somewhere else to get stamped with their logo… formulate somewhere else… manufacture somewhere else… package somewhere else… then ship to you from somewhere else.\n\nThis brand? Nearly everything happens under one roof. And it's not an assembly line of people hand-stirring a recipe card — they've patented scalable manufacturing processes with high safety and testing standards. Tighter quality control, faster innovation, and oversight from beginning to end."
+      },
+      {
+        id: "labels",
+        icon: "🧪",
+        title: "The ingredient list makes sense",
+        body: "🧪 The ingredient list actually makes sense\n\nI'm a label reader — and I have been for as long as I can remember. I've never looked at so many formulas and thought, \"Yep… this all makes beautiful sense.\"\n\nIngredients aren't there just because they're trendy. They're there because they serve a purpose — from the first on the label to the last."
+      },
+      {
+        id: "nature_science",
+        icon: "🌿",
+        title: "Plants… backed by science",
+        body: "🌿 Plants… but backed by science\n\nThis isn't \"sprinkle in some kale powder and call it wellness.\" The formulas combine botanicals with clinically researched vitamins, minerals, amino acids, probiotics, and other nutrients chosen for how they work together.\n\nNature and science don't have to compete."
+      },
+      {
+        id: "sustainability",
+        icon: "♻️",
+        title: "Sustainability isn't an afterthought",
+        body: "♻️ Sustainability isn't an afterthought\n\nIt's woven into almost every decision.\n\nPackaging — a glass bottle re-use program where the company pays you to ship glass back so it can be sanitized back into production.\nProduction — organic cotton cloths hand-wrapped around glass instead of a basic carton.\nShipping — post-consumer recycled materials and biodegradable packing filler.\nIngredient sourcing — including upcycled ingredients (like ground apricot seeds in a body exfoliator) so there's as little waste as possible.\n\nAnd that's just the start…"
+      }
+    ]
+  },
+
+  /* ── Business story posts (use carefully — education, not hype) ── */
+  businessStory: [
+    {
+      id: "products_first",
+      icon: "🤝",
+      title: "Products come first",
+      body: "🤝 Products come first\n\nNo business lasts without products people actually want to reorder. This company upholds a company-wide ~70% retention rate with a ~0.2% return rate.\n\nThe strongest businesses are built on genuine customers. Everything else grows from there."
+    },
+    {
+      id: "timing",
+      icon: "🌎",
+      title: "Incredible timing",
+      body: "🌎 Incredible timing\n\nThe company has spent years building proven systems overseas. The U.S. is just getting started. That's a rare combination.\n\nYou're not betting on an untested idea — you're stepping into a model that's already working elsewhere."
+    },
+    {
+      id: "be_yourself",
+      icon: "🌱",
+      title: "Growth without reinventing yourself",
+      body: "🌱 Growth without reinventing yourself\n\nOne of the things I love most… I don't have to become someone I'm not. I still get to teach. Read labels. Share honestly. Answer questions.\n\nThe business grows because of education — not pressure."
+    },
+    {
+      id: "not_alone",
+      icon: "🏠",
+      title: "You're not building alone",
+      body: "🏠 You're not building alone\n\nThis community isn't about competition. It's about sharing resources, celebrating wins, asking questions, and making the learning curve a whole lot shorter.\n\nIf one person figures something out, everyone benefits. And you'll be growing alongside experienced team leaders — including leaders who've done nearly $100 million in combined team sales volume within the last 9 years (as shared by leadership)."
+    },
+    {
+      id: "integrity",
+      icon: "🎯",
+      title: "Integrity isn't optional",
+      body: "🎯 Integrity isn't optional\n\nYou'll probably notice something different here… No pressure. No exaggerated promises. No pretending every product is magic. No pretending this business is effortless.\n\nTrust takes a long time to build. We'd rather protect it than chase a quick sale."
+    }
+  ],
+
+  /* ── Pillars (Know Ringana + values posts) ── */
+  pillars: [
+    {
+      id: "fresh",
+      icon: "🌱",
+      title: "Fresh",
+      body: "Most companies ask… \"How long can we make this last?\" This one asks… \"How fresh can we make it?\" That mindset changes everything. Fresh ingredients. Small production batches. Products designed to be used — not chill in a warehouse. A philosophy I didn't know existed until I learned about their manufacturing systems."
+    },
+    {
+      id: "trendsetting",
+      icon: "✨",
+      title: "Trendsetting",
+      body: "I love companies that don't wait for everyone else to do something first. They're constantly researching new ingredients, improving formulas, questioning \"normal\" ways of doing things — not because it's trendy, but because innovation never really stops."
+    },
+    {
+      id: "excellence",
+      icon: "🏆",
+      title: "Excellence",
+      body: "Excellence isn't about having the biggest product line. It's about asking… \"Can we make this even better?\" Again and again. That mindset shows up everywhere as they've evolved over nearly 30 years."
+    }
+  ],
+
+  pillarsIntro: "This company doesn't just have a mission statement. They've built everything around three simple words: Fresh. Trendsetting. Excellence. Every product, every decision, every innovation seems to come back to those three ideas — deeply enshrined in their DNA, according to the company.",
+
+  /* ── Fun facts (Know Ringana + calendar fun-fact drafts) ── */
+  funFacts: [
+    {
+      id: "family",
+      title: "Family-founded",
+      body: "Ringana was founded by parents who simply wanted better for their son. Nearly thirty years later, the family remains the founders — no outside investors and no debt."
+    },
+    {
+      id: "virginia",
+      title: "U.S. Fresh Factory",
+      body: "Ringana chose to invest about $85 million into transforming an old Johnson & Johnson plant into the U.S.'s first Fresh Factory in Virginia. They chose Virginia in part for political neutrality (a swing state) and because water-quality testing pointed them there as a strong base for formulas — still filtered further for safety and freshness. This expansion is expected to bring about 425 jobs to Virginia."
+    },
+    {
+      id: "austria_1996",
+      title: "Austria, 1996",
+      body: "Ringana was founded in Austria in 1996. Nearly 30 years later, they're just now opening the U.S. market."
+    },
+    {
+      id: "37_markets",
+      title: "37 markets → U.S. Fresh Factory",
+      body: "The company has spent decades building throughout Europe before expanding into new markets. They're currently in 37 markets, with production shipping from their Fresh Factory in Austria. For the first time, they're transforming a former Johnson & Johnson factory in Virginia into a Fresh Factory in the United States — a legacy company meeting a new-market launch."
+    },
+    {
+      id: "single_channel",
+      title: "Single-channel by design",
+      body: "Ringana doesn't sell through traditional retail stores. Everything is made with direct-to-consumer distribution in mind, which supports their fresh production model. They are a single-channel company — and intend to keep it that way."
+    },
+    {
+      id: "patented_machines",
+      title: "Patented manufacturing",
+      body: "Ringana manufactures the vast majority of its products in-house — not as an assembly line of hand-mixed recipes with lots of room for inconsistency. They use one-of-a-kind patented machinery that manufactures products every two days, giving more control over quality, innovation, and production than companies that rely on third-party manufacturers."
+    },
+    {
+      id: "retention",
+      title: "70% retention",
+      body: "Ringana's customer retention rate is about 70%. People don't reorder because the packaging is pretty — they reorder because they actually want to use the products again."
+    },
+    {
+      id: "transparency",
+      title: "Transparency reports",
+      body: "Ringana publicly publishes Transparency Reports every year — not just sustainability claims. Actual reports."
+    },
+    {
+      id: "optional_team",
+      title: "Team building is optional",
+      body: "You don't have to build a team to earn commissions. Compensation starts with recommending products. Building a team is optional — not required to earn on customer sales and advance."
+    }
+  ],
+
+  /* ── FAQs (Know Ringana) ── */
+  faqs: [
+    {
+      q: "What even is Ringana?",
+      a: "Ringana is an Austrian wellness company that's been around for nearly 30 years, expanding throughout 37 markets. They create fresh skincare, supplements, and nutrition products with a big focus on ingredient quality, sustainability, and making as much as possible in-house."
+    },
+    {
+      q: "Why haven't I heard of it?",
+      a: "Because the timing hasn't been right yet. Ringana has been established throughout Europe for decades and is just beginning its expansion into the United States. We're getting to watch that unfold in real time — with early information from U.S. leaders who have hands-on product access and early details as they're shared."
+    },
+    {
+      q: "Is this an MLM?",
+      a: "Ringana uses a direct sales model, so products are shared through people instead of traditional retail stores. For us, the bigger question isn't what you call the model — it's whether the company is built on products people genuinely want to buy again. Ringana's focus on fresh production, real customer demand, and long-term product quality is what first catches attention.\n\nAlso worth knowing: pyramid schemes are illegal because they reward recruitment instead of product sales. Ringana isn't structured that way. Partners are paid based on product sales, and the compensation plan is designed so every partner can grow their own business — including earning more than the person who introduced them."
+    },
+    {
+      q: "Is this a pyramid scheme?",
+      a: "No. Pyramid schemes are illegal because they reward recruiting instead of the sale of real products. Ringana is built around actual products and customer sales. Whether someone chooses to build a business or simply enjoy the products, the foundation is always the products themselves. That's an important distinction."
+    },
+    {
+      q: "What makes the business model different?",
+      a: "One thing partners often appreciate: everyone starts on equal footing. Your income isn't capped by the person who introduced you. It's completely possible for someone to outgrow and out-earn their sponsor. That's what mentorship should look like — helping people become even more successful than you."
+    },
+    {
+      q: "What makes Ringana different?",
+      a: "It's the combination. Fresh production. Thoughtful formulas. Sustainability. Transparency. Nearly 30 years of experience. None of those things are unique by themselves… seeing them all together is."
+    },
+    {
+      q: "Do I have to build a team?",
+      a: "Nope. You can simply enjoy the products, share them with friends, or build a business if that's something you eventually decide you want. There isn't one \"right\" way to participate."
+    },
+    {
+      q: "Why are you adding this?",
+      a: "Because one company doesn't have to do everything. For years, many of us have loved sharing products we believe in and helping people make safer, more informed choices. Adding another carefully vetted line simply gives more ways to serve the people who already trust you. The mission hasn't changed — the toolbox just got a little bigger."
+    }
+  ]
+};
+
+/* Helpers for rotating calendar drafts */
+window.FS.ContentPick = {
+  hash: function (str) {
+    var h = 0;
+    for (var i = 0; i < str.length; i++) h = ((h << 5) - h) + str.charCodeAt(i) | 0;
+    return Math.abs(h);
+  },
+  from: function (arr, key) {
+    if (!arr || !arr.length) return null;
+    return arr[this.hash(String(key)) % arr.length];
+  },
+  draftForType: function (type, dateKey, rootsData) {
+    var C = window.FS.CONTENT;
+    var why = (rootsData && rootsData.why || "").trim();
+    var moment = (rootsData && rootsData.moment || "").trim();
+
+    if (type === "reactive") {
+      return "No post required today. Reply to comments, check messages, or live your life. Consistency includes rest.";
+    }
+    if (type === "product_curious") {
+      var spark = this.from(C.productSparks, dateKey + "-spark");
+      return spark ? spark.body : "I'm so curious if you've ever used a product like this…";
+    }
+    if (type === "soft_door") {
+      var door = this.from(C.curiosity, dateKey + "-door");
+      return door ? door.body : "";
+    }
+    if (type === "open_loop") {
+      if (moment || why) {
+        var base = moment || why;
+        return (base.length > 180 ? base.slice(0, 180) + "…" : base) + " — more on this soon.";
+      }
+      return this.from(C.openLoops, dateKey + "-loop") || "";
+    }
+    if (type === "curtain") {
+      var fact = this.from(C.funFacts, dateKey + "-fact");
+      var prod = this.from(C.productStory.posts, dateKey + "-prod");
+      /* Alternate fact vs product story by day hash */
+      if (this.hash(dateKey) % 2 === 0 && fact) {
+        return "Fun fact I'm sitting with…\n\n" + fact.body;
+      }
+      return prod ? prod.body : "";
+    }
+    if (type === "honest_note") {
+      var note = this.from(C.productStory.posts, dateKey + "-note");
+      return note ? note.body : "Honest note: I'm still early — sharing what I notice as I go, not a highlight reel.";
+    }
+    if (type === "values_flag") {
+      if (why) {
+        return "Something I care about: " + (why.length > 160 ? why.slice(0, 160) + "…" : why);
+      }
+      var pillar = this.from(C.pillars, dateKey + "-pillar");
+      return pillar ? (pillar.icon + " " + pillar.title + "\n\n" + pillar.body) : "";
+    }
+    return "Write something true and specific today.";
+  },
+  alternativesForType: function (type) {
+    var C = window.FS.CONTENT;
+    if (type === "product_curious") {
+      return (C.productSparks || []).map(function (x) {
+        return { id: x.id, title: x.title, body: x.body };
+      });
+    }
+    if (type === "soft_door") return C.curiosity.map(function (x) { return { id: x.id, title: x.title, body: x.body }; });
+    if (type === "open_loop") return C.openLoops.map(function (b, i) { return { id: "loop_" + i, title: "Open loop " + (i + 1), body: b }; });
+    if (type === "curtain" || type === "honest_note") {
+      var list = C.productStory.posts.map(function (p) { return { id: p.id, title: p.title, body: p.body }; });
+      C.funFacts.forEach(function (f) {
+        list.push({ id: "fact_" + f.id, title: "Fun fact: " + f.title, body: "Fun fact I'm sitting with…\n\n" + f.body });
+      });
+      return list;
+    }
+    if (type === "values_flag") {
+      return C.pillars.map(function (p) {
+        return { id: p.id, title: p.title, body: p.icon + " " + p.title + "\n\n" + p.body };
+      });
+    }
+    return [];
+  }
+};

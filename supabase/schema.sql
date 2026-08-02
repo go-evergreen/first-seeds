@@ -251,3 +251,6 @@ $$;
 
 grant execute on function public.profile_subtree(uuid, integer) to authenticated;
 grant execute on function public.team_graph(integer) to authenticated;
+
+-- ── personal lead pages (run supabase/leads.sql next) ─────
+-- Adds lead_slug, leads table, get_lead_page / submit_lead / claim_lead_slug RPCs.

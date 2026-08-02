@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Stay in touch — First Seeds</title>
+<meta name="description" content="Leave your name and how to reach you — products, business, or both.">
+<meta name="theme-color" content="#abb09a">
+<meta name="robots" content="noindex">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/styles.css?v=54">
+<link rel="stylesheet" href="css/lead.css?v=54">
+</head>
+<body class="lead-body">
+  <main class="lead-shell" id="leadShell">
+    <div class="lead-loading" id="leadLoading">Loading…</div>
+
+    <div class="lead-missing" id="leadMissing" hidden>
+      <p class="lead-eyebrow">First Seeds</p>
+      <h1>This page isn’t live yet</h1>
+      <p>The link may be mistyped, or your friend hasn’t set up their page. Ask them to open <strong>Leads</strong> in First Seeds and share their link again.</p>
+    </div>
+
+    <div class="lead-page" id="leadPage" hidden>
+      <p class="lead-eyebrow">A note from</p>
+      <h1 class="lead-name" id="leadPartnerName">—</h1>
+      <p class="lead-blurb" id="leadBlurb">Leave your name and how to reach you. They’ll follow up personally — no spam list, no shared spreadsheet.</p>
+
+      <form class="lead-form" id="leadForm" novalidate>
+        <label class="lead-field">
+          <span>Your name</span>
+          <input type="text" id="leadName" name="name" maxlength="80" autocomplete="name" required placeholder="First name is perfect">
+        </label>
+
+        <div class="lead-contact-row">
+          <label class="lead-field">
+            <span>Email</span>
+            <input type="email" id="leadEmail" name="email" maxlength="120" autocomplete="email" placeholder="you@email.com">
+          </label>
+          <label class="lead-field">
+            <span>Phone</span>
+            <input type="tel" id="leadPhone" name="phone" maxlength="40" autocomplete="tel" placeholder="Optional if you share email">
+          </label>
+        </div>
+        <p class="lead-hint">Email <em>or</em> phone — whichever you prefer.</p>
+
+        <fieldset class="lead-interest">
+          <legend>I’m interested in</legend>
+          <div class="lead-interest-row" role="group" aria-label="Interest">
+            <button type="button" class="lead-chip" data-interest="products" aria-pressed="false">Products</button>
+            <button type="button" class="lead-chip" data-interest="business" aria-pressed="false">Business</button>
+            <button type="button" class="lead-chip" data-interest="both" aria-pressed="false">Both</button>
+          </div>
+          <input type="hidden" id="leadInterest" name="interest" value="">
+        </fieldset>
+
+        <button type="submit" class="btn lead-submit" id="leadSubmit">Send →</button>
+        <p class="lead-form-msg" id="leadFormMsg" role="status"></p>
+      </form>
+    </div>
+
+    <div class="lead-thanks" id="leadThanks" hidden>
+      <p class="lead-eyebrow">Got it</p>
+      <h1>You’re on the list.</h1>
+      <p id="leadThanksBody">Thanks — they’ll be in touch.</p>
+    </div>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="js/supabase-config.js?v=54"></script>
+  <script src="js/cloud.js?v=54"></script>
+  <script src="js/leads-public.js?v=54"></script>
+</body>
+</html>

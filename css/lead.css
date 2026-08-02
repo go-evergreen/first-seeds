@@ -1,0 +1,156 @@
+/* Public lead capture page — First Seeds brand */
+.lead-body {
+  margin: 0;
+  min-height: 100vh;
+  background:
+    radial-gradient(ellipse 90% 60% at 10% -10%, rgba(217, 169, 63, 0.18), transparent 55%),
+    radial-gradient(ellipse 70% 50% at 100% 0%, rgba(171, 176, 154, 0.35), transparent 50%),
+    linear-gradient(165deg, #f5f6f2 0%, #e8ebe3 48%, #dfe3d6 100%);
+  color: var(--green, #3d453c);
+  font-family: "DM Sans", system-ui, sans-serif;
+}
+
+.lead-shell {
+  width: min(520px, calc(100% - 32px));
+  margin: 0 auto;
+  padding: clamp(40px, 10vh, 88px) 0 48px;
+}
+
+.lead-eyebrow {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--moss, #7a8468);
+  margin: 0 0 10px;
+}
+
+.lead-shell h1,
+.lead-name {
+  font-family: "Fraunces", Georgia, serif;
+  font-weight: 600;
+  font-size: clamp(2rem, 6vw, 2.75rem);
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+  margin: 0 0 14px;
+  color: var(--green, #3d453c);
+}
+
+.lead-blurb,
+.lead-missing p,
+.lead-thanks p {
+  font-size: 1.05rem;
+  line-height: 1.55;
+  color: var(--bark, #5c584e);
+  margin: 0 0 28px;
+}
+
+.lead-form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.lead-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--green-mid, #5a6354);
+}
+
+.lead-field input {
+  font: inherit;
+  font-weight: 400;
+  font-size: 16px;
+  color: var(--green, #3d453c);
+  background: rgba(255, 255, 255, 0.72);
+  border: 1.5px solid rgba(171, 176, 154, 0.55);
+  border-radius: 14px;
+  padding: 14px 16px;
+  outline: none;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.lead-field input:focus {
+  border-color: var(--moss, #7a8468);
+  box-shadow: 0 0 0 3px rgba(171, 176, 154, 0.35);
+}
+
+.lead-contact-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.lead-hint {
+  margin: -4px 0 4px;
+  font-size: 12.5px;
+  color: var(--bark-soft, #8a8578);
+}
+
+.lead-interest {
+  border: none;
+  margin: 8px 0 0;
+  padding: 0;
+}
+
+.lead-interest legend {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--green-mid, #5a6354);
+  margin-bottom: 10px;
+}
+
+.lead-interest-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.lead-chip {
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--green, #3d453c);
+  background: rgba(255, 255, 255, 0.55);
+  border: 1.5px solid rgba(171, 176, 154, 0.55);
+  border-radius: 999px;
+  padding: 10px 16px;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+}
+
+.lead-chip:hover {
+  background: rgba(171, 176, 154, 0.28);
+}
+
+.lead-chip.on {
+  background: var(--green, #3d453c);
+  border-color: var(--green, #3d453c);
+  color: #f5f6f2;
+}
+
+.lead-submit {
+  margin-top: 8px;
+  width: 100%;
+}
+
+.lead-form-msg {
+  min-height: 1.2em;
+  margin: 0;
+  font-size: 13.5px;
+  color: #9a4f3c;
+}
+
+.lead-loading {
+  color: var(--bark-soft, #8a8578);
+  font-size: 15px;
+}
+
+@media (max-width: 520px) {
+  .lead-contact-row {
+    grid-template-columns: 1fr;
+  }
+}

@@ -129,7 +129,9 @@ window.FS = window.FS || {};
         tour_done: !!u.tour_done,
         invite_code: u.invite_code,
         sponsor_id: u.sponsor_id || null,
-        last_active_at: u.last_active_at
+        last_active_at: u.last_active_at,
+        lead_slug: u.lead_slug || "",
+        lead_blurb: u.lead_blurb || ""
       };
     },
 
@@ -589,6 +591,200 @@ window.FS = window.FS || {};
           };
         })
       };
+    },
+
+    /* ── personal lead pages ───────────────────────────── */
+    slugifyName: function (name) {
+      var raw = (name || "").toLowerCase();
+      try { raw = raw.normalize("NFD").replace(/[\u0300-\u036f]/g, ""); } catch (e) {}
+      var s = raw
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/^-+|-+$/g, "")
+        .slice(0, 30);
+      return s || "friend";
+    },
+
+    leadUrl: function (slug) {
+      var dir = window.location.pathname.replace(/[^/]+$/, "");
+      return window.location.origin + dir + "lead.html?p=" + encodeURIComponent(slug || "");
+    },
+
+    ensureLeadSlug: async function (preferredName) {
+      if (!sessionUser) throw new Error("Sign in to get your lead page.");
+      if (sessionUser.lead_slug) return sessionUser.lead_slug;
+      var desired = Cloud.slugifyName(preferredName || sessionUser.display_name || "friend");
+      return Cloud.claimLeadSlug(desired);
+    },
+
+    claimLeadSlug: async function (desired) {
+      if (!sessionUser) throw new Error("Sign in first.");
+      desired = Cloud.slugifyName(desired);
+      if (configured() && client) {
+        var { data, error } = await client.rpc("claim_lead_slug", { desired: desired });
+        if (error) throw error;
+        sessionUser.lead_slug = data;
+        emit("auth", sessionUser);
+        return data;
+      }
+      var store = localStore();
+      var base = desired;
+      var candidate = base;
+      var n = 2;
+      function taken(slug) {
+        return Object.keys(store.users).some(function (id) {
+          var u = store.users[id];
+          return u && u.id !== sessionUser.id && (u.lead_slug || "").toLowerCase() === slug;
+        });
+      }
+      while (taken(candidate)) {
+        candidate = base + "-" + n;
+        n++;
+        if (n > 99) {
+          candidate = base + "-" + makeCode().slice(0, 4);
+          break;
+        }
+      }
+      var me = store.users[sessionUser.id];
+      me.lead_slug = candidate;
+      store.users[sessionUser.id] = me;
+      localSave(store);
+      sessionUser = Cloud._publicUser(me);
+      emit("auth", sessionUser);
+      return candidate;
+    },
+
+    setLeadBlurb: async function (blurb) {
+      if (!sessionUser) throw new Error("Sign in first.");
+      blurb = ((blurb || "") + "").trim().slice(0, 280);
+      return Cloud.updateProfile({ lead_blurb: blurb });
+    },
+
+    getLeadPage: async function (slug) {
+      slug = (slug || "").trim().toLowerCase();
+      if (!slug) return null;
+      if (configured() && client) {
+        var { data, error } = await client.rpc("get_lead_page", { p_slug: slug });
+        if (error) throw error;
+        return data || null;
+      }
+      var store = localStore();
+      var found = null;
+      Object.keys(store.users).forEach(function (id) {
+        var u = store.users[id];
+        if (u && (u.lead_slug || "").toLowerCase() === slug) {
+          found = {
+            slug: u.lead_slug,
+            display_name: u.display_name,
+            blurb: u.lead_blurb || ""
+          };
+        }
+      });
+      return found;
+    },
+
+    submitLead: async function (slug, payload) {
+      slug = (slug || "").trim().toLowerCase();
+      var name = ((payload && payload.name) || "").trim();
+      var email = ((payload && payload.email) || "").trim().toLowerCase();
+      var phone = ((payload && payload.phone) || "").trim();
+      var interest = ((payload && payload.interest) || "").trim().toLowerCase();
+      if (!slug) throw new Error("Page not found.");
+      if (name.length < 2) throw new Error("Please enter your name.");
+      if (["products", "business", "both"].indexOf(interest) < 0) {
+        throw new Error("Pick what you’re interested in.");
+      }
+      if (!email && !phone) throw new Error("Add an email or a phone number.");
+      if (email && email.indexOf("@") < 1) throw new Error("That email doesn’t look right.");
+
+      if (configured() && client) {
+        var { data, error } = await client.rpc("submit_lead", {
+          p_slug: slug,
+          p_name: name,
+          p_email: email,
+          p_phone: phone,
+          p_interest: interest
+        });
+        if (error) throw error;
+        return { id: data };
+      }
+
+      var store = localStore();
+      var ownerId = null;
+      Object.keys(store.users).forEach(function (id) {
+        if ((store.users[id].lead_slug || "").toLowerCase() === slug) ownerId = id;
+      });
+      if (!ownerId) throw new Error("Page not found.");
+      if (!store.leads) store.leads = {};
+      if (!store.leads[ownerId]) store.leads[ownerId] = [];
+      var id = "lead_" + makeCode();
+      store.leads[ownerId].unshift({
+        id: id,
+        partner_id: ownerId,
+        name: name,
+        email: email,
+        phone: phone,
+        interest: interest,
+        status: "new",
+        source_slug: slug,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      });
+      localSave(store);
+      return { id: id };
+    },
+
+    listMyLeads: async function () {
+      if (!sessionUser) return [];
+      if (configured() && client) {
+        var { data, error } = await client
+          .from("leads")
+          .select("*")
+          .eq("partner_id", sessionUser.id)
+          .order("created_at", { ascending: false });
+        if (error) throw error;
+        return data || [];
+      }
+      var store = localStore();
+      return ((store.leads && store.leads[sessionUser.id]) || []).slice();
+    },
+
+    updateLeadStatus: async function (leadId, status) {
+      if (!sessionUser) throw new Error("Sign in first.");
+      if (["new", "reached", "done", "archived"].indexOf(status) < 0) {
+        throw new Error("Unknown status.");
+      }
+      if (configured() && client) {
+        var { data, error } = await client
+          .from("leads")
+          .update({ status: status })
+          .eq("id", leadId)
+          .eq("partner_id", sessionUser.id)
+          .select()
+          .single();
+        if (error) throw error;
+        return data;
+      }
+      var store = localStore();
+      var list = (store.leads && store.leads[sessionUser.id]) || [];
+      var found = null;
+      list.forEach(function (row) {
+        if (row.id === leadId) {
+          row.status = status;
+          row.updated_at = new Date().toISOString();
+          found = row;
+        }
+      });
+      if (!found) throw new Error("Lead not found.");
+      store.leads[sessionUser.id] = list;
+      localSave(store);
+      return found;
+    },
+
+    countNewLeads: async function () {
+      var rows = await Cloud.listMyLeads();
+      var n = 0;
+      rows.forEach(function (r) { if (r.status === "new") n++; });
+      return n;
     }
   };
 

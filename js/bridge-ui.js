@@ -39,8 +39,8 @@ window.FS = window.FS || {};
     var last = row.profile.last_active_at ? new Date(row.profile.last_active_at) : new Date(0);
     var now = new Date();
     var plan = Cal.plan(cfg, cal, data);
-    var week = Cal.weekSlice(plan, now);
-    var stats = Cal.weekStats(week);
+    var slice = Cal.weekSlice(plan, now, 0);
+    var stats = Cal.weekStats(slice.days || []);
     var pre = new Date(now.getFullYear(), cfg.preRegDate.month - 1, cfg.preRegDate.day);
     if (pre < now) pre = new Date(now.getFullYear() + 1, cfg.preRegDate.month - 1, cfg.preRegDate.day);
     return {
@@ -182,7 +182,7 @@ window.FS = window.FS || {};
     var pulse = await Cloud.teamPulse();
     el.hidden = false;
     el.innerHTML = '<div class="live-tag">THE FRESH GROVE PULSE</div><p class="pulse-line"><strong>' +
-      pulse.groveTrees + '</strong> warm-list names planted across the team · <strong>' +
+      pulse.groveTrees + '</strong> names on warm lists across the team · <strong>' +
       pulse.blooming + '</strong> partners blooming · <strong>' +
       pulse.downlineCount + '</strong> people linked to you</p>';
   }
@@ -274,7 +274,7 @@ window.FS = window.FS || {};
         var icon = depth === 1 ? "🌳" : "🌱";
         html += '<li>';
         html += '<span class="live-team-name">' + icon + " " + esc(p.display_name || p.email) + "</span>";
-        if (under) html += ' <span class="live-team-count">' + under + " growing under them</span>";
+        if (under) html += ' <span class="live-team-count">' + under + " linked with them</span>";
         html += renderBranch(p.children, depth + 1);
         html += "</li>";
       });
@@ -317,61 +317,382 @@ window.FS = window.FS || {};
       esc(note.body) + '</p>';
   }
 
+  function openCalSheet() {
+    var sheet = $("calSheet");
+    if (!sheet) return;
+    sheet.hidden = false;
+    document.body.classList.add("cal-sheet-open");
+  }
+
+  function closeCalSheet() {
+    var sheet = $("calSheet");
+    if (!sheet) return;
+    sheet.hidden = true;
+    document.body.classList.remove("cal-sheet-open");
+    var st = getState();
+    if (st) {
+      st.data.calendarEditing = null;
+      if (persist) persist();
+    }
+  }
+
+  function cadenceEnabled(st) {
+    return st.data.calendarCadence === true;
+  }
+
+  function renderTypeOptions(selected) {
+    return Cal.EVENT_TYPES.map(function (t) {
+      return '<option value="' + t.id + '"' + (t.id === selected ? " selected" : "") + ">" +
+        t.icon + " " + esc(t.label) + "</option>";
+    }).join("");
+  }
+
+  function chipClass(it) {
+    var cat = it.category || "content";
+    var st = it.status || "todo";
+    return "cal-chip cat-" + cat + (st !== "todo" ? " is-" + st : "");
+  }
+
+  function renderDayChips(day) {
+    var html = "";
+    (day.items || []).forEach(function (it) {
+      html += '<button type="button" class="' + chipClass(it) + '" data-cal-edit="' + day.date + '" data-cal-item="' + it.id + '">';
+      html += '<span class="cal-chip-ico">' + (it.icon || "·") + "</span>";
+      html += '<span class="cal-chip-txt">' + esc(it.person ? it.person : it.label) + "</span>";
+      html += "</button>";
+    });
+    if (!day.items.length && day.suggested) {
+      html += '<button type="button" class="cal-chip ghost" data-cal-accept="' + day.date + '">';
+      html += '<span class="cal-chip-ico">' + day.suggested.icon + "</span>";
+      html += '<span class="cal-chip-txt">' + esc(day.suggested.label) + "</span>";
+      html += "</button>";
+    }
+    return html;
+  }
+
   function renderCalendar() {
-    var wrap = $("calendarWeek");
-    var detail = $("calendarDetail");
-    if (!wrap || !getState) return;
+    var grid = $("calendarGrid");
+    var phaseEl = $("calendarPhases");
+    var navEl = $("calendarWeekNav");
+    var setupEl = $("calendarSetup");
+    var toggleEl = $("calendarViewToggle");
+    if (!grid || !getState) return;
     var state = getState();
     if (!state || !state.data) return;
     if (!state.data.calendar) state.data.calendar = {};
-    var plan = Cal.plan(window.FS.CONFIG, state.data.calendar, state.data);
-    var week = Cal.weekSlice(plan);
-    var stats = Cal.weekStats(week);
+    if (typeof state.data.calendarWeekOffset !== "number") state.data.calendarWeekOffset = 0;
+    if (typeof state.data.calendarMonthOffset !== "number") state.data.calendarMonthOffset = 0;
+    if (!state.data.calendarView) state.data.calendarView = "week";
+    if (!state.data.libraryTab) state.data.libraryTab = "hooks";
+
+    var cadenceChosen = state.data.calendarCadence === true || state.data.calendarCadence === false;
+    if (typeof state.data.calendarSetupOpen !== "boolean") {
+      state.data.calendarSetupOpen = !cadenceChosen;
+    }
+    if (setupEl) {
+      var setupOpen = !!state.data.calendarSetupOpen;
+      var modeLabel = !cadenceChosen
+        ? "Not chosen yet"
+        : (cadenceEnabled(state) ? "Suggested monthly rhythm" : "Building it yourself");
+      setupEl.hidden = false;
+      setupEl.innerHTML =
+        '<div class="cal-setup-bubble' + (setupOpen ? " is-open" : "") + '">' +
+        '<button type="button" class="cal-setup-toggle" data-cal-setup-toggle aria-expanded="' + (setupOpen ? "true" : "false") + '">' +
+        '<span><span class="cal-setup-toggle-label">How do you want to plan?</span>' +
+        '<span class="cal-setup-toggle-meta">' + esc(modeLabel) + "</span></span>" +
+        '<span class="cal-setup-chevron" aria-hidden="true">▼</span>' +
+        "</button>" +
+        (setupOpen
+          ? ('<div class="cal-setup-body">' +
+            (!cadenceChosen
+              ? ('<div class="cal-setup-actions">' +
+                '<button type="button" class="btn" data-cal-cadence="fill">Fill with a suggested monthly rhythm</button>' +
+                '<button type="button" class="btn-ghost" data-cal-cadence="blank">Start blank — I\'ll build it</button>' +
+                "</div>" +
+                '<p class="cal-setup-hint">Suggested = a 4-week mix (curiosity → product sparks → story → invites) with rest days. Not the same week on repeat. You can always edit days or add reach-outs.</p>')
+              : ('<div class="cal-setup-bar">' +
+                '<span class="cal-setup-mode">' + (cadenceEnabled(state) ? "Suggested rhythm is on" : "Blank calendar") + "</span>" +
+                '<button type="button" class="cal-setup-switch" data-cal-cadence="' + (cadenceEnabled(state) ? "blank" : "fill") + '">' +
+                (cadenceEnabled(state) ? "Switch to blank" : "Fill suggested rhythm") + "</button>" +
+                "</div>" +
+                '<p class="cal-setup-hint" style="margin-top:8px">' +
+                (cadenceEnabled(state)
+                  ? "Ghost chips on empty days are suggestions — tap one to keep it, or add your own."
+                  : "Add cards with ＋ on a day, or grab a ready draft from below.") +
+                "</p>")) +
+            "</div>")
+          : "") +
+        "</div>";
+    }
+
+    var view = state.data.calendarView === "month" ? "month" : "week";
+    var useCadence = cadenceEnabled(state);
+    var plan = Cal.plan(window.FS.CONFIG, state.data.calendar, state.data, { cadence: useCadence });
+
+    var todayKey = Cal.ymd(new Date());
+    var slice = view === "month"
+      ? Cal.monthSlice(plan, new Date(), state.data.calendarMonthOffset)
+      : Cal.weekSlice(plan, new Date(), state.data.calendarWeekOffset);
+    var visibleDays = view === "month" ? (slice.cells || []) : (slice.days || []);
+    var weekForStats = view === "week" ? visibleDays : Cal.weekSlice(plan, new Date(), 0).days;
+    var weekStats = Cal.weekStats(weekForStats);
+    var runway = Cal.runwayStats(plan);
+
+    if (toggleEl) {
+      var btns = toggleEl.querySelectorAll("[data-cal-view]");
+      for (var ti = 0; ti < btns.length; ti++) {
+        var on = btns[ti].getAttribute("data-cal-view") === view;
+        btns[ti].classList.toggle("on", on);
+        btns[ti].setAttribute("aria-selected", on ? "true" : "false");
+      }
+    }
+
     var statsEl = $("calendarStats");
     if (statsEl) {
-      statsEl.textContent = stats.posted + " posted · " + stats.drafted + " drafted · " + stats.total + " suggested this week (rest days free)";
+      statsEl.textContent = runway.cards + " cards · " + runway.posted + " done · " + runway.drafted + " drafted · week " + weekStats.posted + "/" + Math.max(weekStats.total, 0);
     }
-    var selected = state.data.calendarSelected || (week[0] && week[0].date);
-    var html = "";
-    week.forEach(function (d) {
-      html += '<button type="button" class="cal-day' +
-        (d.date === selected ? " on" : "") +
-        (d.status !== "todo" ? " " + d.status : "") +
-        (d.reactive ? " reactive" : "") +
-        '" data-cal-day="' + d.date + '">';
-      html += '<span class="cal-dow">' + ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"][Cal.parseYmd(d.date).getDay()] + '</span>';
-      html += '<span class="cal-icon">' + d.icon + '</span>';
-      html += '<span class="cal-label">' + esc(d.label) + '</span>';
-      html += '<span class="cal-status">' + (d.reactive && d.status === "todo" ? "optional" : d.status) + '</span>';
-      html += '</button>';
-    });
-    wrap.innerHTML = html;
 
-    var day = null;
-    for (var i = 0; i < week.length; i++) if (week[i].date === selected) day = week[i];
-    if (!day && week.length) day = week[0];
-    if (!detail || !day) return;
+    if (navEl) {
+      var off = view === "month" ? state.data.calendarMonthOffset : state.data.calendarWeekOffset;
+      navEl.innerHTML =
+        '<button type="button" class="cal-nav-btn" data-cal-nav="-1" aria-label="Previous">‹</button>' +
+        '<span class="cal-nav-label">' + esc(slice.label || "") + "</span>" +
+        '<button type="button" class="cal-nav-btn" data-cal-nav="1" aria-label="Next">›</button>' +
+        (off ? '<button type="button" class="cal-nav-today" data-cal-nav="0">Today</button>' : "");
+    }
+
+    if (phaseEl) {
+      var phaseDay = Cal.findDay(plan, todayKey) || visibleDays[0];
+      var ph = (phaseDay && phaseDay.phase) || { label: "", tip: "" };
+      phaseEl.innerHTML = ph.label
+        ? ('<span class="cal-phase-pill">' + esc(ph.label) + '</span><span class="cal-phase-tip">' + esc(ph.tip || "") + "</span>")
+        : "";
+    }
+
+    if (!state.data.calendarSelected) state.data.calendarSelected = todayKey;
+
+    grid.className = "cal-grid " + (view === "month" ? "cal-grid-month" : "cal-grid-week");
+    var html = "";
+    if (view === "month") {
+      html += '<div class="cal-month-dows">' + Cal.DOW.map(function (d) { return "<span>" + d + "</span>"; }).join("") + "</div>";
+      html += '<div class="cal-month-cells">';
+      visibleDays.forEach(function (d) {
+        html += '<div class="cal-cell' +
+          (d.date === state.data.calendarSelected ? " on" : "") +
+          (d.date === todayKey ? " today" : "") +
+          (d.inMonth ? "" : " out") + '" data-cal-select="' + d.date + '">';
+        html += '<div class="cal-cell-top">';
+        html += '<span class="cal-cell-num">' + d.dayNum + "</span>";
+        html += '<button type="button" class="cal-cell-add" data-cal-new="' + d.date + '" aria-label="Add">＋</button>';
+        html += "</div>";
+        html += '<div class="cal-cell-chips">' + renderDayChips(d) + "</div>";
+        html += "</div>";
+      });
+      html += "</div>";
+    } else {
+      visibleDays.forEach(function (d) {
+        var dt = Cal.parseYmd(d.date);
+        html += '<div class="cal-cell week' +
+          (d.date === state.data.calendarSelected ? " on" : "") +
+          (d.date === todayKey ? " today" : "") + '" data-cal-select="' + d.date + '">';
+        html += '<div class="cal-cell-top">';
+        html += '<div><span class="cal-dow">' + Cal.DOW[dt.getDay()] + '</span>';
+        html += '<span class="cal-cell-num">' + dt.getDate() + "</span></div>";
+        html += '<button type="button" class="cal-cell-add" data-cal-new="' + d.date + '" aria-label="Add">＋</button>';
+        html += "</div>";
+        html += '<div class="cal-cell-chips">' + renderDayChips(d) + "</div>";
+        html += "</div>";
+      });
+    }
+    grid.innerHTML = html;
+
+    renderLibrary();
+    if (state.data.calendarEditing) renderCalEditor();
+  }
+
+  function renderLibrary() {
+    var tabs = $("libraryTabs");
+    var list = $("libraryList");
+    var target = $("libraryTarget");
+    if (!tabs || !list || !getState) return;
+    var st = getState();
+    var buckets = Cal.libraryBuckets();
+    var active = st.data.libraryTab || "hooks";
+    if (!buckets.some(function (b) { return b.id === active; }) && buckets[0]) active = buckets[0].id;
+    st.data.libraryTab = active;
+
+    var selectedKey = st.data.calendarSelected || Cal.ymd(new Date());
+    var dayLabel = selectedKey;
+    try {
+      var dt = Cal.parseYmd(selectedKey);
+      dayLabel = Cal.DOW[dt.getDay()] + " · " + Cal.MON[dt.getMonth()] + " " + dt.getDate();
+    } catch (e) {}
+    if (target) {
+      target.hidden = false;
+      target.textContent = "Adding to " + dayLabel + " · tap another day above to change";
+    }
+
+    tabs.innerHTML = buckets.map(function (b) {
+      return '<button type="button" class="cal-lib-tab' + (b.id === active ? " on" : "") + '" data-lib-tab="' + b.id + '">' + esc(b.title) + "</button>";
+    }).join("");
+
+    var bucket = buckets.filter(function (b) { return b.id === active; })[0] || buckets[0];
+    if (!bucket) { list.innerHTML = ""; return; }
+    var html = "";
+    if (bucket.hint) html += '<p class="cal-lib-hint">' + esc(bucket.hint) + "</p>";
+    if (!bucket.items || !bucket.items.length) {
+      html += '<p class="cal-lib-hint">Nothing in this shelf yet.</p>';
+    } else {
+      bucket.items.forEach(function (it) {
+        var meta = Cal.typeMeta ? Cal.typeMeta(it.type) : null;
+        html += '<div class="cal-lib-card">';
+        html += '<div class="cal-lib-card-top"><div>';
+        if (meta && meta.label) html += '<span class="cal-lib-card-type">' + esc(meta.label) + "</span>";
+        html += '<span class="cal-lib-card-title">' + esc((it.icon ? it.icon + " " : "") + it.title) + "</span></div>";
+        html += '<button type="button" class="cal-lib-add" data-lib-add="' + esc(bucket.id) + '" data-lib-id="' + esc(it.id) + '">Add to day</button></div>';
+        html += '<p class="cal-lib-body">' + esc(Cal.snippetOf(it.body) || it.body || "") + "</p>";
+        html += "</div>";
+      });
+    }
+    list.innerHTML = html;
+  }
+
+  function libraryItem(bucketId, itemId) {
+    var buckets = Cal.libraryBuckets();
+    for (var i = 0; i < buckets.length; i++) {
+      if (buckets[i].id !== bucketId) continue;
+      for (var j = 0; j < buckets[i].items.length; j++) {
+        if (buckets[i].items[j].id === itemId) return buckets[i].items[j];
+      }
+    }
+    return null;
+  }
+
+  function openEditor(date, itemId) {
+    var st = getState();
+    st.data.calendarSelected = date;
+    st.data.calendarEditing = { date: date, itemId: itemId || null };
+    persist();
+    renderCalEditor();
+    openCalSheet();
+  }
+
+  function createCard(date, partial) {
+    var st = getState();
+    var day = Cal.ensureDay(st.data.calendar, date);
+    var item = Cal.newItem(partial || { type: "personal" }, st.data, date);
+    day.items.push(item);
+    st.data.calendarSelected = date;
+    persist();
+    renderCalendar();
+    openEditor(date, item.id);
+    if (typeof window.FS.onCalendarChange === "function") window.FS.onCalendarChange();
+  }
+
+  function acceptSuggestion(date) {
+    var st = getState();
+    var plan = Cal.plan(window.FS.CONFIG, st.data.calendar, st.data, { cadence: true });
+    var day = Cal.findDay(plan, date);
+    if (!day || !day.suggested) {
+      createCard(date, { type: "personal" });
+      return;
+    }
+    createCard(date, {
+      type: day.suggested.type,
+      draft: day.suggested.draft,
+      title: ""
+    });
+  }
+
+  function renderCalEditor() {
+    var detail = $("calendarDetail");
+    var titleEl = $("calSheetTitle");
+    var st = getState();
+    if (!detail || !st || !st.data.calendarEditing) return;
+    var date = st.data.calendarEditing.date;
+    var itemId = st.data.calendarEditing.itemId;
+    var dayRow = Cal.ensureDay(st.data.calendar, date);
+    var item = null;
+    for (var i = 0; i < dayRow.items.length; i++) {
+      if (dayRow.items[i].id === itemId) item = dayRow.items[i];
+    }
+    if (!item) {
+      closeCalSheet();
+      return;
+    }
+    var meta = Cal.typeMeta(item.type);
+    if (titleEl) titleEl.textContent = Cal.prettyDate(Cal.parseYmd(date));
+    var isOutreach = meta.kind === "outreach";
+
     detail.innerHTML =
-      '<div class="live-tag">' + esc(day.date) + ' · ' + day.icon + ' ' + esc(day.label) + '</div>' +
-      (day.reactive
-        ? '<p class="body-p">Rest or engage day — no post required. Reply to humans.</p>'
-        : '') +
-      '<label class="field"><span class="field-label">Draft</span>' +
-      '<textarea id="calDraft" rows="5">' + esc(day.draft) + '</textarea>' +
-      '<span class="claim-check" id="calClaim"></span></label>' +
-      '<div class="btn-row">' +
-      '<button type="button" class="btn-ghost" data-cal-status="drafted">Mark drafted</button>' +
-      '<button type="button" class="btn" data-cal-status="posted">Mark posted</button>' +
-      '<button type="button" class="btn-ghost" data-cal-status="skipped">Skip</button>' +
-      '</div>';
+      '<label class="field"><span class="field-label">Type</span>' +
+        '<select id="calType" class="cal-select">' + renderTypeOptions(item.type) + "</select></label>" +
+      (isOutreach || item.person || item.type === "personal"
+        ? '<label class="field"><span class="field-label">Who</span>' +
+          '<input type="text" id="calPerson" class="cal-input" placeholder="Name…" value="' + esc(item.person || "") + '"></label>'
+        : '<input type="hidden" id="calPerson" value="' + esc(item.person || "") + '">') +
+      '<label class="field"><span class="field-label">Title</span>' +
+        '<input type="text" id="calTitle" class="cal-input" placeholder="Optional short label" value="' + esc(item.title || "") + '"></label>' +
+      '<label class="field"><span class="field-label">' + (isOutreach ? "Message" : "Draft") + "</span>" +
+        '<textarea id="calDraft" rows="8" placeholder="Write it in your voice…">' + esc(item.draft || "") + "</textarea>" +
+        '<span class="claim-check" id="calClaim"></span></label>' +
+      '<div class="cal-status-row">' +
+        Cal.STATUSES.map(function (s) {
+          return '<button type="button" class="cal-status-btn' + (item.status === s.id ? " on" : "") + '" data-cal-status="' + s.id + '">' + esc(s.label) + "</button>";
+        }).join("") +
+      "</div>" +
+      '<div class="cal-sheet-actions">' +
+        ((meta.kind === "content" && item.type !== "reactive")
+          ? '<button type="button" class="btn-ghost" data-cal-swap>Try another</button>' : "") +
+        '<button type="button" class="btn" data-cal-save>Done</button>' +
+        '<button type="button" class="btn-ghost danger-ghost" data-cal-delete>Delete</button>' +
+      "</div>";
+
+    wireEditorFields(date, item.id);
+  }
+
+  function wireEditorFields(date, itemId) {
+    var st = getState();
+    function itemRow() {
+      var day = Cal.ensureDay(st.data.calendar, date);
+      for (var i = 0; i < day.items.length; i++) if (day.items[i].id === itemId) return day.items[i];
+      return null;
+    }
+    function touch(rerender) {
+      persist();
+      if (rerender) {
+        renderCalendar();
+        renderCalEditor();
+      }
+      if (typeof window.FS.onCalendarChange === "function") window.FS.onCalendarChange();
+    }
+
+    var typeEl = $("calType");
+    if (typeEl) typeEl.addEventListener("change", function () {
+      var it = itemRow(); if (!it) return;
+      var meta = Cal.typeMeta(typeEl.value);
+      it.type = typeEl.value;
+      it.category = meta.category;
+      if (!(it.draft || "").trim()) it.draft = Cal.draftFor(it.type, st.data, date);
+      touch(true);
+    });
+    ["calPerson", "calTitle"].forEach(function (id) {
+      var el = $(id);
+      if (!el) return;
+      el.addEventListener("input", function () {
+        var it = itemRow(); if (!it) return;
+        if (id === "calPerson") it.person = el.value;
+        if (id === "calTitle") it.title = el.value;
+        touch(false);
+      });
+    });
     var ta = $("calDraft");
     if (ta) {
       ta.addEventListener("input", function () {
-        var st = getState();
-        if (!st.data.calendar[day.date]) st.data.calendar[day.date] = { status: day.status };
-        st.data.calendar[day.date].draft = ta.value;
+        var it = itemRow(); if (!it) return;
+        it.draft = ta.value;
         runCalClaim(ta.value);
-        persist();
+        touch(false);
       });
       runCalClaim(ta.value);
     }
@@ -381,11 +702,137 @@ window.FS = window.FS || {};
     var el = $("calClaim");
     if (!el) return;
     var RISKY = window.FS.RISKY || [];
-    if (!text || !text.trim()) { el.innerHTML = ""; return; }
+    var trimmed = (text || "").trim();
+    if (!trimmed) { el.innerHTML = ""; return; }
     var hits = [];
     for (var i = 0; i < RISKY.length; i++) if (RISKY[i].re.test(text)) hits.push(RISKY[i]);
-    if (!hits.length) { el.innerHTML = '<span class="claim-ok">Reads clean ✓</span>'; return; }
-    el.innerHTML = '<span class="claim-flag">⚠ ' + esc(hits[0].word) + '</span><span class="claim-note">' + esc(hits[0].tip) + '</span>';
+    if (hits.length) {
+      el.innerHTML = '<span class="claim-flag">⚠ ' + esc(hits[0].word) + '</span><span class="claim-note">' + esc(hits[0].tip) + '</span>';
+      return;
+    }
+    if (trimmed.length < 12) { el.innerHTML = ""; return; }
+    el.innerHTML = "";
+  }
+
+  var leadsFilter = "all";
+  var leadsCache = [];
+
+  function interestLabel(v) {
+    if (v === "products") return "Products";
+    if (v === "business") return "Business";
+    if (v === "both") return "Both";
+    return v || "—";
+  }
+
+  function statusLabel(v) {
+    if (v === "new") return "New";
+    if (v === "reached") return "Reached out";
+    if (v === "done") return "Done";
+    if (v === "archived") return "Archived";
+    return v || "—";
+  }
+
+  function syncLeadsShareUI(slug) {
+    var share = $("leadsShareInput");
+    var preview = $("leadsPreviewLink");
+    var slugInput = $("leadsSlugInput");
+    if (slugInput && document.activeElement !== slugInput) slugInput.value = slug || "";
+    var url = slug ? Cloud.leadUrl(slug) : "";
+    if (share) share.value = url;
+    if (preview) {
+      preview.href = slug ? ("lead.html?p=" + encodeURIComponent(slug)) : "lead.html";
+      preview.hidden = !slug;
+    }
+  }
+
+  function renderLeadsList() {
+    var list = $("leadsList");
+    if (!list) return;
+    var rows = leadsCache.filter(function (r) {
+      if (leadsFilter === "all") return r.status !== "archived";
+      return r.status === leadsFilter;
+    });
+    if (!rows.length) {
+      list.innerHTML = '<p class="leads-empty">No leads here yet. Share your link — when someone submits, they’ll show up only in this inbox.</p>';
+      return;
+    }
+    var html = "";
+    rows.forEach(function (r) {
+      var when = "";
+      try {
+        var d = new Date(r.created_at);
+        when = d.toLocaleDateString(undefined, { month: "short", day: "numeric" });
+      } catch (e) {}
+      var contact = [];
+      if (r.email) contact.push(esc(r.email));
+      if (r.phone) contact.push(esc(r.phone));
+      html += '<article class="leads-card' + (r.status === "new" ? " is-new" : "") + '">';
+      html += '<div class="leads-card-top">';
+      html += '<div><div class="leads-card-name">' + esc(r.name) + "</div>";
+      html += '<div class="leads-card-meta">' + contact.join(" · ") + "</div></div>";
+      html += '<div class="leads-card-tags"><span class="leads-pill">' + esc(interestLabel(r.interest)) + "</span>";
+      html += '<span class="leads-pill soft">' + esc(statusLabel(r.status)) + "</span></div></div>";
+      html += '<div class="leads-card-foot"><span class="leads-card-when">' + esc(when) + "</span>";
+      html += '<div class="leads-card-actions">';
+      if (r.status === "new") {
+        html += '<button type="button" class="btn-ghost" data-lead-status="' + esc(r.id) + '" data-status="reached">Mark reached out</button>';
+      }
+      if (r.status === "reached" || r.status === "new") {
+        html += '<button type="button" class="btn-ghost" data-lead-status="' + esc(r.id) + '" data-status="done">Done</button>';
+      }
+      if (r.status !== "archived") {
+        html += '<button type="button" class="btn-ghost" data-lead-status="' + esc(r.id) + '" data-status="archived">Archive</button>';
+      }
+      if (r.status === "archived") {
+        html += '<button type="button" class="btn-ghost" data-lead-status="' + esc(r.id) + '" data-status="new">Restore</button>';
+      }
+      html += "</div></div></article>";
+    });
+    list.innerHTML = html;
+  }
+
+  async function renderLeads() {
+    var gate = $("leadsGate");
+    var studio = $("leadsStudio");
+    if (!gate || !studio) return;
+    var user = Cloud.user();
+    if (!user) {
+      gate.hidden = false;
+      studio.hidden = true;
+      return;
+    }
+    gate.hidden = true;
+    studio.hidden = false;
+    var modeNote = $("leadsModeNote");
+    if (modeNote) {
+      if (Cloud.mode() === "local") {
+        modeNote.hidden = false;
+        modeNote.textContent = "Local demo mode: leads stay in this browser only. Connect Supabase (and run supabase/leads.sql) so each partner’s page works for real visitors.";
+      } else {
+        modeNote.hidden = true;
+        modeNote.textContent = "";
+      }
+    }
+    var st = getState ? getState() : null;
+    var preferred = (st && st.settings && st.settings.partnerName) || user.display_name || "";
+    try {
+      var slug = await Cloud.ensureLeadSlug(preferred);
+      syncLeadsShareUI(slug);
+      var blurb = $("leadsBlurbInput");
+      if (blurb && document.activeElement !== blurb) blurb.value = user.lead_blurb || "";
+      leadsCache = await Cloud.listMyLeads();
+      renderLeadsList();
+      var badge = document.querySelector('[data-tab="leads"] .bottom-nav-badge');
+      var nNew = 0;
+      leadsCache.forEach(function (r) { if (r.status === "new") nNew++; });
+      if (badge) {
+        badge.hidden = nNew < 1;
+        badge.textContent = nNew > 9 ? "9+" : String(nNew);
+      }
+    } catch (err) {
+      var msg = $("leadsSlugMsg");
+      if (msg) msg.textContent = (err && err.message) || "Could not load leads.";
+    }
   }
 
   async function afterAuth() {
@@ -394,7 +841,19 @@ window.FS = window.FS || {};
     await renderPulse();
     await renderLeaderNoteBanner();
     if (getState && getState().active === "leader") await renderLeader();
-    if (getState && getState().active === "calendar") renderCalendar();
+    if (getState && (getState().active === "calendar" || getState().active === "tend")) renderCalendar();
+    if (getState && getState().active === "leads") await renderLeads();
+    else if (Cloud.isSignedIn()) {
+      /* Quiet badge refresh */
+      try {
+        var n = await Cloud.countNewLeads();
+        var badge = document.querySelector('[data-tab="leads"] .bottom-nav-badge');
+        if (badge) {
+          badge.hidden = n < 1;
+          badge.textContent = n > 9 ? "9+" : String(n);
+        }
+      } catch (e) {}
+    }
   }
 
   function wire() {
@@ -404,11 +863,69 @@ window.FS = window.FS || {};
       var t = e.target.closest(
         "#authOpenBtn,#authCloseBtn,#authSubmitBtn,#authSignOutBtn,#railCopyInvite,#leaderCopyInvite,#authCopyInvite," +
         "#exportBridgeBtn,#importLiveTreeBtn,#cheerDismiss,#notifySponsorBtn,[data-goto-bridge],[data-copy-nudge],[data-cheer],[data-note]," +
-        "[data-cal-day],[data-cal-status]"
+        "[data-cal-day],[data-cal-select],[data-cal-status],[data-cal-swap],[data-cal-week],[data-cal-nav],[data-cal-view],[data-cal-add],[data-cal-clear]," +
+        "[data-cal-new],[data-cal-edit],[data-cal-item],[data-cal-accept],[data-cal-cadence],[data-cal-setup-toggle],[data-cal-save],[data-cal-delete]," +
+        "[data-lib-tab],[data-lib-add],#calSheetClose,#calSheetX," +
+        "#leadsSignInBtn,#leadsSlugSave,#leadsCopyLink,#leadsBlurbSave,[data-leads-filter],[data-lead-status]"
       );
       if (!t) return;
 
       if (t.id === "authOpenBtn") { openAuth(true); return; }
+      if (t.id === "leadsSignInBtn") { openAuth(true); return; }
+      if (t.id === "leadsCopyLink") {
+        var shareIn = $("leadsShareInput");
+        if (shareIn && navigator.clipboard) {
+          navigator.clipboard.writeText(shareIn.value).then(function () {
+            t.textContent = "Copied ✓";
+            setTimeout(function () { t.textContent = "Copy link"; }, 1600);
+          });
+        }
+        return;
+      }
+      if (t.id === "leadsSlugSave") {
+        var slugMsg = $("leadsSlugMsg");
+        var desired = (($("leadsSlugInput") || {}).value || "").trim();
+        try {
+          var claimed = await Cloud.claimLeadSlug(desired);
+          syncLeadsShareUI(claimed);
+          if (slugMsg) slugMsg.textContent = claimed === Cloud.slugifyName(desired)
+            ? "Saved — your link uses “" + claimed + "”."
+            : "“" + Cloud.slugifyName(desired) + "” was taken, so yours is “" + claimed + "”.";
+        } catch (err) {
+          if (slugMsg) slugMsg.textContent = (err && err.message) || "Could not save slug.";
+        }
+        return;
+      }
+      if (t.id === "leadsBlurbSave") {
+        var blurbMsg = $("leadsSlugMsg");
+        try {
+          await Cloud.setLeadBlurb((($("leadsBlurbInput") || {}).value || ""));
+          if (blurbMsg) blurbMsg.textContent = "Intro saved.";
+        } catch (err) {
+          if (blurbMsg) blurbMsg.textContent = (err && err.message) || "Could not save intro.";
+        }
+        return;
+      }
+      if (t.hasAttribute("data-leads-filter")) {
+        leadsFilter = t.getAttribute("data-leads-filter") || "all";
+        var filters = document.querySelectorAll("[data-leads-filter]");
+        for (var fi = 0; fi < filters.length; fi++) {
+          filters[fi].classList.toggle("on", filters[fi].getAttribute("data-leads-filter") === leadsFilter);
+        }
+        renderLeadsList();
+        return;
+      }
+      if (t.hasAttribute("data-lead-status")) {
+        var leadId = t.getAttribute("data-lead-status");
+        var nextStatus = t.getAttribute("data-status");
+        try {
+          await Cloud.updateLeadStatus(leadId, nextStatus);
+          await renderLeads();
+        } catch (err) {
+          alert((err && err.message) || "Could not update lead.");
+        }
+        return;
+      }
       if (t.id === "authCloseBtn") { closeAuth(); return; }
       if (t.id === "authSubmitBtn") {
         var email = ($("authEmail") || {}).value;
@@ -563,23 +1080,150 @@ window.FS = window.FS || {};
         }
         return;
       }
-      if (t.hasAttribute("data-cal-day")) {
-        var st = getState();
-        st.data.calendarSelected = t.getAttribute("data-cal-day");
+      if (t.id === "calSheetClose" || t.id === "calSheetX" || t.hasAttribute("data-cal-save")) {
+        closeCalSheet();
+        renderCalendar();
+        return;
+      }
+      if (t.hasAttribute("data-cal-view")) {
+        var stV = getState();
+        stV.data.calendarView = t.getAttribute("data-cal-view") === "month" ? "month" : "week";
         persist();
         renderCalendar();
         return;
       }
-      if (t.hasAttribute("data-cal-status")) {
-        var st2 = getState();
-        var date = st2.data.calendarSelected;
-        if (!date) return;
-        if (!st2.data.calendar[date]) st2.data.calendar[date] = {};
-        var draftEl = $("calDraft");
-        if (draftEl) st2.data.calendar[date].draft = draftEl.value;
-        st2.data.calendar[date].status = t.getAttribute("data-cal-status");
+      if (t.hasAttribute("data-cal-nav") || t.hasAttribute("data-cal-week")) {
+        var stW = getState();
+        var delta = t.getAttribute("data-cal-nav") || t.getAttribute("data-cal-week");
+        var isMonth = stW.data.calendarView === "month";
+        if (delta === "0") {
+          if (isMonth) stW.data.calendarMonthOffset = 0;
+          else stW.data.calendarWeekOffset = 0;
+        } else {
+          var n = parseInt(delta, 10) || 0;
+          if (isMonth) stW.data.calendarMonthOffset = (stW.data.calendarMonthOffset || 0) + n;
+          else stW.data.calendarWeekOffset = (stW.data.calendarWeekOffset || 0) + n;
+        }
         persist();
         renderCalendar();
+        return;
+      }
+      if (t.hasAttribute("data-cal-select")) {
+        var stSel = getState();
+        stSel.data.calendarSelected = t.getAttribute("data-cal-select");
+        persist();
+        renderCalendar();
+        return;
+      }
+      if (t.hasAttribute("data-cal-setup-toggle")) {
+        var stSetup = getState();
+        stSetup.data.calendarSetupOpen = !stSetup.data.calendarSetupOpen;
+        persist();
+        renderCalendar();
+        return;
+      }
+      if (t.hasAttribute("data-cal-cadence")) {
+        var stCad = getState();
+        var mode = t.getAttribute("data-cal-cadence");
+        if (mode === "fill") {
+          stCad.data.calendarCadence = true;
+          Cal.applyCadenceFill(stCad.data.calendar, stCad.data, window.FS.CONFIG);
+        } else {
+          stCad.data.calendarCadence = false;
+          Cal.clearCadenceSuggestions(stCad.data.calendar);
+        }
+        stCad.data.calendarSetupOpen = false;
+        persist();
+        renderCalendar();
+        if (typeof window.FS.onCalendarChange === "function") window.FS.onCalendarChange();
+        return;
+      }
+      if (t.hasAttribute("data-cal-new")) {
+        createCard(t.getAttribute("data-cal-new"), { type: "personal" });
+        return;
+      }
+      if (t.hasAttribute("data-cal-accept")) {
+        acceptSuggestion(t.getAttribute("data-cal-accept"));
+        return;
+      }
+      if (t.hasAttribute("data-cal-edit")) {
+        openEditor(t.getAttribute("data-cal-edit"), t.getAttribute("data-cal-item"));
+        return;
+      }
+      if (t.hasAttribute("data-lib-tab")) {
+        var stLib = getState();
+        stLib.data.libraryTab = t.getAttribute("data-lib-tab");
+        persist();
+        renderLibrary();
+        return;
+      }
+      if (t.hasAttribute("data-lib-add")) {
+        var lib = libraryItem(t.getAttribute("data-lib-add"), t.getAttribute("data-lib-id"));
+        if (!lib) return;
+        var stAdd = getState();
+        var dateAdd = stAdd.data.calendarSelected || Cal.ymd(new Date());
+        createCard(dateAdd, {
+          type: lib.type || "open_loop",
+          title: lib.title || "",
+          draft: lib.body || ""
+        });
+        return;
+      }
+      if (t.hasAttribute("data-cal-status")) {
+        var st2 = getState();
+        var ed = st2.data.calendarEditing;
+        if (!ed) return;
+        var day2 = Cal.ensureDay(st2.data.calendar, ed.date);
+        for (var si = 0; si < day2.items.length; si++) {
+          if (day2.items[si].id === ed.itemId) {
+            var draftEl = $("calDraft");
+            var personEl2 = $("calPerson");
+            var titleEl2 = $("calTitle");
+            if (draftEl) day2.items[si].draft = draftEl.value;
+            if (personEl2) day2.items[si].person = personEl2.value;
+            if (titleEl2) day2.items[si].title = titleEl2.value;
+            day2.items[si].status = t.getAttribute("data-cal-status");
+          }
+        }
+        persist();
+        renderCalEditor();
+        renderCalendar();
+        if (typeof window.FS.onCalendarChange === "function") window.FS.onCalendarChange();
+        return;
+      }
+      if (t.hasAttribute("data-cal-delete")) {
+        var stDel = getState();
+        var edDel = stDel.data.calendarEditing;
+        if (!edDel) return;
+        var dayDel = Cal.ensureDay(stDel.data.calendar, edDel.date);
+        dayDel.items = dayDel.items.filter(function (it) { return it.id !== edDel.itemId; });
+        if (!dayDel.items.length) delete stDel.data.calendar[edDel.date];
+        persist();
+        closeCalSheet();
+        renderCalendar();
+        if (typeof window.FS.onCalendarChange === "function") window.FS.onCalendarChange();
+        return;
+      }
+      if (t.hasAttribute("data-cal-swap")) {
+        var st3 = getState();
+        var ed3 = st3.data.calendarEditing;
+        if (!ed3) return;
+        var day3 = Cal.ensureDay(st3.data.calendar, ed3.date);
+        var item3 = null;
+        for (var di = 0; di < day3.items.length; di++) {
+          if (day3.items[di].id === ed3.itemId) item3 = day3.items[di];
+        }
+        if (!item3) return;
+        var alts = (window.FS.ContentPick && window.FS.ContentPick.alternativesForType)
+          ? window.FS.ContentPick.alternativesForType(item3.type)
+          : [];
+        if (!alts.length) return;
+        var idx = (item3.altIndex || 0) + 1;
+        if (idx >= alts.length) idx = 0;
+        item3.altIndex = idx;
+        item3.draft = alts[idx].body;
+        persist();
+        renderCalEditor();
         return;
       }
     });
@@ -601,9 +1245,26 @@ window.FS = window.FS || {};
       });
       return;
     }
-    /* Prefer richer local if remote empty; else remote wins for done flags merge */
-    var mergedData = Object.assign({}, remote.data || {}, local.data || {});
-    var mergedDone = Object.assign({}, remote.done || {}, local.done || {});
+    /* Prefer non-empty field wins; never let a cleared local wipe remote text,
+       and never let a sticky remote done:true resurrect after local cleared it. */
+    var remoteData = remote.data || {};
+    var localData = local.data || {};
+    var mergedData = Object.assign({}, remoteData, localData);
+    Object.keys(remoteData).forEach(function (k) {
+      var lv = localData[k];
+      var rv = remoteData[k];
+      if (typeof rv === "string" && typeof lv === "string") {
+        if (!lv.trim() && rv.trim()) mergedData[k] = rv;
+      }
+    });
+    var remoteDone = remote.done || {};
+    var localDone = local.done || {};
+    var mergedDone = {};
+    Object.keys(remoteDone).concat(Object.keys(localDone)).forEach(function (k) {
+      /* Explicit false/cleared local wins over remote true */
+      if (Object.prototype.hasOwnProperty.call(localDone, k)) mergedDone[k] = !!localDone[k];
+      else mergedDone[k] = !!remoteDone[k];
+    });
     var mergedCal = Object.assign({}, remote.calendar || {}, (local.data && local.data.calendar) || {});
     setStateFromCloud({
       data: Object.assign(mergedData, { calendar: mergedCal }),
@@ -611,7 +1272,9 @@ window.FS = window.FS || {};
       active: local.active && local.active !== "welcome" ? local.active : (remote.active || local.active),
       settings: {
         hubMode: local.settings.hubMode || Cloud.user().hub_mode || "",
-        partnerName: local.settings.partnerName || Cloud.user().display_name || ""
+        partnerName: local.settings.partnerName || Cloud.user().display_name || "",
+        growthMoment: typeof local.settings.growthMoment === "boolean" ? local.settings.growthMoment : true,
+        growthToast: typeof local.settings.growthToast === "boolean" ? local.settings.growthToast : true
       },
       tourDone: local.tourDone || Cloud.user().tour_done,
       cheers: remote.cheers || []
@@ -657,6 +1320,7 @@ window.FS = window.FS || {};
     renderPulse: renderPulse,
     renderCheers: renderCheers,
     renderLeaderNoteBanner: renderLeaderNoteBanner,
+    renderLeads: renderLeads,
     openAuth: openAuth
   };
 })();

@@ -22,12 +22,20 @@
       data: {},
       done: {},
       active: "welcome",
-      settings: { hubMode: "", partnerName: "" },
+      settings: { hubMode: "", partnerName: "", growthMoment: true, growthToast: true },
       tourDone: false
     };
   }
 
   var state = blankState();
+
+  function ensureSettings() {
+    if (!state.settings) state.settings = {};
+    if (!state.settings.hubMode) state.settings.hubMode = "";
+    if (!state.settings.partnerName) state.settings.partnerName = "";
+    if (typeof state.settings.growthMoment !== "boolean") state.settings.growthMoment = true;
+    if (typeof state.settings.growthToast !== "boolean") state.settings.growthToast = true;
+  }
 
   function loadState() {
     try {
@@ -42,6 +50,8 @@
           state.settings = old.settings || { hubMode: "", partnerName: "" };
           state.tourDone = !!old.tourDone;
           if (!state.data.calendar) state.data.calendar = {};
+          ensureSettings();
+          migrateGrovePicks();
           save();
           return;
         }
@@ -52,12 +62,31 @@
         state.done = p.done || {};
         state.active = p.active || "welcome";
         state.settings = p.settings || { hubMode: "", partnerName: "" };
-        if (!state.settings.hubMode) state.settings.hubMode = "";
-        if (!state.settings.partnerName) state.settings.partnerName = "";
         state.tourDone = !!p.tourDone;
       }
       if (!state.data.calendar) state.data.calendar = {};
-    } catch (e) {}
+      ensureSettings();
+      migrateGrovePicks();
+    } catch (e) {
+      ensureSettings();
+      migrateGrovePicks();
+    }
+  }
+
+  function parseNameLines(text) {
+    return ((text || "") + "").split("\n")
+      .map(function (l) { return l.replace(/^\d+[\.\)]\s*/, "").trim(); })
+      .filter(function (l) { return l.length > 0; });
+  }
+
+  function migrateGrovePicks() {
+    if (!state.data) state.data = {};
+    if (!Array.isArray(state.data.customer_first)) {
+      state.data.customer_first = parseNameLines(state.data.customer_pick).slice(0, 5);
+    }
+    if (!Array.isArray(state.data.warm_first)) {
+      state.data.warm_first = parseNameLines(state.data.warm_pick).slice(0, 5);
+    }
   }
 
   var cloudSyncTimer;
@@ -89,13 +118,52 @@
     return false;
   }
 
-  /* Starter path: roots → grove → ground → tend → done
-     Full path:    roots → grove → tree → ground → plant → tend → done */
+  /* Starter path: roots → ground → grove → tend → done
+     Full path:    roots → ground → grove → tree → plant → tend → done */
   function nextAfter(id) {
     if (isStarter()) {
-      return { roots: "grove", grove: "ground", ground: "tend", tend: "done" }[id];
+      return { roots: "ground", ground: "grove", grove: "tend", tend: "done" }[id];
     }
-    return { roots: "grove", grove: "tree", tree: "ground", ground: "plant", plant: "tend", tend: "done" }[id];
+    return { roots: "ground", ground: "grove", grove: "tree", tree: "plant", plant: "tend", tend: "done" }[id];
+  }
+
+  function priorSectionId(id) {
+    var secs = visibleSections();
+    for (var i = 0; i < secs.length; i++) {
+      if (secs[i].id === id) return i === 0 ? null : secs[i - 1].id;
+    }
+    return null;
+  }
+
+  function sectionLabel(id) {
+    for (var i = 0; i < SECTIONS.length; i++) if (SECTIONS[i].id === id) return SECTIONS[i].label;
+    return id;
+  }
+
+  function softUnlocked(id) {
+    return !!(state.data.softUnlock && state.data.softUnlock[id]);
+  }
+
+  /* Prior modules must be truly finished — soft-unlock peek doesn't count as a chain link. */
+  function sectionChainComplete(id) {
+    if (!id) return true;
+    if (id === "roots") return rootCount() >= ROOT_MAX;
+    if (!state.done[id]) return false;
+    return sectionChainComplete(priorSectionId(id));
+  }
+
+  function isModuleUnlocked(id) {
+    if (!id || id === "welcome" || id === "done" || id === "calendar" || id === "leader" || id === "know" || id === "tend" || id === "products" || id === "leads") return true;
+    if (!sectionVisible(id)) return false;
+    if (softUnlocked(id)) return true;
+    if (state.done[id]) return true;
+    var prior = priorSectionId(id);
+    if (!prior) return true;
+    return sectionChainComplete(prior);
+  }
+
+  function ensureSoftUnlockMap() {
+    if (!state.data.softUnlock) state.data.softUnlock = {};
   }
 
   function partnerName() {
@@ -107,23 +175,38 @@
     return n ? n.split(/\s+/)[0] : "";
   }
 
-  /* ── growth math ─────────────────────────────────────── */
-  var FIELD_UNITS = ["why", "moment", "said_yes", "warm", "warm_pick", "page_story", "seed_open", "seed_value", "seed_invite"];
-  var MAX_UNITS = 16;
+  /* ── growth math ────────────────────────────────────────
+     Roots  = the 3 Roots answers (underground)
+     Sprout = each checklist item done outside Roots
+     Bar    = checklist items done / total
+     ───────────────────────────────────────────────────── */
+  var ROOT_FIELDS = ["why", "moment", "said_yes"];
+  var ROOT_MAX = 3;
+  var lastSprout = -1;
 
   function filledText(k) { return ((state.data[k] || "") + "").trim().length > 0; }
+  function giveDraftFilled() {
+    return filledText("seed_curtain") || filledText("seed_honest") || filledText("seed_values") || filledText("seed_value");
+  }
+  function anySeedDraft() {
+    return filledText("seed_open") || giveDraftFilled() || filledText("seed_invite");
+  }
+  /* Old saves used one shared seed_value — park it under Behind the Curtain */
+  if (filledText("seed_value") && !filledText("seed_curtain") && !filledText("seed_honest") && !filledText("seed_values")) {
+    state.data.seed_curtain = state.data.seed_value;
+  }
 
-  function unitCount() {
+  function rootCount() {
     var n = 0;
-    for (var i = 0; i < FIELD_UNITS.length; i++) {
-      if (!filledText(FIELD_UNITS[i])) continue;
-      /* starter doesn't need plant drafts for growth display — still count if filled */
-      n++;
-    }
-    if (state.data.page_choice) n++;
-    n += Math.min((state.data.rhythm || []).length, 3);
-    n += Math.min(Tree.counts(Tree.ensure(state)).total, 3);
+    for (var i = 0; i < ROOT_FIELDS.length; i++) if (filledText(ROOT_FIELDS[i])) n++;
     return n;
+  }
+
+  /* Soft-unlock is peek-only for Growth — the full prior chain must be finished. */
+  function sectionEarnsGrowth(id) {
+    if (!id || id === "roots") return true;
+    if (!sectionVisible(id)) return false;
+    return sectionChainComplete(priorSectionId(id));
   }
 
   function doneCount() {
@@ -137,14 +220,71 @@
     return visibleSections().length;
   }
 
+  function checklistProgress() {
+    var secs = visibleSections();
+    var done = 0, total = 0, sproutDone = 0, sproutTotal = 0;
+    for (var i = 0; i < secs.length; i++) {
+      var earns = sectionEarnsGrowth(secs[i].id);
+      var items = checklistItems(secs[i].id);
+      for (var j = 0; j < items.length; j++) {
+        if (items[j].optional) continue;
+        if (!earns && secs[i].id !== "roots") continue;
+        total++;
+        if (items[j].done) done++;
+        if (secs[i].id !== "roots") {
+          sproutTotal++;
+          if (items[j].done) sproutDone++;
+        }
+      }
+    }
+    return { done: done, total: total, sproutDone: sproutDone, sproutTotal: sproutTotal };
+  }
+
+  /* Drop sticky done flags when the work is no longer complete. */
+  function reconcileDoneFlags() {
+    var secs = visibleSections();
+    var changed = false;
+    for (var i = 0; i < secs.length; i++) {
+      var id = secs[i].id;
+      if (state.done[id] && !canComplete(id)) {
+        state.done[id] = false;
+        changed = true;
+      }
+    }
+    return changed;
+  }
+
   /* ── DOM refs ────────────────────────────────────────── */
   var nav = document.getElementById("nav");
-  var railPlant = document.getElementById("railPlant");
+  var homePlant = document.getElementById("homePlant");
   var finishPlant = document.getElementById("finishPlant");
   var caption = document.getElementById("plantCaption");
   var progressFill = document.getElementById("progressFill");
 
-  function esc(t) { return (t + "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"); }
+  function esc(t) { return (t + "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;"); }
+
+  function renderDmStarters() {
+    var host = document.getElementById("dmStarters");
+    if (!host) return;
+    var list = CFG.dmStarters || [];
+    if (!list.length && CFG.dmStarter) {
+      list = [{ label: "Warm opener", text: CFG.dmStarter }];
+    }
+    var html = "";
+    for (var i = 0; i < list.length; i++) {
+      var id = "dmStarter_" + i;
+      var label = list[i].label || ("Option " + (i + 1));
+      html += '<div class="dm-option copy-card">';
+      html += '<button type="button" class="dm-option-head copy-card-head" data-copy-toggle="' + id + '">';
+      html += '<span class="dm-option-label">' + esc(label) + "</span>";
+      html += '<span class="copy-card-chev">+</span></button>';
+      html += '<div class="dm-option-body copy-card-body" id="' + id + '_body" hidden>';
+      html += '<div class="starter-text" id="' + id + '">' + esc(list[i].text) + "</div>";
+      html += '<button type="button" class="copy-btn small" data-copy="' + id + '">Copy it</button>';
+      html += "</div></div>";
+    }
+    host.innerHTML = html;
+  }
 
   function setOverlayOpen(open) {
     document.body.classList.toggle("overlay-open", !!open);
@@ -158,8 +298,13 @@
     if (tg) tg.textContent = CFG.tagline;
     var so = document.getElementById("signoff");
     if (so) so.textContent = CFG.signoff;
-    var starter = document.getElementById("starterText");
-    if (starter) starter.textContent = CFG.dmStarter;
+    renderDmStarters();
+    var coldTag = document.getElementById("coldOutreachTag");
+    var coldBody = document.getElementById("coldOutreachBody");
+    if (CFG.coldOutreach) {
+      if (coldTag) coldTag.textContent = CFG.coldOutreach.tag;
+      if (coldBody) coldBody.innerHTML = CFG.coldOutreach.body;
+    }
     var pc = CFG.pageOptions;
     var ct = document.getElementById("customTitle"), cd = document.getElementById("customDesc");
     var gt = document.getElementById("genericTitle"), gd = document.getElementById("genericDesc");
@@ -169,10 +314,19 @@
     if (gd) gd.textContent = pc.generic.desc;
 
     /* onboarding static copy */
+    var team = CFG.teamDisplayName || "The Fresh Grove";
+    function obCopy(text) {
+      return (text || "").replace(/The Fresh Grove/g, team);
+    }
     setText("obWelcomeEyebrow", OB.welcomeEyebrow);
-    setText("obWelcomeBody", (OB.welcomeBody || "").replace(/The Fresh Grove/g, CFG.teamDisplayName || "The Fresh Grove"));
+    setText("obWelcomeBody", obCopy(OB.welcomeBody));
     setText("onboardTitle", OB.welcomeTitle);
     setText("onboardingNext", OB.welcomeCta || "Let's go");
+    setText("obCircleEyebrow", OB.circleEyebrow);
+    setText("obCircleTitle", OB.circleTitle);
+    setText("obCircleBody", obCopy(OB.circleBody));
+    setText("obCircleNote", obCopy(OB.circleNote));
+    setText("onboardingCircleNext", OB.circleCta || "I'm in");
     setText("obNameEyebrow", OB.nameEyebrow);
     setText("obNameTitle", OB.nameTitle);
     setText("obNameHint", OB.nameHint);
@@ -186,13 +340,31 @@
     if (nameInput && OB.namePlaceholder) nameInput.placeholder = OB.namePlaceholder;
 
     if (MODES.starter) {
+      setText("modePickStarterTag", MODES.starter.tag || "Soft start");
       setText("modePickStarterLabel", MODES.starter.label);
       setText("modePickStarterDesc", MODES.starter.desc);
     }
     if (MODES.full) {
+      setText("modePickFullTag", MODES.full.tag || "All in");
       setText("modePickFullLabel", MODES.full.label);
       setText("modePickFullDesc", MODES.full.desc);
     }
+
+    renderTermLibrary();
+  }
+
+  function renderTermLibrary() {
+    var list = document.getElementById("hubTermList");
+    if (!list) return;
+    var terms = CFG.terms || [];
+    var html = "";
+    for (var i = 0; i < terms.length; i++) {
+      html += '<div class="term-item">' +
+        '<span class="term-name">' + esc(terms[i].term) + "</span>" +
+        '<span class="term-def">' + esc(terms[i].def) + "</span>" +
+        "</div>";
+    }
+    list.innerHTML = html;
   }
 
   function setText(id, text) {
@@ -216,32 +388,32 @@
     var wh = document.getElementById("welcomeHeadline");
     if (wh) {
       wh.innerHTML = name
-        ? ("Hey " + esc(name) + ".<br>Let's put down roots.")
-        : "You said yes.<br>Let's put down roots.";
+        ? ("Hey " + esc(name) + ".<br>Watch it grow.")
+        : "Watch it grow.";
     }
 
     var pathNote = document.getElementById("welcomePathNote");
     if (pathNote) {
-      if (isStarter()) {
-        pathNote.innerHTML = "You're on <strong>Getting started</strong> — four calm steps. <strong>Roots</strong> grow every time you fill a box. Your <strong>sprout</strong> grows when you finish a section.";
-      } else if (isFull()) {
-        pathNote.innerHTML = "You're on the <strong>Full runway</strong> — six sections. <strong>Roots</strong> grow with every answer. Your <strong>sprout</strong> grows when you finish a section — and blooms at the end.";
-      } else {
-        pathNote.textContent = "";
-      }
+      pathNote.innerHTML = "Your plant lives here. The steps on the left grow it — Calendar, Know, and more stay one tap away at the bottom.";
     }
 
     var rh = document.getElementById("rootsHeadline");
     if (rh) rh.textContent = name ? (name + " — plant your roots") : "Plant Your Roots";
 
-    /* section numbers shift in starter (no tree/plant) */
+    /* section numbers: roots=01, ground=02, then grove/tree/plant/tend */
     var groundNum = document.getElementById("groundNum");
+    var groveNum = document.getElementById("groveNum");
+    var treeNum = document.getElementById("treeNum");
+    var plantNum = document.getElementById("plantNum");
     var tendNum = document.getElementById("tendNum");
+    if (groundNum) groundNum.textContent = "02";
     if (isStarter()) {
-      if (groundNum) groundNum.textContent = "03";
+      if (groveNum) groveNum.textContent = "03";
       if (tendNum) tendNum.textContent = "04";
     } else {
-      if (groundNum) groundNum.textContent = "04";
+      if (groveNum) groveNum.textContent = "03";
+      if (treeNum) treeNum.textContent = "04";
+      if (plantNum) plantNum.textContent = "05";
       if (tendNum) tendNum.textContent = "06";
     }
 
@@ -252,29 +424,39 @@
   /* ── "What should I do today?" — one next move, no overwhelm ─ */
   function sectionStarted(id) {
     if (id === "roots") return filledText("why") || filledText("moment") || filledText("said_yes");
-    if (id === "grove") return groveNames().length > 0 || filledText("warm_pick");
+    if (id === "grove") {
+      return customerNames().length > 0 || groveNames().length > 0
+        || grovePicks("customer_first").length > 0 || grovePicks("warm_first").length > 0;
+    }
     if (id === "tree") return Tree.counts(Tree.ensure(state)).total > 0;
     if (id === "ground") return !!state.data.page_choice || filledText("page_story");
-    if (id === "plant") return filledText("seed_open") || filledText("seed_value") || filledText("seed_invite");
-    if (id === "tend") return (state.data.rhythm || []).length > 0;
+    if (id === "plant") return anySeedDraft();
+    if (id === "tend") {
+      var marked = window.FS.Calendar && window.FS.Calendar.countMarked
+        ? window.FS.Calendar.countMarked(state.data.calendar || {})
+        : 0;
+      return marked > 0;
+    }
     return false;
   }
 
   function calendarWeekPulse() {
     if (!window.FS.Calendar) return { posted: 0, drafted: 0, total: 0, restToday: false };
     var cal = state.data.calendar || {};
-    var plan = window.FS.Calendar.plan(CFG, cal, state.data);
-    var week = window.FS.Calendar.weekSlice(plan);
+    var plan = window.FS.Calendar.plan(CFG, cal, state.data, { cadence: state.data.calendarCadence === true });
+    var slice = window.FS.Calendar.weekSlice(plan, new Date(), state.data.calendarWeekOffset || 0);
+    var week = slice.days || [];
     var stats = window.FS.Calendar.weekStats(week);
     var today = window.FS.Calendar.ymd(new Date());
     var todaySlot = null;
     for (var i = 0; i < week.length; i++) if (week[i].date === today) todaySlot = week[i];
+    var restToday = !!(todaySlot && todaySlot.suggested && todaySlot.suggested.reactive && !(todaySlot.items || []).length);
     return {
       posted: stats.posted,
       drafted: stats.drafted,
       total: stats.total,
-      restToday: !!(todaySlot && todaySlot.reactive),
-      todayStatus: todaySlot ? todaySlot.status : "todo"
+      restToday: restToday,
+      todayStatus: "todo"
     };
   }
 
@@ -289,44 +471,44 @@
         cta: sectionStarted("roots") ? "Finish your Roots →" : "Start with Roots →",
         why: "Everything you share later grows from this."
       },
-      grove: {
-        title: "Map a few names.",
-        body: "Brain-dump people you'd actually want to tell. Even five warm names is a real win.",
-        cta: sectionStarted("grove") ? "Keep mapping your grove →" : "Open your grove →",
-        why: "You're not building a spray list — just people who matter."
-      },
-      tree: {
-        title: "Sketch your dream team.",
-        body: "Add three people you'd love building with. Hopeful is fine — flip them to committed when they say yes.",
-        cta: sectionStarted("tree") ? "Keep growing your tree →" : "Open Grow Your Tree →",
-        why: "Seeing faces makes “downline” feel like family."
-      },
       ground: {
         title: "Claim a patch of ground.",
         body: "Pick a page option and draft one warm opening line. That's enough for today.",
         cta: sectionStarted("ground") ? "Finish your page draft →" : "Claim your ground →",
         why: "Curious people need one place to land."
       },
+      grove: {
+        title: "Map a few names.",
+        body: "List people who'd love the products, then tap up to 5 first chats — they land on your calendar. Partners are optional if you're building.",
+        cta: sectionStarted("grove") ? "Keep mapping your grove →" : "Open your grove →",
+        why: "Affiliate-style or builder — customers first either way."
+      },
+      tree: {
+        title: "Sketch your dream team.",
+        body: "Add three people you'd love building with. Hopeful is fine — flip them to committed when they say yes.",
+        cta: sectionStarted("tree") ? "Keep growing your tree →" : "Open Grow Your Tree →",
+        why: "Seeing faces turns a vague list into real people."
+      },
       plant: {
         title: "Draft today's seeds.",
-        body: "Write your starter trio — an open loop, a give, and a soft door. No posting required yet.",
+        body: "Open a post type, learn it, and draft inside it — open loop, a give, and a soft door. No posting required yet.",
         cta: sectionStarted("plant") ? "Keep drafting →" : "Open Post Studio →",
         why: "Launch feels calmer when the words are already yours."
       },
       tend: {
-        title: "Pick a rhythm you can keep.",
-        body: "Choose at least three weekly habits. Consistency beats a perfect plan you abandon.",
-        cta: sectionStarted("tend") ? "Lock in your rhythm →" : "Open Tend It →",
+        title: "Tend your calendar.",
+        body: "Open week or month view. Edit a draft, schedule a reach-out, or mark three days done. Nothing auto-posts.",
+        cta: sectionStarted("tend") ? "Keep your calendar warm →" : "Open Calendar →",
         why: "A garden grows from showing up, not one big planting day."
       }
     };
 
     for (var i = 0; i < secs.length; i++) {
       var s = secs[i];
-      if (!state.done[s.id]) {
+      if (!state.done[s.id] && isModuleUnlocked(s.id)) {
         var tip = tips[s.id] || {
           title: "Keep going.",
-          body: "Your next section is waiting — one small step.",
+          body: "Your next module is waiting — one small step.",
           cta: "Continue →",
           why: ""
         };
@@ -368,9 +550,9 @@
     if (Cloud && Cloud.isSignedIn && Cloud.isSignedIn()) {
       return {
         title: "You're in motion.",
-        body: "Runway done and calendar humming. Check My people if you're leading — or leave your leader a quiet ping that you're still here.",
+        body: "Growth checklist humming and calendar warm. Open Team if you're leading partners — or leave your leader a quiet ping that you're still here.",
         why: "Showing up is the whole game, " + hey + ".",
-        primary: { label: "My people →", goto: "leader" },
+        primary: { label: "Team →", goto: "leader" },
         secondary: { label: "Notify my leader", goto: "done" }
       };
     }
@@ -431,7 +613,7 @@
     } else {
       if (eyebrow) eyebrow.textContent = "IN FULL BLOOM";
       if (headline) headline.textContent = name ? ("Look what you grew, " + name + ".") : "Look what you grew.";
-      if (body) body.innerHTML = "You've got your story, your grove, your dream tree, your page, your first seeds, and a rhythm to carry you to launch. That's more than most people have on day <em>one</em> — and you did it before the doors even opened. Now keep showing up — and keep flipping those 🌱 to 🌳.";
+      if (body) body.innerHTML = "You've got your story, your grove, clear facts in Know Ringana, and a rhythm you can keep. That's calm prep — not a scramble. Keep showing up, keep flipping 🌱 to 🌳, and let launch feel like opening a door you already helped build.";
       if (levelUp) levelUp.hidden = true;
     }
   }
@@ -444,26 +626,14 @@
 
   function updateModeUI() {
     applyModeClass();
-    var badge = document.getElementById("modeBadge");
-    if (badge) {
-      if (isStarter()) {
-        badge.hidden = false;
-        badge.textContent = (MODES.starter && MODES.starter.badge) || "Getting started";
-      } else if (isFull()) {
-        badge.hidden = false;
-        badge.textContent = (MODES.full && MODES.full.badge) || "Full runway";
-      } else {
-        badge.hidden = true;
-      }
-    }
     var starterBtn = document.getElementById("modeStarter");
     var fullBtn = document.getElementById("modeFull");
     if (starterBtn) starterBtn.classList.toggle("on", isStarter());
     if (fullBtn) fullBtn.classList.toggle("on", isFull());
     var hint = document.getElementById("hubModeHint");
     if (hint) {
-      if (isStarter()) hint.textContent = "Calm 4-step path. Switch to Full runway anytime for the tree + Post Studio.";
-      else if (isFull()) hint.textContent = "All six sections unlocked. Switch to Getting started for a simpler view — your progress stays.";
+      if (isStarter()) hint.textContent = "Calm 4-step path. Switch to Full runway anytime for the tree, Post Studio, and Team.";
+      else if (isFull()) hint.textContent = "All six sections unlocked, plus Team in the bottom nav. Switch to Getting started for a simpler view — your progress stays.";
       else hint.textContent = "";
     }
     renderGreetings();
@@ -475,7 +645,9 @@
     var prev = state.settings.hubMode;
     state.settings.hubMode = mode;
     /* if currently on a section hidden in new mode, bounce to welcome */
-    if (state.active !== "welcome" && state.active !== "done" && !sectionVisible(state.active)) {
+    if (state.active === "leader" && mode === "starter") {
+      state.active = "welcome";
+    } else if (state.active !== "welcome" && state.active !== "done" && !sectionVisible(state.active)) {
       state.active = "welcome";
     }
     save();
@@ -489,6 +661,41 @@
   }
 
   /* ── post studio ─────────────────────────────────────── */
+  function bindSeedDraftFields(root) {
+    if (!root) return;
+    var fields = root.querySelectorAll("[data-key]");
+    for (var i = 0; i < fields.length; i++) {
+      (function (f) {
+        var k = f.getAttribute("data-key");
+        if (state.data[k]) f.value = state.data[k];
+        runClaimCheck(k);
+        f.addEventListener("input", function () {
+          state.data[k] = f.value;
+          runClaimCheck(k);
+          var beforeSprout = lastSprout;
+          liveRefresh({ silent: true });
+          if (checklistProgress().sproutDone > beforeSprout) {
+            lastSprout = beforeSprout;
+            renderPlant({ deferCelebrate: true });
+          } else if (pendingGrowth) {
+            clearTimeout(growthIdleTimer);
+            growthIdleTimer = setTimeout(flushPendingGrowth, GROWTH_IDLE_MS);
+          }
+          clearTimeout(flashTimers._seedDraft);
+          flashTimers._seedDraft = setTimeout(function () {
+            save();
+            flash("plant");
+            renderModuleChecklists();
+            refreshButtons();
+          }, 500);
+        });
+        f.addEventListener("blur", function () {
+          if (pendingGrowth) flushPendingGrowth();
+        });
+      })(fields[i]);
+    }
+  }
+
   function renderSeedTypes() {
     var wrap = document.getElementById("seedTypes");
     if (!wrap) return;
@@ -498,29 +705,45 @@
     for (var i = 0; i < types.length; i++) {
       var st = types[i];
       var isOpen = open === st.id;
-      html += '<div class="seed-card' + (isOpen ? " open" : "") + '">';
-      html += '<button class="seed-head" data-seedtype="' + st.id + '">';
+      var draftKey = st.draftKey;
+      var hasDraft = draftKey && filledText(draftKey);
+      html += '<div class="seed-card' + (isOpen ? " open" : "") + (hasDraft ? " drafted" : "") + '">';
+      html += '<button type="button" class="seed-head" data-seedtype="' + st.id + '">';
       html += '<span class="seed-icon">' + st.icon + '</span>';
       html += '<span class="seed-titles"><span class="seed-name">' + esc(st.name) + '</span><span class="seed-tag">' + esc(st.tagline) + '</span></span>';
       html += '<span class="seed-chev">' + (isOpen ? "−" : "+") + '</span>';
       html += '</button>';
       if (isOpen) {
         html += '<div class="seed-body">';
-        html += '<div class="seed-block"><div class="seed-label">WHY IT WORKS</div><p>' + esc(st.psychology) + '</p></div>';
+        if (st.works_today) {
+          html += '<div class="seed-block today"><div class="seed-label">WHY IT WORKS ON SOCIAL NOW</div><p>' + esc(st.works_today) + '</p></div>';
+        }
+        html += '<div class="seed-block"><div class="seed-label">WHY PEOPLE RESPOND</div><p>' + esc(st.psychology) + '</p></div>';
         html += '<div class="seed-block"><div class="seed-label">THE TEMPLATE</div><p>' + esc(st.template) + '</p></div>';
-        html += '<div class="seed-block example"><div class="seed-label">WORKED EXAMPLE</div><p class="seed-example" id="seedEx_' + st.id + '">' + esc(st.example) + '</p><button class="copy-btn small" data-copy="seedEx_' + st.id + '">Copy it</button></div>';
+        html += '<div class="seed-block example"><div class="seed-label">WORKED EXAMPLE</div><p class="seed-example" id="seedEx_' + st.id + '">' + esc(st.example) + '</p><button type="button" class="copy-btn small" data-copy="seedEx_' + st.id + '">Copy it</button></div>';
         html += '<div class="seed-block rule"><div class="seed-label">THE CLASSY RULE</div><p>' + esc(st.classy_rule) + '</p></div>';
+        if (draftKey) {
+          html += '<div class="seed-block draft field" data-field="' + draftKey + '">';
+          html += '<div class="seed-label">YOUR DRAFT</div>';
+          html += '<p class="seed-draft-hint">' + esc(st.draftHint || "Write yours — pull from Roots when you can.") + '</p>';
+          html += '<textarea data-key="' + draftKey + '" rows="3" placeholder="' + esc(st.draftPlaceholder || "") + '"></textarea>';
+          html += '<span class="claim-check" data-check="' + draftKey + '"></span>';
+          html += '</div>';
+        }
         html += '</div>';
       }
       html += '</div>';
     }
     wrap.innerHTML = html;
+    bindSeedDraftFields(wrap);
   }
 
   function renderHooks() {
     var wrap = document.getElementById("hookList");
     if (!wrap) return;
-    var hooks = CFG.hookBank || [];
+    var hooks = (CFG.hookBank && CFG.hookBank.length)
+      ? CFG.hookBank
+      : ((window.FS.CONTENT && window.FS.CONTENT.openLoops) || []);
     var html = "";
     for (var i = 0; i < hooks.length; i++) {
       html += '<div class="hook-row"><span class="hook-text" id="hook_' + i + '">' + esc(hooks[i]) + '</span><button class="copy-btn small" data-copy="hook_' + i + '">Copy</button></div>';
@@ -528,22 +751,421 @@
     wrap.innerHTML = html;
   }
 
+  function renderCopyShelf(wrapId, items, prefix) {
+    var wrap = document.getElementById(wrapId);
+    if (!wrap || !items) return;
+    var html = "";
+    for (var i = 0; i < items.length; i++) {
+      var it = items[i];
+      var id = prefix + "_" + (it.id || i);
+      var title = it.title || it.icon || ("Option " + (i + 1));
+      if (it.icon && it.title) title = it.icon + " " + it.title;
+      html += '<div class="copy-card' + (it.open ? " open" : "") + '">';
+      html += '<button type="button" class="copy-card-head" data-copy-toggle="' + id + '">';
+      html += '<span class="copy-card-title">' + esc(title) + '</span>';
+      html += '<span class="copy-card-chev">+</span></button>';
+      html += '<div class="copy-card-body" id="' + id + '_body" hidden>';
+      html += '<p class="copy-card-text" id="' + id + '">' + esc(it.body || "") + '</p>';
+      html += '<button type="button" class="copy-btn small" data-copy="' + id + '">Copy</button>';
+      html += '</div></div>';
+    }
+    wrap.innerHTML = html;
+  }
+
+  function renderContentBanks() {
+    var C = window.FS.CONTENT;
+    if (!C) return;
+    renderCopyShelf("curiosityList", C.curiosity, "cur");
+    renderCopyShelf("calendarCuriosityList", C.curiosity, "calcur");
+    var intro = document.getElementById("productStoryIntro");
+    if (intro && C.productStory) intro.textContent = C.productStory.intro;
+    renderCopyShelf("productStoryList", C.productStory && C.productStory.posts, "prod");
+    renderCopyShelf("businessStoryList", C.businessStory, "biz");
+  }
+
+  function renderKnowPanel() {
+    var C = window.FS.CONTENT;
+    if (!C) return;
+    var pi = document.getElementById("pillarsIntro");
+    if (pi) pi.textContent = C.pillarsIntro || "";
+    var pillarsWrap = document.getElementById("pillarsList");
+    if (pillarsWrap && C.pillars) {
+      pillarsWrap.innerHTML = C.pillars.map(function (p) {
+        return '<div class="fact-card pillar-card"><div class="fact-label">' + esc(p.icon + " " + p.title) +
+          '</div><p>' + esc(p.body) + '</p></div>';
+      }).join("");
+    }
+    var factsWrap = document.getElementById("funFactsList");
+    if (factsWrap && C.funFacts) {
+      factsWrap.innerHTML = C.funFacts.map(function (f) {
+        return '<div class="fact-card"><div class="fact-label">' + esc(f.title) +
+          '</div><p>' + esc(f.body) + '</p></div>';
+      }).join("");
+    }
+    var prodKnow = document.getElementById("productKnowList");
+    if (prodKnow && C.productStory && C.productStory.posts) {
+      prodKnow.innerHTML = C.productStory.posts.map(function (p) {
+        return '<div class="fact-card"><div class="fact-label">' + esc(p.icon + " " + p.title) +
+          '</div><p>' + esc(p.body.replace(/^[^\n]+\n\n/, "")) + '</p></div>';
+      }).join("");
+    }
+    var bizKnow = document.getElementById("businessKnowList");
+    if (bizKnow && C.businessStory) {
+      bizKnow.innerHTML = C.businessStory.map(function (p) {
+        return '<div class="fact-card"><div class="fact-label">' + esc(p.icon + " " + p.title) +
+          '</div><p>' + esc(p.body.replace(/^[^\n]+\n\n/, "")) + '</p></div>';
+      }).join("");
+    }
+    var faqWrap = document.getElementById("faqList");
+    if (faqWrap && C.faqs) {
+      var openFaq = state.data.openFaq || "";
+      faqWrap.innerHTML = C.faqs.map(function (f, i) {
+        var id = "faq_" + i;
+        var isOpen = openFaq === id;
+        return '<div class="faq-item' + (isOpen ? " open" : "") + '">' +
+          '<button type="button" class="faq-q" data-faq="' + id + '">' + esc(f.q) +
+          '<span class="faq-chev">' + (isOpen ? "−" : "+") + '</span></button>' +
+          (isOpen ? '<div class="faq-a"><p id="' + id + '">' + esc(f.a) + '</p>' +
+            '<button type="button" class="copy-btn small" data-copy="' + id + '">Copy answer</button></div>' : "") +
+          '</div>';
+      }).join("");
+    }
+  }
+
+  /* ── Product learning library ─────────────────────────── */
+  function ensureProductBrowse() {
+    if (!state.productBrowse) {
+      state.productBrowse = { category: null, subcategory: null, productId: null, q: "" };
+    }
+    return state.productBrowse;
+  }
+
+  function productLib() {
+    return window.FS.PRODUCT_LIB || { categories: [], products: [], disclaimer: "", sourceNote: "" };
+  }
+
+  function productById(id) {
+    var list = productLib().products || [];
+    for (var i = 0; i < list.length; i++) if (list[i].id === id) return list[i];
+    return null;
+  }
+
+  function categoryById(id) {
+    var cats = productLib().categories || [];
+    for (var i = 0; i < cats.length; i++) if (cats[i].id === id) return cats[i];
+    return null;
+  }
+
+  function productsInScope(browse) {
+    var list = productLib().products || [];
+    var q = ((browse && browse.q) || "").trim().toLowerCase();
+    return list.filter(function (p) {
+      if (browse.category && p.category !== browse.category) return false;
+      if (browse.subcategory && p.subcategory !== browse.subcategory) return false;
+      if (!q) return true;
+      var hay = [
+        p.name, p.tagline, p.summary, p.heroIngredients, p.ingredientsNote,
+        p.application, (p.claims || []).join(" "), (p.forWho || []).join(" "),
+        (p.badges || []).join(" "), p.step, p.subcategory, p.category
+      ].join(" ").toLowerCase();
+      return hay.indexOf(q) > -1;
+    });
+  }
+
+  function renderProductListRows(items) {
+    if (!items.length) return '<p class="prod-empty">No products match that search in this view. Try another word, or clear search.</p>';
+    return '<div class="prod-list">' + items.map(function (p) {
+      return '<button type="button" class="prod-row" data-prod-open="' + esc(p.id) + '">' +
+        '<span class="prod-row-step">' + esc(p.step || p.subcategory || "") + "</span>" +
+        '<span class="prod-row-name">' + esc(p.name) + "</span>" +
+        '<span class="prod-row-tag">' + esc(p.tagline || p.summary.slice(0, 110)) + "</span>" +
+        "</button>";
+    }).join("") + "</div>";
+  }
+
+  function renderProductDetail(p) {
+    var cat = categoryById(p.category);
+    var html = "";
+    html += '<div class="prod-crumb">' +
+      '<button type="button" data-prod-nav="hub">All products</button><span>/</span>' +
+      '<button type="button" data-prod-nav="cat" data-prod-cat="' + esc(p.category) + '">' + esc(cat ? cat.label : p.category) + "</button><span>/</span>" +
+      "<span>" + esc(p.name) + "</span></div>";
+    html += '<div class="prod-detail-kicker">' + esc((cat ? cat.label : "") + (p.step ? " · " + p.step : "")) + "</div>";
+    html += '<h1 class="prod-detail-title">' + esc(p.name) + "</h1>";
+    if (p.tagline) html += '<p class="prod-detail-tagline">' + esc(p.tagline) + "</p>";
+    if (p.summary) html += '<p class="prod-detail-summary">' + esc(p.summary) + "</p>";
+    if (p.badges && p.badges.length) {
+      html += '<div class="prod-badges">' + p.badges.map(function (b) {
+        return '<span class="prod-badge">' + esc(b) + "</span>";
+      }).join("") + "</div>";
+    }
+    if (p.heroIngredients) {
+      html += '<div class="prod-block"><h3>Hero ingredients</h3><p>' + esc(p.heroIngredients) + "</p></div>";
+    }
+    if (p.claims && p.claims.length) {
+      html += '<div class="prod-block claims"><h3>Study / performance notes</h3><ul>' +
+        p.claims.map(function (c) { return "<li>" + esc(c) + "</li>"; }).join("") +
+        "</ul><p style=\"margin-top:8px;font-size:12px\">As published on the ringana.com product page. Not a guarantee of individual results.</p></div>";
+    }
+    if (p.forWho && p.forWho.length) {
+      html += '<div class="prod-block"><h3>Who it’s for</h3><ul>' +
+        p.forWho.map(function (c) { return "<li>" + esc(c) + "</li>"; }).join("") + "</ul></div>";
+    }
+    if (p.notFor && p.notFor.length) {
+      html += '<div class="prod-block notfor"><h3>Who it’s not for / cautions</h3><ul>' +
+        p.notFor.map(function (c) { return "<li>" + esc(c) + "</li>"; }).join("") + "</ul></div>";
+    }
+    if (p.application) {
+      html += '<div class="prod-block"><h3>How to use</h3><p>' + esc(p.application) + "</p></div>";
+    }
+    if (p.ingredientsNote) {
+      html += '<div class="prod-block"><h3>Ingredients</h3><p>' + esc(p.ingredientsNote) + "</p></div>";
+    }
+    html += '<p class="prod-source">Source: <a href="' + esc(p.sourceUrl) + '" target="_blank" rel="noopener noreferrer">View on ringana.com</a></p>';
+    html += '<div class="prod-back-row">' +
+      '<button type="button" class="btn-ghost" data-prod-nav="cat" data-prod-cat="' + esc(p.category) + '">← Back to ' + esc(cat ? cat.label : "category") + "</button>" +
+      '<button type="button" class="btn-ghost" data-goto="know">Know Ringana</button>' +
+      "</div>";
+    return html;
+  }
+
+  function renderProductLibrary() {
+    var root = document.getElementById("productLibRoot");
+    if (!root) return;
+    var lib = productLib();
+    var browse = ensureProductBrowse();
+    var html = "";
+
+    if (browse.productId) {
+      var detail = productById(browse.productId);
+      if (!detail) {
+        browse.productId = null;
+      } else {
+        root.innerHTML = renderProductDetail(detail);
+        return;
+      }
+    }
+
+    html += '<div class="prod-crumb">';
+    html += '<button type="button" data-goto="know">← Know Ringana</button>';
+    if (browse.category) {
+      var catCrumb = categoryById(browse.category);
+      html += '<span>/</span><button type="button" data-prod-nav="hub">All products</button>';
+      html += '<span>/</span><span>' + esc(catCrumb ? catCrumb.label : browse.category) + "</span>";
+    }
+    html += "</div>";
+
+    if (!browse.category) {
+      html += '<h1 class="prod-head-title">Learn the products</h1>';
+      html += '<p class="prod-head-sub">' + esc(lib.sourceNote || "Browse by category — searchable and ready to learn.") + "</p>";
+    } else {
+      var cat = categoryById(browse.category);
+      html += '<h1 class="prod-head-title">' + esc(cat ? cat.label : browse.category) + "</h1>";
+      html += '<p class="prod-head-sub">' + esc(cat ? cat.blurb : "") + "</p>";
+    }
+
+    html += '<label class="sr-only" for="productSearch">Search products</label>';
+    html += '<input type="search" id="productSearch" class="prod-search" placeholder="Search ingredients, names, skin concerns…" value="' + esc(browse.q || "") + '" autocomplete="off">';
+    var scoped = productsInScope(browse);
+    html += '<p class="prod-search-meta">' + scoped.length + " product" + (scoped.length === 1 ? "" : "s") +
+      (browse.q ? " matching “" + esc(browse.q) + "”" : " to explore") + "</p>";
+    html += '<p class="prod-disclaimer">' + esc(lib.disclaimer || "") + "</p>";
+
+    if (!browse.category && !browse.q) {
+      html += '<div class="prod-cat-grid">';
+      (lib.categories || []).forEach(function (c) {
+        var n = (lib.products || []).filter(function (p) { return p.category === c.id; }).length;
+        html += '<button type="button" class="prod-cat-card" data-prod-nav="cat" data-prod-cat="' + esc(c.id) + '">' +
+          '<span class="prod-cat-card-count">' + n + "</span>" +
+          '<span class="prod-cat-card-label">' + esc(c.label) + "</span>" +
+          '<span class="prod-cat-card-blurb">' + esc(c.blurb) + "</span></button>";
+      });
+      html += "</div>";
+    } else if (!browse.category && browse.q) {
+      html += renderProductListRows(scoped);
+    } else {
+      var catObj = categoryById(browse.category);
+      if (catObj && catObj.subs && catObj.subs.length && !browse.q) {
+        html += '<div class="prod-sub-row">';
+        html += '<button type="button" class="prod-sub-chip' + (!browse.subcategory ? " on" : "") + '" data-prod-nav="cat" data-prod-cat="' + esc(browse.category) + '" data-prod-sub="">All</button>';
+        catObj.subs.forEach(function (s) {
+          html += '<button type="button" class="prod-sub-chip' + (browse.subcategory === s.id ? " on" : "") +
+            '" data-prod-nav="cat" data-prod-cat="' + esc(browse.category) + '" data-prod-sub="' + esc(s.id) + '">' +
+            esc(s.label) + "</button>";
+        });
+        html += "</div>";
+      }
+      html += renderProductListRows(scoped);
+    }
+
+    root.innerHTML = html;
+    var search = document.getElementById("productSearch");
+    if (search) {
+      search.addEventListener("input", function () {
+        ensureProductBrowse().q = search.value || "";
+        renderProductLibrary();
+        var again = document.getElementById("productSearch");
+        if (again) {
+          again.focus();
+          var len = again.value.length;
+          try { again.setSelectionRange(len, len); } catch (e) {}
+        }
+      });
+    }
+  }
+
   function renderNav() {
     var secs = visibleSections();
     var html = "";
     for (var i = 0; i < secs.length; i++) {
       var s = secs[i];
-      var cls = "nav-item" + (state.active === s.id ? " active" : "") + (state.done[s.id] ? " done" : "");
-      html += '<button class="' + cls + '" data-goto="' + s.id + '"><span class="nav-dot">' + (state.done[s.id] ? "✓" : (i + 1)) + '</span><span><span class="nav-label">' + s.label + '</span><span class="nav-sub">' + s.sub + '</span></span></button>';
+      var locked = !isModuleUnlocked(s.id);
+      var cls = "nav-item" +
+        (state.active === s.id ? " active" : "") +
+        (state.done[s.id] ? " done" : "") +
+        (locked ? " locked" : "");
+      var dot = state.done[s.id] ? "✓" : (locked ? "🔒" : String(i + 1));
+      var sub = locked ? "Locked · finish previous first" : s.sub;
+      html += '<button class="' + cls + '" data-goto="' + s.id + '"' +
+        (locked ? ' aria-disabled="true"' : "") +
+        '><span class="nav-dot">' + dot + '</span><span><span class="nav-label">' +
+        s.label + '</span><span class="nav-sub">' + esc(sub) + "</span></span></button>";
     }
     nav.innerHTML = html;
+  }
+
+  function hideLockToast() {
+    var el = document.getElementById("lockToast");
+    if (el) el.hidden = true;
+  }
+
+  function showLockToast(targetId) {
+    var el = document.getElementById("lockToast");
+    if (!el) return;
+    var prior = priorSectionId(targetId);
+    var priorName = prior ? sectionLabel(prior) : "the previous module";
+    el.hidden = false;
+    el.innerHTML =
+      '<div class="lock-toast-inner">' +
+      "<p>That module unlocks after you finish <strong>" + esc(priorName) + "</strong>.</p>" +
+      '<div class="lock-toast-actions">' +
+      '<button type="button" class="btn" data-goto="' + esc(prior || "roots") + '">Go finish it →</button>' +
+      '<button type="button" class="btn-ghost" data-soft-unlock="' + esc(targetId) + '">Open anyway</button>' +
+      '<button type="button" class="lock-toast-x" id="lockToastClose" aria-label="Dismiss">×</button>' +
+      "</div></div>";
+  }
+
+  function checklistItems(id) {
+    if (id === "roots") {
+      return [
+        { done: filledText("why"), label: "Your why" },
+        { done: filledText("moment"), label: "Your moment" },
+        { done: filledText("said_yes"), label: "Why you said yes" }
+      ];
+    }
+    if (id === "grove") {
+      var c = customerNames().length;
+      var cp = grovePicks("customer_first").length;
+      var need = Math.min(5, Math.max(c, 0));
+      var n = groveNames().length;
+      var wp = grovePicks("warm_first").length;
+      return [
+        { done: c >= 5, label: "At least 5 customer names (" + c + "/5)" },
+        { done: c >= 5 && cp >= need && need > 0, label: "Tap first customer chats (" + cp + "/" + (need || 5) + ")" },
+        /* Optional — shown for builders, never inflate Growth denominator */
+        { done: n >= 1, label: "Partner names (optional) · " + n, optional: true },
+        { done: wp > 0, label: "Partner first chats (optional) · " + wp + "/5", optional: true }
+      ];
+    }
+    if (id === "tree") {
+      var named = 0;
+      (function walk(arr) {
+        for (var i = 0; i < arr.length; i++) {
+          if ((arr[i].name || "").trim()) named++;
+          walk(arr[i].children || []);
+        }
+      })(Tree.ensure(state));
+      return [
+        { done: named >= 1, label: "Add someone to your front line" },
+        { done: named >= 3, label: "At least 3 people on your tree (" + named + "/3)" }
+      ];
+    }
+    if (id === "ground") {
+      return [
+        { done: !!state.data.page_choice, label: "Pick a page option" },
+        { done: filledText("page_story"), label: "Draft your opening line" }
+      ];
+    }
+    if (id === "plant") {
+      return [
+        { done: filledText("seed_open"), label: "Open loop draft" },
+        { done: giveDraftFilled(), label: "Give draft (curtain, honest note, or values)" },
+        { done: filledText("seed_invite"), label: "Soft door draft" }
+      ];
+    }
+    if (id === "tend") {
+      var Cal = window.FS.Calendar;
+      var posted = Cal && Cal.countPosted ? Cal.countPosted(state.data.calendar || {}) : 0;
+      var drafted = Cal && Cal.countDrafted ? Cal.countDrafted(state.data.calendar || {}) : 0;
+      return [
+        { done: drafted >= 1 || posted >= 1, label: "Draft or mark a card Done (" + (drafted + posted) + ")" },
+        { done: posted >= 3, label: "Mark 3 cards Done (" + posted + "/3)" }
+      ];
+    }
+    return [];
+  }
+
+  function renderModuleChecklists() {
+    var secs = visibleSections();
+    for (var i = 0; i < secs.length; i++) {
+      var s = secs[i];
+      var panel = document.getElementById("panel-" + s.id);
+      if (!panel) continue;
+      var box = panel.querySelector("[data-module-check]");
+      if (!box) {
+        box = document.createElement("div");
+        box.className = "module-check";
+        box.setAttribute("data-module-check", s.id);
+        var after = panel.querySelector(".sec-sub") || panel.querySelector("h1") || panel.querySelector(".sec-num");
+        if (after) after.insertAdjacentElement("afterend", box);
+        else panel.insertBefore(box, panel.firstChild);
+      }
+      var items = checklistItems(s.id);
+      if (!items.length) {
+        box.hidden = true;
+        continue;
+      }
+      box.hidden = false;
+      var required = [];
+      for (var r = 0; r < items.length; r++) if (!items[r].optional) required.push(items[r]);
+      var doneN = 0;
+      for (var j = 0; j < required.length; j++) if (required[j].done) doneN++;
+      var all = required.length > 0 && doneN === required.length;
+      var html = '<div class="module-check-head">' +
+        '<span class="module-check-tag">MODULE CHECKLIST</span>' +
+        '<span class="module-check-count' + (all ? " on" : "") + '">' + doneN + " of " + required.length + " done</span>" +
+        "</div><ul class=\"module-check-list\">";
+      for (var k = 0; k < items.length; k++) {
+        html += '<li class="' + (items[k].done ? "is-done" : "") + (items[k].optional ? " is-optional" : "") + '">' +
+          '<span class="module-check-mark" aria-hidden="true">' + (items[k].done ? "✓" : "○") + "</span>" +
+          esc(items[k].label) + "</li>";
+      }
+      html += "</ul>";
+      if (!isModuleUnlocked(s.id)) {
+        html += '<p class="module-check-lock">Locked until you finish ' +
+          esc(sectionLabel(priorSectionId(s.id) || "roots")) + ". Soft-unlock from the nav if you need a peek.</p>";
+      }
+      box.innerHTML = html;
+    }
   }
 
   function openHubMenu() {
     var menu = document.getElementById("hubMenu");
     if (!menu) return;
+    syncGrowthSettingsUI();
     menu.hidden = false;
     document.body.classList.add("hub-menu-open");
+    renderBottomNav();
   }
 
   function closeHubMenu() {
@@ -551,21 +1173,221 @@
     if (!menu) return;
     menu.hidden = true;
     document.body.classList.remove("hub-menu-open");
+    renderBottomNav();
   }
 
-  var lastUnits = -1;
+  function renderBottomNav() {
+    var bar = document.getElementById("bottomNav");
+    if (!bar) return;
+    var tab = "";
+    if (state.active === "tend" || state.active === "calendar") tab = "calendar";
+    else if (state.active === "know" || state.active === "products") tab = "know";
+    else if (state.active === "leader") tab = "team";
+    else if (state.active === "leads") tab = "leads";
+    else if (state.active === "welcome" || state.active === "done") tab = "home";
+    var btns = bar.querySelectorAll(".bottom-nav-btn");
+    for (var i = 0; i < btns.length; i++) {
+      var t = btns[i].getAttribute("data-tab");
+      btns[i].classList.toggle("on", !!tab && t === tab);
+    }
+    var settingsBtn = document.getElementById("settingsNavBtn");
+    if (settingsBtn) settingsBtn.classList.toggle("on", document.body.classList.contains("hub-menu-open"));
+  }
+
+  function filterKnowSearch() {
+    var input = document.getElementById("knowSearch");
+    var empty = document.getElementById("knowSearchEmpty");
+    if (!input) return;
+    var q = (input.value || "").trim().toLowerCase();
+    var secs = document.querySelectorAll("#panel-know .know-acc");
+    var shown = 0;
+    for (var i = 0; i < secs.length; i++) {
+      var sec = secs[i];
+      var text = (sec.textContent || "").toLowerCase();
+      var match = !q || text.indexOf(q) > -1;
+      sec.hidden = !match;
+      if (match) {
+        shown++;
+        if (q) sec.open = true;
+      }
+    }
+    if (empty) empty.hidden = !q || shown > 0;
+  }
+
+  function wireKnowSearch() {
+    var input = document.getElementById("knowSearch");
+    if (!input || input.dataset.bound) return;
+    input.dataset.bound = "1";
+    input.addEventListener("input", filterKnowSearch);
+  }
+
+  function renderHomeRunway() {
+    var wrap = document.getElementById("homeRunway");
+    if (!wrap) return;
+    var secs = visibleSections();
+    var html = "";
+    for (var i = 0; i < secs.length; i++) {
+      var s = secs[i];
+      var locked = !isModuleUnlocked(s.id);
+      var cls = "home-chip" +
+        (state.active === s.id ? " on" : "") +
+        (state.done[s.id] ? " done" : "") +
+        (locked ? " locked" : "");
+      var status = state.done[s.id] ? "Done" : (locked ? "Locked" : s.sub);
+      html += '<button type="button" class="' + cls + '" data-goto="' + s.id + '"' +
+        (locked ? ' aria-disabled="true"' : "") + ">" +
+        '<span class="home-chip-num">' + (state.done[s.id] ? "✓" : String(i + 1)) + "</span>" +
+        '<span class="home-chip-label">' + esc(s.label) + "</span>" +
+        '<span class="home-chip-sub">' + esc(status) + "</span></button>";
+    }
+    wrap.innerHTML = html;
+  }
+
+  var lastRoots = -1;
   var lastSecs = -1;
   var captionTimer;
 
   function pulsePlant(kind) {
-    if (!railPlant) return;
+    if (!homePlant) return;
     if (window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-    railPlant.classList.remove("roots-pulse", "sprout-pulse");
-    void railPlant.offsetWidth;
-    railPlant.classList.add(kind === "sprout" ? "sprout-pulse" : "roots-pulse");
+    homePlant.classList.remove("roots-pulse", "sprout-pulse");
+    void homePlant.offsetWidth;
+    homePlant.classList.add(kind === "sprout" ? "sprout-pulse" : "roots-pulse");
     setTimeout(function () {
-      railPlant.classList.remove("roots-pulse", "sprout-pulse");
+      homePlant.classList.remove("roots-pulse", "sprout-pulse");
     }, 1000);
+  }
+
+  var growthMomentTimer = null;
+  var growthToastTimer = null;
+
+  function showGrowthToast(msg) {
+    var el = document.getElementById("growthToast");
+    if (!el || !msg) return;
+    el.textContent = msg;
+    el.hidden = false;
+    clearTimeout(growthToastTimer);
+    growthToastTimer = setTimeout(function () { el.hidden = true; }, 2400);
+  }
+
+  function closeGrowthMoment() {
+    var wrap = document.getElementById("growthMoment");
+    if (!wrap) return;
+    wrap.classList.remove("open");
+    wrap.hidden = true;
+    clearTimeout(growthMomentTimer);
+    growthMomentTimer = null;
+  }
+
+  function openGrowthMoment(msg, kind, prev, next) {
+    var wrap = document.getElementById("growthMoment");
+    var slot = document.getElementById("growthMomentPlant");
+    var lab = document.getElementById("growthMomentMsg");
+    if (!wrap || !slot || !lab) return;
+    var prevStage = plantVisualStage(prev.sprout, prev.sproutTotal);
+    var nextStage = plantVisualStage(next.sprout, next.sproutTotal);
+    slot.classList.remove("roots-pulse", "sprout-pulse");
+    slot.innerHTML = window.FS.plantSVG(prevStage, prev.roots, ROOT_MAX, "m0_");
+    lab.textContent = msg;
+    wrap.hidden = false;
+    wrap.classList.add("open");
+    requestAnimationFrame(function () {
+      requestAnimationFrame(function () {
+        slot.innerHTML = window.FS.plantSVG(nextStage, next.roots, ROOT_MAX, "m1_");
+        if (!(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches)) {
+          slot.classList.add(kind === "sprout" ? "sprout-pulse" : "roots-pulse");
+        }
+      });
+    });
+    clearTimeout(growthMomentTimer);
+    growthMomentTimer = setTimeout(closeGrowthMoment, 2400);
+  }
+
+  function celebrateGrowth(kind, msg, prev, next) {
+    if (state.settings.growthMoment !== false) {
+      openGrowthMoment(msg, kind, prev, next);
+    } else if (state.settings.growthToast !== false) {
+      showGrowthToast(msg);
+    }
+  }
+
+  var pendingGrowth = null;
+  var growthIdleTimer = null;
+  var GROWTH_IDLE_MS = 1600;
+
+  function growthMessage(kind, roots, sproutDone, sproutTotal) {
+    if (kind === "roots") {
+      return roots >= ROOT_MAX
+        ? "Root " + ROOT_MAX + " in — next checklist items sprout above ground."
+        : "Root " + roots + " of " + ROOT_MAX + " grew underground.";
+    }
+    return sproutTotal > 0 && sproutDone >= sproutTotal
+      ? "Full bloom — you finished the growth checklist."
+      : "Checklist item done — your sprout grew (" + sproutDone + "/" + sproutTotal + ").";
+  }
+
+  function flushPendingGrowth() {
+    clearTimeout(growthIdleTimer);
+    growthIdleTimer = null;
+    if (!pendingGrowth) return;
+    var p = pendingGrowth;
+    pendingGrowth = null;
+    var roots = rootCount();
+    var progress = checklistProgress();
+    var next = { roots: roots, sprout: progress.sproutDone, sproutTotal: progress.sproutTotal };
+    var kind = next.sprout > p.prev.sprout ? "sprout" : "roots";
+    var msg = growthMessage(kind, next.roots, next.sprout, next.sproutTotal);
+    pulsePlant(kind);
+    highlightCaption(msg);
+    celebrateGrowth(kind, msg, p.prev, next);
+  }
+
+  function queueGrowthCelebration(kind, msg, prev, next) {
+    if (!pendingGrowth) {
+      pendingGrowth = { kind: kind, msg: msg, prev: prev, next: next };
+    } else {
+      pendingGrowth.kind = kind;
+      pendingGrowth.msg = msg;
+      pendingGrowth.next = next;
+    }
+    clearTimeout(growthIdleTimer);
+    growthIdleTimer = setTimeout(flushPendingGrowth, GROWTH_IDLE_MS);
+  }
+
+  function syncGrowthSettingsUI() {
+    var moment = document.getElementById("optGrowthMoment");
+    var toast = document.getElementById("optGrowthToast");
+    if (moment) moment.checked = state.settings.growthMoment !== false;
+    if (toast) toast.checked = state.settings.growthToast !== false;
+  }
+
+  function wireGrowthSettings() {
+    var moment = document.getElementById("optGrowthMoment");
+    var toast = document.getElementById("optGrowthToast");
+    if (moment && !moment.dataset.bound) {
+      moment.dataset.bound = "1";
+      moment.addEventListener("change", function () {
+        state.settings.growthMoment = !!moment.checked;
+        save();
+      });
+    }
+    if (toast && !toast.dataset.bound) {
+      toast.dataset.bound = "1";
+      toast.addEventListener("change", function () {
+        state.settings.growthToast = !!toast.checked;
+        save();
+      });
+    }
+    var hit = document.getElementById("growthMomentHit");
+    var card = document.querySelector(".growth-moment-card");
+    if (hit && !hit.dataset.bound) {
+      hit.dataset.bound = "1";
+      hit.addEventListener("click", closeGrowthMoment);
+    }
+    if (card && !card.dataset.bound) {
+      card.dataset.bound = "1";
+      card.addEventListener("click", closeGrowthMoment);
+    }
   }
 
   function highlightCaption(msg) {
@@ -576,32 +1398,89 @@
     captionTimer = setTimeout(function () { caption.classList.remove("highlight"); }, 1600);
   }
 
+  function plantCaptionFor(roots, sproutDone, sproutTotal) {
+    if (sproutDone === 0) {
+      if (roots === 0) return "Seed on the dirt. Answer the three Roots blurbs to grow underground.";
+      if (roots < ROOT_MAX) return "Roots growing · " + roots + " of " + ROOT_MAX + ". Each checklist item after Roots sprouts the plant.";
+      return "Roots are in. Next checklist items grow the sprout above ground.";
+    }
+    if (sproutTotal > 0 && sproutDone >= sproutTotal) return "Full bloom — growth checklist complete.";
+    return "Sprout growing · " + sproutDone + " of " + sproutTotal + " checklist items. Each one grows it more.";
+  }
+
+  function plantVisualStage(sproutDone, sproutTotal) {
+    if (sproutDone <= 0) return 0;
+    if (sproutTotal > 0 && sproutDone >= sproutTotal) return 6;
+    if (sproutTotal <= 1) return Math.min(5, sproutDone);
+    return Math.max(1, Math.min(5, Math.round((sproutDone / sproutTotal) * 5)));
+  }
+
   function renderPlant(opts) {
     opts = opts || {};
-    var secs = doneCount(), units = unitCount(), total = sectionTotal();
-    /* Map starter's 4 sections onto the same 0–6 visual plant stages */
-    var visualSecs = isStarter() ? Math.round((secs / Math.max(total, 1)) * 6) : secs;
-    if (isStarter() && secs === total && total > 0) visualSecs = 6;
-    railPlant.innerHTML = window.FS.plantSVG(visualSecs, units, MAX_UNITS);
-    if (finishPlant) finishPlant.innerHTML = window.FS.plantSVG(6, MAX_UNITS, MAX_UNITS);
-    var pct = Math.round(((units / MAX_UNITS) * 0.5 + (secs / Math.max(total, 1)) * 0.5) * 100);
-    progressFill.style.width = pct + "%";
+    var roots = rootCount();
+    var progress = checklistProgress();
+    var sproutDone = progress.sproutDone;
+    var sproutTotal = progress.sproutTotal;
+    var visualSecs = plantVisualStage(sproutDone, sproutTotal);
+    var plantKey = visualSecs + ":" + roots + ":" + sproutDone + ":" + sproutTotal;
 
-    if (!opts.silent && lastUnits >= 0 && units > lastUnits) {
-      pulsePlant("roots");
-      highlightCaption("A root just grew 🌿");
-    } else if (!opts.silent && lastSecs >= 0 && secs > lastSecs) {
-      pulsePlant("sprout");
-      highlightCaption("Your sprout just grew taller 🌱");
-    } else if (!caption.classList.contains("highlight")) {
-      caption.textContent =
-        units === 0 ? "Nothing planted yet — fill a box to grow a root." :
-        secs === 0 ? "Roots forming underground… (" + units + " answers). Finish a section to grow the sprout." :
-        secs < total ? (secs + " of " + total + " sections · roots " + Math.round(units / MAX_UNITS * 100) + "% deep") :
-        "In full bloom. You're ready. 🌱";
+    var grewRoots = !opts.silent && lastRoots >= 0 && roots > lastRoots;
+    var grewSprout = !opts.silent && lastSprout >= 0 && sproutDone > lastSprout;
+    var prevSnap = {
+      roots: Math.max(0, lastRoots),
+      sprout: Math.max(0, lastSprout),
+      sproutTotal: sproutTotal
+    };
+    var nextSnap = { roots: roots, sprout: sproutDone, sproutTotal: sproutTotal };
+
+    if (homePlant) {
+      if (opts.force || homePlant.dataset.plantKey !== plantKey) {
+        homePlant.dataset.plantKey = plantKey;
+        homePlant.innerHTML = window.FS.plantSVG(visualSecs, roots, ROOT_MAX, "h_");
+      }
     }
-    lastUnits = units;
-    lastSecs = secs;
+    if (finishPlant) finishPlant.innerHTML = window.FS.plantSVG(6, ROOT_MAX, ROOT_MAX, "f_");
+
+    var pct = progress.total ? Math.round((progress.done / progress.total) * 100) : 0;
+    if (progressFill) progressFill.style.width = pct + "%";
+    var track = document.getElementById("progressTrack");
+    if (track) track.setAttribute("aria-valuenow", String(pct));
+    var label = document.getElementById("progressLabel");
+    if (label) label.textContent = "Growth " + pct + "%";
+    var homePct = document.getElementById("homePctLabel");
+    if (homePct) homePct.textContent = pct + "%";
+
+    var statRoots = document.getElementById("statRoots");
+    var statMods = document.getElementById("statModules");
+    if (statRoots) statRoots.innerHTML = "<em>Roots</em> " + roots + "/" + ROOT_MAX;
+    if (statMods) statMods.innerHTML = "<em>Checks</em> " + progress.done + "/" + progress.total;
+
+    if (grewRoots) {
+      var rootMsg = growthMessage("roots", roots, sproutDone, sproutTotal);
+      if (opts.deferCelebrate) {
+        if (caption) caption.textContent = plantCaptionFor(roots, sproutDone, sproutTotal);
+        queueGrowthCelebration("roots", rootMsg, prevSnap, nextSnap);
+      } else {
+        pulsePlant("roots");
+        highlightCaption(rootMsg);
+        celebrateGrowth("roots", rootMsg, prevSnap, nextSnap);
+      }
+    } else if (grewSprout) {
+      var sproutMsg = growthMessage("sprout", roots, sproutDone, sproutTotal);
+      if (opts.deferCelebrate) {
+        if (caption) caption.textContent = plantCaptionFor(roots, sproutDone, sproutTotal);
+        queueGrowthCelebration("sprout", sproutMsg, prevSnap, nextSnap);
+      } else {
+        pulsePlant("sprout");
+        highlightCaption(sproutMsg);
+        celebrateGrowth("sprout", sproutMsg, prevSnap, nextSnap);
+      }
+    } else if (caption && !caption.classList.contains("highlight")) {
+      caption.textContent = plantCaptionFor(roots, sproutDone, sproutTotal);
+    }
+    lastRoots = roots;
+    lastSprout = sproutDone;
+    lastSecs = typeof doneCount === "function" ? doneCount() : visualSecs;
   }
 
   function renderPanels() {
@@ -609,10 +1488,34 @@
     for (var i = 0; i < panels.length; i++) {
       panels[i].classList.toggle("active", panels[i].id === "panel-" + state.active);
     }
+    var mainContent = document.getElementById("mainContent");
+    if (mainContent) {
+      mainContent.classList.toggle("content-wide", state.active === "tend" || state.active === "calendar");
+    }
     window.scrollTo({ top: 0, behavior: "auto" });
+    renderModuleChecklists();
+    renderContentBanks();
+    renderBottomNav();
+    renderHomeRunway();
+    if (state.active === "know") {
+      renderKnowPanel();
+      wireKnowSearch();
+      filterKnowSearch();
+    }
+    if (state.active === "products") {
+      renderProductLibrary();
+    }
+    if (state.active === "plant") {
+      renderSeedTypes();
+    }
+    if (state.active === "tend") {
+      renderHooks();
+      renderContentBanks();
+    }
     if (window.FS.BridgeUI) {
-      if (state.active === "calendar") window.FS.BridgeUI.renderCalendar();
+      if (state.active === "calendar" || state.active === "tend") window.FS.BridgeUI.renderCalendar();
       if (state.active === "leader") window.FS.BridgeUI.renderLeader();
+      if (state.active === "leads" && window.FS.BridgeUI.renderLeads) window.FS.BridgeUI.renderLeads();
       if (state.active === "welcome") window.FS.BridgeUI.renderPulse();
       if (window.FS.BridgeUI.renderLeaderNoteBanner) window.FS.BridgeUI.renderLeaderNoteBanner();
     }
@@ -650,23 +1553,122 @@
     if (hypeDays) hypeDays.textContent = d1 === 0 ? "🎉" : String(d1);
   }
 
+  function setRoadmapOpen(open) {
+    var wrap = document.getElementById("cdRoadmap");
+    var hit = document.getElementById("cdRoadmapHit");
+    if (!wrap || !hit) return;
+    wrap.classList.toggle("is-open", !!open);
+    hit.setAttribute("aria-expanded", open ? "true" : "false");
+  }
+
+  function wireRoadmapHover() {
+    var wrap = document.getElementById("cdRoadmap");
+    var hit = document.getElementById("cdRoadmapHit");
+    if (!wrap || !hit || hit.dataset.bound) return;
+    hit.dataset.bound = "1";
+    hit.addEventListener("click", function (e) {
+      if (window.matchMedia("(hover: hover)").matches) return;
+      e.preventDefault();
+      setRoadmapOpen(!wrap.classList.contains("is-open"));
+    });
+    document.addEventListener("click", function (e) {
+      if (!wrap.classList.contains("is-open")) return;
+      if (wrap.contains(e.target)) return;
+      setRoadmapOpen(false);
+    });
+  }
+
   /* ── completion rules ────────────────────────────────── */
-  function groveNames() {
-    return ((state.data.warm || "") + "").split("\n")
-      .map(function (l) { return l.replace(/^\d+[\.\)]\s*/, "").trim(); })
-      .filter(function (l) { return l.length > 0; });
+  function listNames(key) {
+    return parseNameLines(state.data[key] || "");
+  }
+
+  function groveNames() { return listNames("warm"); }
+  function customerNames() { return listNames("customers"); }
+
+  function grovePicks(key) {
+    if (!Array.isArray(state.data[key])) state.data[key] = [];
+    return state.data[key];
+  }
+
+  function pruneGrovePicks(lane) {
+    var names = lane === "warm" ? groveNames() : customerNames();
+    var key = lane === "warm" ? "warm_first" : "customer_first";
+    var set = {};
+    names.forEach(function (n) { set[n.toLowerCase()] = n; });
+    var next = grovePicks(key).filter(function (n) { return set[(n || "").toLowerCase()]; })
+      .map(function (n) { return set[(n || "").toLowerCase()]; });
+    /* de-dupe */
+    var seen = {}, out = [];
+    next.forEach(function (n) {
+      var k = n.toLowerCase();
+      if (seen[k]) return;
+      seen[k] = true;
+      out.push(n);
+    });
+    state.data[key] = out.slice(0, 5);
+    return state.data[key];
+  }
+
+  function toggleGrovePick(lane, name) {
+    name = (name || "").trim();
+    if (!name) return;
+    var key = lane === "warm" ? "warm_first" : "customer_first";
+    var list = grovePicks(key).slice();
+    var ix = -1;
+    for (var i = 0; i < list.length; i++) {
+      if (list[i].toLowerCase() === name.toLowerCase()) { ix = i; break; }
+    }
+    if (ix > -1) list.splice(ix, 1);
+    else if (list.length < 5) list.push(name);
+    state.data[key] = list;
+    syncGroveCalendar();
+  }
+
+  function syncGroveCalendar() {
+    if (!window.FS.Calendar || !window.FS.Calendar.syncGroveOutreach) return;
+    if (!state.data.calendar) state.data.calendar = {};
+    var people = [];
+    grovePicks("customer_first").forEach(function (n) {
+      people.push({ name: n, lane: "customers" });
+    });
+    grovePicks("warm_first").forEach(function (n) {
+      people.push({ name: n, lane: "warm" });
+    });
+    window.FS.Calendar.syncGroveOutreach(state.data.calendar, people, state.data);
+    if (window.FS.BridgeUI && (state.active === "calendar" || state.active === "tend")) {
+      window.FS.BridgeUI.renderCalendar();
+    }
   }
 
   function canComplete(id) {
     if (id === "roots") return filledText("why") && filledText("moment") && filledText("said_yes");
-    if (id === "grove") return groveNames().length >= 5 && filledText("warm_pick");
+    if (id === "grove") {
+      var c = customerNames();
+      var picks = grovePicks("customer_first");
+      var set = {};
+      c.forEach(function (n) { set[n.toLowerCase()] = true; });
+      var valid = picks.filter(function (n) { return set[(n || "").toLowerCase()]; });
+      var need = Math.min(5, c.length);
+      return c.length >= 5 && valid.length >= need && need > 0;
+    }
     if (id === "tree") {
-      var c = Tree.counts(Tree.ensure(state));
-      return c.total >= 3;
+      var named = 0;
+      (function walk(arr) {
+        for (var i = 0; i < arr.length; i++) {
+          if ((arr[i].name || "").trim()) named++;
+          walk(arr[i].children || []);
+        }
+      })(Tree.ensure(state));
+      return named >= 3;
     }
     if (id === "ground") return !!state.data.page_choice && filledText("page_story");
-    if (id === "plant") return filledText("seed_open") && filledText("seed_value") && filledText("seed_invite");
-    if (id === "tend") return (state.data.rhythm || []).length >= 3;
+    if (id === "plant") return filledText("seed_open") && giveDraftFilled() && filledText("seed_invite");
+    if (id === "tend") {
+      var Cal = window.FS.Calendar;
+      var posted = Cal && Cal.countPosted ? Cal.countPosted(state.data.calendar || {}) : 0;
+      return posted >= 3;
+    }
     return false;
   }
 
@@ -702,19 +1704,20 @@
   }
 
   var lastGroveCount = 0;
-  var groveFlashTimer;
+  var lastCustomerCount = 0;
+  var groveFlashTimers = {};
 
-  function flashGroveTrees(forceAll) {
-    var wrap = document.getElementById("groveTrees");
-    var visual = document.querySelector(".grove-visual");
+  function flashGroveTrees(wrapId, forceAll) {
+    var wrap = document.getElementById(wrapId || "groveTrees");
     if (!wrap) return;
+    var visual = wrap.closest(".grove-visual");
     if (window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
     var nodes = wrap.querySelectorAll(".gtree");
     if (!nodes.length) return;
     if (visual) {
       visual.classList.add("flashing");
-      clearTimeout(groveFlashTimer);
-      groveFlashTimer = setTimeout(function () { visual.classList.remove("flashing"); }, 450);
+      clearTimeout(groveFlashTimers[wrapId]);
+      groveFlashTimers[wrapId] = setTimeout(function () { visual.classList.remove("flashing"); }, 450);
     }
     for (var i = 0; i < nodes.length; i++) {
       (function (node, delay) {
@@ -727,31 +1730,132 @@
     }
   }
 
-  function renderGrove(opts) {
+  function renderNameLane(opts) {
     opts = opts || {};
-    var names = groveNames();
-    var count = document.getElementById("groveCount"), trees = document.getElementById("groveTrees"), hint = document.getElementById("groveHint");
+    var names = opts.names || [];
+    var count = document.getElementById(opts.countId);
+    var trees = document.getElementById(opts.treesId);
+    var hint = document.getElementById(opts.hintId);
     if (!count) return;
     var n = names.length;
-    count.innerHTML = n === 0 ? "Your grove is empty soil — add your first name."
-      : "<strong>" + n + "</strong> " + (n === 1 ? "tree" : "trees") + " in your grove";
-    var hues = ["#6b8f6b", "#7ba07b", "#5f8a5f", "#87ab87"];
-    var html = "";
-    for (var i = 0; i < Math.min(n, 30); i++) {
-      html += '<span class="gtree" title="' + esc(names[i]) + '">' + window.FS.miniTreeSVG(hues[i % 4]) + "</span>";
+    var empty = opts.empty || "Empty soil — add your first name.";
+    var unit = opts.unit || "names";
+    count.innerHTML = n === 0 ? empty
+      : "<strong>" + n + "</strong> " + (n === 1 ? unit.replace(/s$/, "") : unit) + (opts.suffix || "");
+    if (hint) {
+      var hints = opts.hints || {};
+      hint.textContent = n === 0 ? "" :
+        n < 5 ? (hints.low || "Keep going — even 5 names is a real start.") :
+        n < 15 ? (hints.mid || "Nice. Aim for 15–25 when you can.") :
+        n <= 25 ? (hints.full || "That's a full list. Quality over quantity from here.") :
+        (hints.over || "That's a forest! Focus on the warmest 25.");
     }
-    trees.innerHTML = html;
-    hint.textContent = n === 0 ? "" :
-      n < 5 ? "Keep going — even 5 warm names is a real start." :
-      n < 15 ? "Nice. Aim for 15–25 when you can — who else would you actually tell?" :
-      n <= 25 ? "That's a full grove. Quality over quantity from here." :
-      "That's a forest! Focus your energy on the warmest 25.";
 
-    if (opts.flash && n > 0) {
-      /* re-apply flash after DOM rebuild */
-      requestAnimationFrame(function () { flashGroveTrees(n > lastGroveCount); });
+    var prev = opts.getPrev ? opts.getPrev() : 0;
+    if (trees) {
+      var key = String(n);
+      if (trees.dataset.groveKey !== key) {
+        trees.dataset.groveKey = key;
+        var hues = opts.hues || ["#abb09a", "#c5c9b8", "#9aa08a", "#b8bca8"];
+        var html = "";
+        var sproutFn = window.FS.miniSproutSVG || window.FS.miniTreeSVG;
+        for (var i = 0; i < Math.min(n, 30); i++) {
+          html += '<span class="gtree" title="' + esc(names[i]) + '">' + sproutFn(hues[i % hues.length]) + "</span>";
+        }
+        trees.innerHTML = html;
+        if (opts.flash && n > prev && n > 0) {
+          requestAnimationFrame(function () { flashGroveTrees(opts.treesId, true); });
+        }
+      }
     }
-    lastGroveCount = n;
+    if (opts.setPrev) opts.setPrev(n);
+  }
+
+  function renderPickList(lane) {
+    var names = lane === "warm" ? groveNames() : customerNames();
+    var picks = pruneGrovePicks(lane);
+    var wrap = document.getElementById(lane === "warm" ? "warmPicksWrap" : "customerPicksWrap");
+    var list = document.getElementById(lane === "warm" ? "warmPickList" : "customerPickList");
+    var meta = document.getElementById(lane === "warm" ? "warmPickMeta" : "customerPickMeta");
+    if (!wrap || !list) return;
+    if (!names.length) {
+      wrap.hidden = true;
+      list.innerHTML = "";
+      if (meta) meta.textContent = "";
+      return;
+    }
+    wrap.hidden = false;
+    var selected = {};
+    picks.forEach(function (n) { selected[n.toLowerCase()] = true; });
+    var atMax = picks.length >= 5;
+    var html = "";
+    names.forEach(function (name, idx) {
+      var on = !!selected[name.toLowerCase()];
+      var disabled = !on && atMax;
+      html += '<button type="button" class="grove-chip' + (on ? " on" : "") + '"'
+        + ' data-grove-pick="' + lane + '" data-grove-idx="' + idx + '"'
+        + (on ? ' aria-pressed="true"' : ' aria-pressed="false"')
+        + (disabled ? " disabled" : "")
+        + ">" + esc(name) + "</button>";
+    });
+    list.innerHTML = html;
+    if (meta) {
+      if (lane === "customers") {
+        meta.textContent = picks.length
+          ? picks.length + " of 5 first chats selected · landing on your calendar"
+          : "Tap the easiest people to share a product story with first.";
+      } else {
+        meta.textContent = picks.length
+          ? picks.length + " partner chats selected · also on your calendar"
+          : "Optional — tap anyone you'd start a mission chat with.";
+      }
+    }
+  }
+
+  function renderGrove(opts) {
+    opts = opts || {};
+    pruneGrovePicks("warm");
+    pruneGrovePicks("customers");
+    renderNameLane({
+      names: customerNames(),
+      countId: "customerCount",
+      treesId: "customerTrees",
+      hintId: "customerHint",
+      empty: "Customer soil is empty — who would love the products?",
+      unit: "customer names",
+      suffix: " who'd love the products",
+      hints: {
+        low: "Keep going — even 5 product-curious names is a real start.",
+        mid: "Nice. Who else asks about what you use, drink, or put on your skin?",
+        full: "Solid customer map — tap your first chats below.",
+        over: "Plenty of leads — quality chats beat a long list."
+      },
+      hues: ["#d9a93f", "#e8c86a", "#c9a04a", "#f0d06a"],
+      flash: !!opts.customerFlash,
+      getPrev: function () { return lastCustomerCount; },
+      setPrev: function (n) { lastCustomerCount = n; }
+    });
+    renderNameLane({
+      names: groveNames(),
+      countId: "groveCount",
+      treesId: "groveTrees",
+      hintId: "groveHint",
+      empty: "Optional — skip if you're sharing more like an affiliate for now.",
+      unit: "partner names",
+      suffix: " who might grow with you",
+      hints: {
+        low: "Nice start. Add more only if you're building with people.",
+        mid: "Solid optional list — tap first chats if you want them on the calendar.",
+        full: "That's a full partner list. Quality over quantity from here.",
+        over: "Focus on the warmest handful — partners are optional."
+      },
+      hues: ["#abb09a", "#c5c9b8", "#9aa08a", "#b8bca8"],
+      flash: !!opts.flash,
+      getPrev: function () { return lastGroveCount; },
+      setPrev: function (n) { lastGroveCount = n; }
+    });
+    renderPickList("customers");
+    renderPickList("warm");
   }
 
   function renderMiniPage() {
@@ -765,14 +1869,20 @@
     var el = document.querySelector('[data-check="' + key + '"]');
     if (!el) return;
     var text = (state.data[key] || "");
-    if (!text.trim()) { el.innerHTML = ""; return; }
+    var trimmed = text.trim();
+    if (!trimmed) { el.innerHTML = ""; return; }
     var hits = [];
     for (var i = 0; i < RISKY.length; i++) if (RISKY[i].re.test(text)) hits.push(RISKY[i]);
-    if (hits.length === 0) { el.innerHTML = '<span class="claim-ok">Reads clean ✓</span>'; return; }
-    var html = "";
-    for (var j = 0; j < hits.length; j++) html += '<span class="claim-flag">⚠ ' + esc(hits[j].word) + "</span>";
-    html += '<span class="claim-note">' + esc(hits[0].tip) + (hits.length > 1 ? " (and " + (hits.length - 1) + " more to double-check)" : "") + "</span>";
-    el.innerHTML = html;
+    if (hits.length) {
+      var html = "";
+      for (var j = 0; j < hits.length; j++) html += '<span class="claim-flag">⚠ ' + esc(hits[j].word) + "</span>";
+      html += '<span class="claim-note">' + esc(hits[0].tip) + (hits.length > 1 ? " (and " + (hits.length - 1) + " more to double-check)" : "") + "</span>";
+      el.innerHTML = html;
+      return;
+    }
+    /* Don't celebrate “clean” — only warn when risky claim words show up */
+    if (trimmed.length < 12) { el.innerHTML = ""; return; }
+    el.innerHTML = "";
   }
 
   function renderWeek() {
@@ -795,26 +1905,31 @@
     var fields = document.querySelectorAll(".field[data-field]");
     for (var i = 0; i < fields.length; i++) {
       var k = fields[i].getAttribute("data-field");
-      fields[i].classList.toggle("filled", filledText(k));
+      var len = ((state.data[k] || "") + "").trim().length;
+      fields[i].classList.toggle("filled", len >= 24);
     }
   }
 
   function liveRefresh(opts) {
     opts = opts || {};
+    if (reconcileDoneFlags()) save();
     renderStory();
-    renderGrove({ flash: !!opts.groveFlash });
+    renderGrove({ flash: !!opts.groveFlash, customerFlash: !!opts.customerFlash });
     renderMiniPage();
     renderWeek();
     markFilledStates();
     renderPlant(opts);
     refreshButtons();
+    renderModuleChecklists();
     renderTodayCard();
+    renderHomeRunway();
+    renderBottomNav();
   }
 
   /* ── leaf burst ──────────────────────────────────────── */
   function leafBurst(x, y) {
     if (window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-    var colors = ["#6b8f6b", "#7ba07b", "#e8c86a", "#c9a24b"];
+    var colors = ["#abb09a", "#c5c9b8", "#f0d06a", "#d9a93f"];
     for (var i = 0; i < 10; i++) {
       var el = document.createElement("div");
       el.className = "leaf-p";
@@ -850,13 +1965,46 @@
       var k = f.getAttribute("data-key");
       if (state.data[k]) f.value = state.data[k];
       var t;
+      var isLongWrite = f.tagName === "TEXTAREA";
       f.addEventListener("input", function () {
         state.data[k] = f.value;
         runClaimCheck(k);
-        liveRefresh({ groveFlash: k === "warm" });
+        var beforeRoots = lastRoots;
+        var beforeSprout = lastSprout;
+        var groveFlash = false;
+        var customerFlash = false;
+        if (k === "warm") {
+          groveFlash = groveNames().length !== lastGroveCount;
+        }
+        if (k === "customers") {
+          customerFlash = customerNames().length !== lastCustomerCount;
+        }
+        if (k === "warm" || k === "customers") {
+          pruneGrovePicks(k === "warm" ? "warm" : "customers");
+        }
+        liveRefresh({ groveFlash: groveFlash, customerFlash: customerFlash, silent: true });
+        /* Pulse when roots or sprout checklist progress actually advances */
+        if (rootCount() > beforeRoots || checklistProgress().sproutDone > beforeSprout) {
+          lastRoots = beforeRoots;
+          lastSprout = beforeSprout;
+          renderPlant({ deferCelebrate: isLongWrite });
+        } else if (isLongWrite && pendingGrowth) {
+          /* keep resetting idle timer while they keep typing */
+          clearTimeout(growthIdleTimer);
+          growthIdleTimer = setTimeout(flushPendingGrowth, GROWTH_IDLE_MS);
+        }
         clearTimeout(t);
-        t = setTimeout(function () { save(); flash(sectionOf(f)); }, 500);
+        t = setTimeout(function () {
+          if (k === "warm" || k === "customers") syncGroveCalendar();
+          save();
+          flash(sectionOf(f));
+        }, 500);
       });
+      if (isLongWrite) {
+        f.addEventListener("blur", function () {
+          if (pendingGrowth) flushPendingGrowth();
+        });
+      }
     })(fields[fi]);
   }
 
@@ -870,8 +2018,9 @@
     }
   }
 
-  var rhythmWrap = document.getElementById("rhythmList");
   function renderRhythms() {
+    var rhythmWrap = document.getElementById("rhythmList");
+    if (!rhythmWrap) return;
     var sel = state.data.rhythm || [];
     var html = "";
     for (var i = 0; i < RHYTHMS.length; i++) {
@@ -888,40 +2037,54 @@
       Tree.setName(state, t.getAttribute("data-tname"), t.value);
       clearTimeout(flashTimers._tree);
       flashTimers._tree = setTimeout(function () {
-        save(); flash("tree");
+        save();
+        flash("tree");
+        var c = Tree.counts(Tree.ensure(state));
         var stats = document.getElementById("treeStats");
         if (stats) {
-          var c = Tree.counts(Tree.ensure(state));
-          stats.innerHTML =
-            '<span class="tstat"><strong>' + c.total + '</strong> in your tree</span>' +
-            '<span class="tstat hopeful-c">🌱 <strong>' + c.hopeful + '</strong> hopeful</span>' +
-            '<span class="tstat committed-c">🌳 <strong>' + c.committed + '</strong> committed</span>' +
-            (c.depth > 1 ? '<span class="tstat">' + c.depth + ' levels deep</span>' : '');
+          stats.innerHTML = c.total
+            ? ("<strong>" + c.total + "</strong> · 🌱 " + c.hopeful + " · 🌳 " + c.committed)
+            : "";
         }
-      }, 500);
+        renderModuleChecklists();
+        refreshButtons();
+        var beforeSprout = lastSprout;
+        liveRefresh({ silent: true });
+        if (checklistProgress().sproutDone > beforeSprout) {
+          lastSprout = beforeSprout;
+          renderPlant({});
+        }
+      }, 400);
     }
   });
 
   /* ── onboarding ──────────────────────────────────────── */
   var onboardingStep = 0;
+  var ONBOARD_STEPS = 4;
+  var ONBOARD_THEMES = ["onboarding-welcome", "onboarding-circle", "onboarding-name", "onboarding-mode"];
 
   function renderOnboardingStep() {
     var card = document.getElementById("onboardingCard");
     var dots = document.getElementById("onboardingDots");
-    if (card) card.classList.toggle("onboarding-welcome", onboardingStep === 0);
+    if (card) {
+      for (var t = 0; t < ONBOARD_THEMES.length; t++) {
+        card.classList.toggle(ONBOARD_THEMES[t], t === onboardingStep);
+      }
+    }
     var panes = document.querySelectorAll("#onboarding .onboarding-pane");
     for (var i = 0; i < panes.length; i++) {
       panes[i].classList.toggle("on", parseInt(panes[i].getAttribute("data-onboard-step"), 10) === onboardingStep);
     }
     if (dots) {
       dots.innerHTML = "";
-      for (var d = 0; d < 3; d++) {
+      for (var d = 0; d < ONBOARD_STEPS; d++) {
         var iEl = document.createElement("i");
         if (d === onboardingStep) iEl.className = "on";
+        else if (d < onboardingStep) iEl.className = "done";
         dots.appendChild(iEl);
       }
     }
-    if (onboardingStep === 1) {
+    if (onboardingStep === 2) {
       var input = document.getElementById("partnerNameInput");
       if (input) {
         input.value = partnerName();
@@ -973,6 +2136,14 @@
       });
     }
 
+    var circleNext = document.getElementById("onboardingCircleNext");
+    if (circleNext) {
+      circleNext.addEventListener("click", function () {
+        onboardingStep = 2;
+        renderOnboardingStep();
+      });
+    }
+
     var nameInput = document.getElementById("partnerNameInput");
     var nameNext = document.getElementById("onboardingNameNext");
     if (nameInput) {
@@ -989,7 +2160,7 @@
         if (!nameInput || !nameInput.value.trim()) return;
         state.settings.partnerName = nameInput.value.trim();
         save();
-        onboardingStep = 2;
+        onboardingStep = 3;
         renderOnboardingStep();
       });
     }
@@ -1062,23 +2233,62 @@
   }
 
   document.addEventListener("keydown", function (e) {
-    if (e.key === "Escape") closeHubMenu();
+    if (e.key === "Escape") {
+      closeHubMenu();
+      setRoadmapOpen(false);
+      closeGrowthMoment();
+    }
   });
 
   /* ── clicks ──────────────────────────────────────────── */
   document.addEventListener("click", function (e) {
-    var t = e.target.closest("[data-goto],[data-complete],[data-choice],[data-rhythm],[data-copy],[data-tadd],[data-tstatus],[data-tdel],[data-seedtype],[data-menu-goto],#exportBtn,#exportBtn2,#resetBtn,#modeStarter,#modeFull,#levelUpBtn,#menuOpenBtn,#menuCloseBtn,#menuCloseBackdrop,#todayAuthBtn");
+    var t = e.target.closest("[data-goto],[data-complete],[data-grove-pick],[data-prod-nav],[data-prod-open],[data-choice],[data-rhythm],[data-copy],[data-tadd],[data-tstatus],[data-tdel],[data-seedtype],[data-menu-goto],[data-soft-unlock],[data-faq],[data-copy-toggle],#exportBtn,#exportBtn2,#resetBtn,#modeStarter,#modeFull,#levelUpBtn,#settingsNavBtn,#menuCloseBtn,#menuCloseBackdrop,#todayAuthBtn,#lockToastClose");
     if (!t) return;
+
+    if (t.hasAttribute("data-faq")) {
+      var faqId = t.getAttribute("data-faq");
+      state.data.openFaq = state.data.openFaq === faqId ? "" : faqId;
+      save();
+      renderKnowPanel();
+      return;
+    }
+    if (t.hasAttribute("data-copy-toggle")) {
+      var body = document.getElementById(t.getAttribute("data-copy-toggle") + "_body");
+      var card = t.closest(".copy-card");
+      if (body) {
+        var willOpen = body.hidden;
+        body.hidden = !willOpen;
+        if (card) card.classList.toggle("open", willOpen);
+        var chev = t.querySelector(".copy-card-chev");
+        if (chev) chev.textContent = willOpen ? "−" : "+";
+      }
+      return;
+    }
 
     if (t.id === "todayAuthBtn") {
       if (window.FS.BridgeUI && window.FS.BridgeUI.openAuth) window.FS.BridgeUI.openAuth(true);
       return;
     }
-    if (t.id === "menuOpenBtn") { openHubMenu(); return; }
+    if (t.id === "settingsNavBtn") { openHubMenu(); return; }
     if (t.id === "menuCloseBtn" || t.id === "menuCloseBackdrop") { closeHubMenu(); return; }
+    if (t.id === "lockToastClose") { hideLockToast(); return; }
+    if (t.hasAttribute("data-soft-unlock")) {
+      var unlockId = t.getAttribute("data-soft-unlock");
+      ensureSoftUnlockMap();
+      state.data.softUnlock[unlockId] = true;
+      state.active = unlockId;
+      save();
+      hideLockToast();
+      renderNav();
+      renderPanels();
+      renderModuleChecklists();
+      return;
+    }
     if (t.hasAttribute("data-menu-goto")) {
       var dest = t.getAttribute("data-menu-goto");
+      if (dest === "calendar") dest = "tend";
       closeHubMenu();
+      hideLockToast();
       state.active = dest;
       save();
       renderNav();
@@ -1111,8 +2321,50 @@
 
     if (t.hasAttribute("data-goto")) {
       var goto = t.getAttribute("data-goto");
-      if (goto !== "welcome" && goto !== "done" && goto !== "calendar" && goto !== "leader" && !sectionVisible(goto)) return;
+      if (goto === "calendar") goto = "tend";
+      if (goto === "leader" && !isFull()) return;
+      if (goto === "products") {
+        ensureProductBrowse();
+        state.productBrowse.category = null;
+        state.productBrowse.subcategory = null;
+        state.productBrowse.productId = null;
+        hideLockToast();
+        closeHubMenu();
+        state.active = "products";
+        save(); renderNav(); renderPanels();
+        return;
+      }
+      if (goto !== "welcome" && goto !== "done" && goto !== "calendar" && goto !== "leader" && goto !== "know" && goto !== "tend" && goto !== "products" && goto !== "leads" && !sectionVisible(goto)) return;
+      if (goto !== "welcome" && goto !== "done" && goto !== "calendar" && goto !== "leader" && goto !== "know" && goto !== "tend" && goto !== "products" && goto !== "leads" && !isModuleUnlocked(goto)) {
+        showLockToast(goto);
+        return;
+      }
+      hideLockToast();
+      closeHubMenu();
       state.active = goto;
+      save(); renderNav(); renderPanels();
+      return;
+    }
+    if (t.hasAttribute("data-prod-nav") || t.hasAttribute("data-prod-open")) {
+      var browseNav = ensureProductBrowse();
+      if (t.hasAttribute("data-prod-open")) {
+        browseNav.productId = t.getAttribute("data-prod-open");
+      } else {
+        var navMode = t.getAttribute("data-prod-nav");
+        browseNav.productId = null;
+        if (navMode === "hub") {
+          browseNav.category = null;
+          browseNav.subcategory = null;
+        } else if (navMode === "cat") {
+          browseNav.category = t.getAttribute("data-prod-cat") || null;
+          if (t.hasAttribute("data-prod-sub")) {
+            browseNav.subcategory = t.getAttribute("data-prod-sub") || null;
+          } else {
+            browseNav.subcategory = null;
+          }
+        }
+      }
+      state.active = "products";
       save(); renderNav(); renderPanels();
       return;
     }
@@ -1121,17 +2373,38 @@
       if (!canComplete(id)) return;
       var wasNew = !state.done[id];
       state.done[id] = true;
-      state.active = nextAfter(id) || "done";
-      save(); renderNav(); renderPlant(); renderPanels(); refreshButtons(); renderFinishCopy();
+      if (id === "grove") syncGroveCalendar();
+      var nxt = nextAfter(id) || "done";
+      /* If next is locked somehow, still allow — completing prior unlocks it */
+      state.active = nxt;
+      save(); renderNav(); renderPlant(); renderPanels(); refreshButtons(); renderFinishCopy(); renderModuleChecklists(); renderTodayCard();
+      hideLockToast();
       if (wasNew) {
         var r = t.getBoundingClientRect();
         leafBurst(r.left + r.width / 2, r.top);
       }
       return;
     }
+    if (t.hasAttribute("data-grove-pick")) {
+      var lane = t.getAttribute("data-grove-pick");
+      var idx = parseInt(t.getAttribute("data-grove-idx"), 10);
+      var pool = lane === "warm" ? groveNames() : customerNames();
+      var pickName = pool[idx] || "";
+      toggleGrovePick(lane, pickName);
+      save();
+      liveRefresh({ silent: true });
+      flash("grove");
+      return;
+    }
     if (t.hasAttribute("data-choice")) {
+      var beforeSprout = lastSprout;
       state.data[t.getAttribute("data-choice")] = t.getAttribute("data-value");
-      save(); renderChoices(); liveRefresh(); flash(sectionOf(t));
+      save(); renderChoices(); liveRefresh({ silent: true });
+      if (checklistProgress().sproutDone > beforeSprout) {
+        lastSprout = beforeSprout;
+        renderPlant({});
+      }
+      flash(sectionOf(t));
       return;
     }
     if (t.hasAttribute("data-rhythm")) {
@@ -1145,7 +2418,7 @@
     }
     if (t.hasAttribute("data-tadd")) {
       if (Tree.add(state, t.getAttribute("data-tadd"))) {
-        save(); Tree.render(state); renderPlant(); refreshButtons(); flash("tree");
+        save(); Tree.render(state); liveRefresh({ silent: true }); renderModuleChecklists(); refreshButtons(); flash("tree");
         var inputs = document.querySelectorAll(".tnode-name");
         for (var n = inputs.length - 1; n >= 0; n--) {
           if (!inputs[n].value) { inputs[n].focus(); break; }
@@ -1155,13 +2428,13 @@
     }
     if (t.hasAttribute("data-tstatus")) {
       if (Tree.toggleStatus(state, t.getAttribute("data-tstatus"))) {
-        save(); Tree.render(state); renderPlant(); refreshButtons(); flash("tree");
+        save(); Tree.render(state); liveRefresh({ silent: true }); renderModuleChecklists(); refreshButtons(); flash("tree");
       }
       return;
     }
     if (t.hasAttribute("data-tdel")) {
       if (Tree.remove(state, t.getAttribute("data-tdel"))) {
-        save(); Tree.render(state); renderPlant(); refreshButtons(); flash("tree");
+        save(); Tree.render(state); liveRefresh({ silent: true }); renderModuleChecklists(); refreshButtons(); flash("tree");
       }
       return;
     }
@@ -1188,6 +2461,10 @@
         updateModeUI();
         renderNav(); renderPanels(); renderChoices(); renderRhythms(); renderSeedTypes(); Tree.render(state); liveRefresh();
         startOnboarding();
+        /* If signed in, push the blank slate so cloud can't resurrect old Growth. */
+        if (window.FS.BridgeUI && window.FS.BridgeUI.syncNow) {
+          window.FS.BridgeUI.syncNow().catch(function () {});
+        }
       }
       return;
     }
@@ -1208,9 +2485,12 @@
       "My why:", d.why || "—", "",
       "My Ringana moment:", d.moment || "—", "",
       "Why I said yes:", d.said_yes || "—", "",
-      "═══ 02 · MY GROVE (" + groveNames().length + " names) ═══",
+      "═══ MY GROVE · CUSTOMERS (" + customerNames().length + " names) ═══",
+      d.customers || "—", "",
+      "First customer chats:", (grovePicks("customer_first").join(", ") || "—"), "",
+      "═══ MY GROVE · PARTNERS · optional (" + groveNames().length + " names) ═══",
       d.warm || "—", "",
-      "My first five:", d.warm_pick || "—", ""
+      "First partner chats:", (grovePicks("warm_first").join(", ") || "—"), ""
     ]);
 
     if (isFull() || (d.tree && d.tree.length)) {
@@ -1225,11 +2505,13 @@
       "My opening line:", d.page_story || "—", ""
     ]);
 
-    if (isFull() || filledText("seed_open") || filledText("seed_value") || filledText("seed_invite")) {
+    if (isFull() || anySeedDraft()) {
       lines = lines.concat([
         "═══ MY STARTER TRIO (Post Studio) ═══",
         "My open loop 🔓:", d.seed_open || "—", "",
-        "My give 🌿:", d.seed_value || "—", "",
+        "Behind the curtain 🎬:", d.seed_curtain || "—", "",
+        "Honest note 📝:", d.seed_honest || "—", "",
+        "Values flag 🚩:", d.seed_values || d.seed_value || "—", "",
         "My soft door 🚪:", d.seed_invite || "—", "",
         "(Cadence: four gives, one ask — the door posts last)", ""
       ]);
@@ -1249,8 +2531,22 @@
   }
 
   /* ── init ────────────────────────────────────────────── */
+  window.FS.onCalendarChange = function () {
+    var beforeSprout = lastSprout;
+    refreshButtons();
+    renderModuleChecklists();
+    renderTodayCard();
+    liveRefresh({ silent: true });
+    if (checklistProgress().sproutDone > beforeSprout) {
+      lastSprout = beforeSprout;
+      renderPlant({});
+    }
+  };
+
   renderBrand();
   wireOnboarding();
+  wireGrowthSettings();
+  syncGrowthSettingsUI();
   wireTour();
   updateModeUI();
   renderNav();
@@ -1259,9 +2555,12 @@
   renderRhythms();
   renderSeedTypes();
   renderHooks();
+  renderContentBanks();
+  renderKnowPanel();
   Tree.render(state);
   renderCountdowns();
-  var keys = ["why", "moment", "said_yes", "page_story", "seed_open", "seed_value", "seed_invite"];
+  wireRoadmapHover();
+  var keys = ["why", "moment", "said_yes", "page_story", "seed_open", "seed_value", "seed_curtain", "seed_honest", "seed_values", "seed_invite"];
   for (var ki = 0; ki < keys.length; ki++) runClaimCheck(keys[ki]);
   liveRefresh({ silent: true });
   setInterval(renderCountdowns, 60000);
@@ -1274,6 +2573,7 @@
         state.done = next.done || state.done;
         state.active = next.active || state.active;
         state.settings = next.settings || state.settings;
+        ensureSettings();
         state.tourDone = !!next.tourDone;
         state.cheers = next.cheers || [];
         if (!state.data.calendar) state.data.calendar = {};
@@ -1289,18 +2589,30 @@
         renderPanels();
         renderChoices();
         renderRhythms();
+        renderSeedTypes();
         Tree.render(state);
         liveRefresh({ silent: true });
         renderGreetings();
       },
       persist: function () { save(); },
       gotoPanel: function (id) {
+        if (id !== "welcome" && id !== "done" && id !== "calendar" && id !== "leader" && id !== "know" && id !== "leads" && !isModuleUnlocked(id)) {
+          showLockToast(id);
+          return;
+        }
+        hideLockToast();
         state.active = id;
         save();
         renderNav();
         renderPanels();
       }
     });
+  }
+
+  /* If they landed on a locked module (old save), send them home */
+  if (state.active && !isModuleUnlocked(state.active)) {
+    state.active = "welcome";
+    save();
   }
 
   if (!modeChosen()) {
