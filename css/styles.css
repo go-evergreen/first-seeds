@@ -833,7 +833,6 @@ body.overlay-open{overflow:hidden}
     gap:8px;
     max-width:100%;
   }
-  .topbar-hello{max-width:100%;text-align:center;order:-1;width:100%;font-size:14px}
   .topbar-cds{
     margin-left:0;
     gap:8px;
