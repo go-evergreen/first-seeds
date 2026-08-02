@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="First Seeds">
+  <rect width="64" height="64" rx="14" fill="#abb09a"/>
+  <ellipse cx="32" cy="46" rx="18" ry="7" fill="#5a4636"/>
+  <ellipse cx="32" cy="44" rx="14" ry="4.5" fill="#6b5740"/>
+  <ellipse cx="32" cy="30" rx="9" ry="12" fill="#6b5740"/>
+  <ellipse cx="29" cy="27" rx="3.2" ry="5" fill="#c4a574" opacity=".85"/>
+  <ellipse cx="32" cy="30" rx="9" ry="12" fill="none" stroke="#4a382c" stroke-width="1.2" opacity=".35"/>
+</svg>
