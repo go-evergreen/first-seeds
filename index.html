@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>First Seeds — Your Runway to Launch</title>
+<meta name="description" content="A self-paced guide for founding Ringana partners — from 'I'm in' to seeds planted, before pre-registration opens October 1.">
+<meta name="theme-color" content="#1c3227">
+<meta property="og:title" content="First Seeds — Your Runway to Launch">
+<meta property="og:description" content="Your story, your grove, your tree, your ground, your seeds, your rhythm. Grow it before the doors open.">
+<meta property="og:type" content="website">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,400;1,9..144,500&family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+
+<div class="layout">
+  <!-- ═══ RAIL ═══ -->
+  <aside class="rail">
+    <div>
+      <div class="brand-eyebrow" id="brandEyebrow">THE GROVE</div>
+      <div class="brand-title">First Seeds</div>
+      <div class="brand-sub" id="brandTagline">Your runway to launch — it grows as you do.</div>
+      <div class="mode-badge" id="modeBadge" hidden></div>
+    </div>
+
+    <div class="plantbox" id="railPlant" aria-hidden="true"></div>
+    <div class="plant-caption" id="plantCaption"></div>
+    <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+
+    <nav class="nav" id="nav" aria-label="Sections"></nav>
+
+    <div class="rail-foot">
+      <div class="rail-mode">
+        <div class="rail-mode-label">Your pace</div>
+        <div class="hub-mode-row">
+          <button type="button" class="hub-mode-btn" id="modeStarter">Getting started</button>
+          <button type="button" class="hub-mode-btn" id="modeFull">Full runway</button>
+        </div>
+        <p class="hub-mode-hint" id="hubModeHint"></p>
+      </div>
+      Your answers save automatically on this device.
+      <div class="rail-actions">
+        <button class="rail-btn" id="exportBtn">Download my answers</button>
+        <button class="rail-btn" id="resetBtn">Start over</button>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ═══ MAIN ═══ -->
+  <main class="main">
+
+    <!-- header bar with countdowns -->
+    <div class="topbar">
+      <div class="topbar-hello" id="topbarHello" hidden></div>
+      <div class="topbar-cds">
+        <div class="topbar-cd">
+          <span class="cd-num" id="cdPre">—</span><span class="cd-unit">DAYS</span>
+          <span class="cd-label" id="cdPreLabel">Pre-Reg Opens</span>
+        </div>
+        <div class="topbar-cd launch">
+          <span class="cd-num" id="cdLaunch">—</span><span class="cd-unit">DAYS</span>
+          <span class="cd-label" id="cdLaunchLabel">Products Launch</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="content">
+
+      <!-- WELCOME -->
+      <section class="panel" id="panel-welcome">
+        <div class="eyebrow">YOU'RE IN — NOW WHAT</div>
+        <h1 id="welcomeHeadline">You said yes.<br>Let's put down roots.</h1>
+        <p class="body-p" id="welcomeBody">You don't have to wait for launch to start. The people who show up strongest on launch day are the ones who did the quiet work first — got clear on their story, mapped who they wanted in their community, and started planting seeds before there was anything to buy.</p>
+        <p class="body-p" id="welcomePathNote"></p>
+        <div class="callout voice">
+          <div class="callout-tag">FROM YOUR TEAM</div>
+          <div class="callout-body">A quick promise: none of this should feel salesy or scripted. If a line doesn't sound like <em>you</em>, change it. Your story in your words is the one thing corporate can never copy — that's the whole edge.</div>
+        </div>
+        <div class="btn-row">
+          <button class="btn" data-goto="roots" id="welcomeCta">Plant your first seed →</button>
+        </div>
+      </section>
+
+      <!-- 01 ROOTS -->
+      <section class="panel" id="panel-roots" data-modes="starter full">
+        <div class="sec-num">01</div>
+        <h1 id="rootsHeadline">Plant Your Roots</h1>
+        <p class="sec-sub">Before you share a single thing, get clear on your own story.</p>
+        <p class="body-p">Everything you'll ever post, DM, or say out loud grows from this. Not the company's story — <em>yours</em>. Why this, why now, why you. Watch your story assemble itself below as you answer.</p>
+
+        <label class="field" data-field="why">
+          <span class="field-label">Your why — what made you care about clean products in the first place?</span>
+          <span class="field-hint">A health scare, having kids, reading a scary label, years of not feeling well. The real reason, not the polished one.</span>
+          <textarea data-key="why" rows="4" placeholder="I started paying attention to what was in my products when…"></textarea>
+          <span class="claim-check" data-check="why"></span>
+        </label>
+
+        <label class="field" data-field="moment">
+          <span class="field-label">Your moment — when did Ringana click for you?</span>
+          <span class="field-hint">Think of the founders' toothpaste moment — yours is the story of how you found this and why it felt different.</span>
+          <textarea data-key="moment" rows="4" placeholder="I found Ringana when… and what stopped me in my tracks was…"></textarea>
+          <span class="claim-check" data-check="moment"></span>
+        </label>
+
+        <label class="field" data-field="said_yes">
+          <span class="field-label">Why you said yes — in one or two sentences you'd actually text a friend.</span>
+          <span class="field-hint">This becomes your go-to answer when someone asks "wait, what are you doing?"</span>
+          <textarea data-key="said_yes" rows="2" placeholder="Honestly? I said yes because…"></textarea>
+          <span class="claim-check" data-check="said_yes"></span>
+        </label>
+
+        <div class="live-card">
+          <div class="live-tag">YOUR STORY SO FAR — SAY IT OUT LOUD ONCE</div>
+          <div class="story-preview" id="storyPreview"></div>
+        </div>
+
+        <div class="callout compliance">
+          <div class="callout-tag">KEEP IT CLEAN</div>
+          <div class="callout-body">Keep your story about <strong>your experience and your values</strong> — not what a product cured or fixed. "This is the standard I've been looking for" is yours to say. "This healed my ___" is a health claim, and those cause real problems as we head into the US launch. The checker under each box will nudge you if a word could read as a claim.</div>
+        </div>
+
+        <div class="btn-row">
+          <button class="btn waiting" data-complete="roots" data-ready="Roots are down → Map your grove" data-wait="Fill in all three above to continue">Fill in all three above to continue</button>
+          <span class="save-flash" data-flash="roots">Saved ✓</span>
+        </div>
+      </section>
+
+      <!-- 02 GROVE -->
+      <section class="panel" id="panel-grove" data-modes="starter full">
+        <div class="sec-num">02</div>
+        <h1>Map Your Grove</h1>
+        <p class="sec-sub">Who do you actually want in your community? Not a spray list — a thoughtful one.</p>
+        <p class="body-p">Forget "who can I sell to." Ask: <em>who do I genuinely want beside me in this?</em> The friend who reads labels too. The one always asking what you use. People who'd be a little hurt if you <em>didn't</em> tell them. Every name you add plants a tree below — aim for a grove of 15–25.</p>
+
+        <label class="field" data-field="warm">
+          <span class="field-label">Brain-dump your grove — one name per line. Don't filter yet.</span>
+          <span class="field-hint">Phone contacts, close friends, that group chat, the mom from school who asks about your skincare. Just names.</span>
+          <textarea data-key="warm" rows="8" placeholder="Jess&#10;Aunt Carol&#10;Megan from the gym&#10;…"></textarea>
+        </label>
+
+        <div class="grove-visual">
+          <div class="grove-count" id="groveCount"></div>
+          <div class="grove-trees" id="groveTrees"></div>
+          <div class="grove-hintline" id="groveHint"></div>
+        </div>
+
+        <label class="field" data-field="warm_pick">
+          <span class="field-label">Now pick your first 5 — the warmest, easiest, no-pressure conversations.</span>
+          <span class="field-hint">These are the people you'll message first once pre-registration opens. Start where it's easy.</span>
+          <textarea data-key="warm_pick" rows="3" placeholder="My first five to reach out to:"></textarea>
+        </label>
+
+        <div class="starter">
+          <div class="live-tag">STEAL THIS STARTER — FOR WHEN PRE-REG OPENS</div>
+          <div class="starter-text" id="starterText"></div>
+          <button class="copy-btn" data-copy="starterText">Copy it</button>
+        </div>
+
+        <div class="callout voice full-only">
+          <div class="callout-tag">FROM YOUR TEAM</div>
+          <div class="callout-body">You're not pitching these people on day one. You're <em>inviting them to be first.</em> Big difference. Make the starter yours — change every word until it sounds like a text you'd actually send. The only rule: no pressure, ever.</div>
+        </div>
+
+        <div class="btn-row">
+          <button class="btn waiting" data-complete="grove" data-ready-starter="Grove mapped → Claim your ground" data-ready-full="Grove mapped → Grow your tree" data-ready="Grove mapped → Grow your tree" data-wait="Add at least 5 names and your first five to continue">Add at least 5 names and your first five to continue</button>
+          <span class="save-flash" data-flash="grove">Saved ✓</span>
+        </div>
+      </section>
+
+      <!-- 03 TREE (full only) -->
+      <section class="panel" id="panel-tree" data-modes="full">
+        <div class="sec-num">03</div>
+        <h1>Grow Your Tree</h1>
+        <p class="sec-sub">Your grove is who you'll invite. Your tree is who you dream of building with.</p>
+        <p class="body-p">This is your ideal family tree — the team you're growing, sketched out <em>before</em> it exists. Add the people you'd love on your front line. Then add branches under them: who might <em>they</em> bring? Mark each person <strong>🌱 hopeful</strong> (you dream of them joining) or <strong>🌳 committed</strong> (they've said yes). Watch it become real between now and launch.</p>
+
+        <div class="tree-wrap">
+          <div class="tree-stats" id="treeStats"></div>
+          <div id="familyTree"></div>
+          <div class="tree-legend">🌱 <strong>hopeful</strong> — you'd love them in this · 🌳 <strong>committed</strong> — they're in · tap a status to switch it · ＋ branch adds someone under them</div>
+        </div>
+
+        <div class="callout voice">
+          <div class="callout-tag">FROM YOUR TEAM</div>
+          <div class="callout-body">Dreaming in names makes it real. When you can see that Sarah might bring her sister, and her sister runs that wellness book club — you stop building a vague "downline" and start building a family with faces. Come back and flip 🌱 to 🌳 every time someone says yes. That moment never gets old.</div>
+        </div>
+
+        <div class="callout compliance">
+          <div class="callout-tag">KEEP IT CLEAN</div>
+          <div class="callout-body">Dream big here, but invite honestly out there: share the products and the timing, never income promises. "Come build this with me" is beautiful. "You'll make money" is a claim nobody can make.</div>
+        </div>
+
+        <div class="btn-row">
+          <button class="btn waiting" data-complete="tree" data-ready="Tree sketched → Claim your ground" data-wait="Add at least 3 people to your tree to continue">Add at least 3 people to your tree to continue</button>
+          <span class="save-flash" data-flash="tree">Saved ✓</span>
+        </div>
+      </section>
+
+      <!-- 04 GROUND -->
+      <section class="panel" id="panel-ground" data-modes="starter full">
+        <div class="sec-num" id="groundNum">04</div>
+        <h1>Your Own Patch of Ground</h1>
+        <p class="sec-sub">A simple home base that's yours — in your voice, not a copy of anyone else's.</p>
+        <p class="body-p">A landing page gives curious people one warm place to land — instead of losing them in a DM thread. Two easy ways to get one, neither requires tech skills:</p>
+
+        <button class="choice" data-choice="page_choice" data-value="custom">
+          <span class="choice-head"><span class="choice-radio"></span><span class="choice-title" id="customTitle"></span></span>
+          <span class="choice-desc" id="customDesc"></span>
+        </button>
+        <button class="choice" data-choice="page_choice" data-value="generic">
+          <span class="choice-head"><span class="choice-radio"></span><span class="choice-title" id="genericTitle"></span></span>
+          <span class="choice-desc" id="genericDesc"></span>
+        </button>
+
+        <label class="field" data-field="page_story" style="margin-top:24px">
+          <span class="field-label">Draft your page's opening line — the first thing a visitor reads.</span>
+          <span class="field-hint">Pull straight from Section 01. Your why, in one warm sentence. Watch it appear on your page below.</span>
+          <textarea data-key="page_story" rows="3" placeholder="e.g. I've spent years helping people swap the questionable stuff — here's the one I've been waiting to share…"></textarea>
+          <span class="claim-check" data-check="page_story"></span>
+        </label>
+
+        <div class="mini-page">
+          <div class="mini-chrome"><span class="mini-dot"></span><span class="mini-dot"></span><span class="mini-dot"></span><span class="mini-url">yourname.com</span></div>
+          <div class="mini-body">
+            <div class="mini-eyebrow">COMING TO AMERICA · 2026</div>
+            <div class="mini-headline" id="miniHeadline"></div>
+            <div class="mini-btnrow"><span class="mini-btn">Get First Access</span></div>
+          </div>
+        </div>
+
+        <div class="callout compliance full-only">
+          <div class="callout-tag">KEEP IT CLEAN · READ BEFORE YOU PUBLISH</div>
+          <div class="callout-body"><strong>1. Don't clone the official Ringana page.</strong> Yours should look and sound like <em>you</em> — your story, your voice, your photos where you can. The personal part is the part no corporate page can replicate.<br><br>
+          <strong>2. Tie every product claim to real data or your own honest experience.</strong> "Here's what I noticed using it" is fine. Specific health or medical claims are not — they trip platform filters and attract regulator attention.</div>
+        </div>
+
+        <div class="btn-row">
+          <button class="btn waiting" data-complete="ground" data-ready-starter="Ground claimed → Learn to tend it" data-ready-full="Ground claimed → Start planting" data-ready="Ground claimed → Start planting" data-wait="Pick a page option and draft your opening line">Pick a page option and draft your opening line</button>
+          <span class="save-flash" data-flash="ground">Saved ✓</span>
+        </div>
+      </section>
+
+      <!-- 05 PLANT / POST STUDIO (full only) -->
+      <section class="panel" id="panel-plant" data-modes="full">
+        <div class="sec-num">05</div>
+        <h1>Start Planting</h1>
+        <p class="sec-sub">The Post Studio — curiosity that's earned, not baited. Selling that doesn't feel like selling.</p>
+        <p class="body-p">The pre-launch window isn't dead time — it's the <em>most</em> valuable time. But most people fill it wrong: either radio silence or spammy hype. Here's the sustainable middle: <strong>five kinds of posts, each doing one psychological job, in a ratio that protects your reputation.</strong></p>
+
+        <div class="live-card cadence-card">
+          <div class="live-tag">THE RATIO THAT PROTECTS YOUR REPUTATION</div>
+          <div class="cadence-dots">
+            <span class="cdot give" title="Give">🌿</span>
+            <span class="cdot give" title="Give">🌿</span>
+            <span class="cdot give" title="Give">🌿</span>
+            <span class="cdot give" title="Give">🌿</span>
+            <span class="cdot ask" title="Invite">🚪</span>
+          </div>
+          <div class="cadence-note"><strong>Four gives, one ask.</strong> Story, process, honesty, values… <em>then</em> one soft door. People who only ever open doors get muted. People who give four times first get their door walked through.</div>
+        </div>
+
+        <p class="body-p"><strong>The five seed types.</strong> Tap each one — the psychology, the template, a worked example, and the classy rule that keeps it from ever feeling gross:</p>
+
+        <div id="seedTypes"></div>
+
+        <div class="hook-bank">
+          <div class="live-tag">HOOK BANK — FIRST LINES THAT EARN THE PAUSE</div>
+          <p class="hook-intro">The first line's only job is to stop the scroll with something true. Steal these, then rewrite every one in your own voice:</p>
+          <div id="hookList"></div>
+        </div>
+
+        <p class="body-p" style="margin-top:28px"><strong>Now draft your starter trio</strong> — one open loop, one give (any of types 2–4), and one soft door. That's your first five days of launch-season content, done before it starts:</p>
+
+        <label class="field" data-field="seed_open">
+          <span class="field-label">Draft 1 — Your Open Loop 🔓</span>
+          <span class="field-hint">A true, specific moment from your Ringana story with the resolution held back. Pull from your Roots section.</span>
+          <textarea data-key="seed_open" rows="4" placeholder="In January I…"></textarea>
+          <span class="claim-check" data-check="seed_open"></span>
+        </label>
+
+        <label class="field" data-field="seed_value">
+          <span class="field-label">Draft 2 — Your Give 🌿 (curtain, honest note, or values flag)</span>
+          <span class="field-hint">Pick whichever type feels most natural to you. Specific beats polished, honest beats hyped.</span>
+          <textarea data-key="seed_value" rows="4" placeholder="Currently:…  /  Honest note on…  /  Unpopular-ish opinion:…"></textarea>
+          <span class="claim-check" data-check="seed_value"></span>
+        </label>
+
+        <label class="field" data-field="seed_invite">
+          <span class="field-label">Draft 3 — Your Soft Door 🚪</span>
+          <span class="field-hint">One tiny ask, zero pressure, keyword included. This one only posts after the gives have gone out.</span>
+          <textarea data-key="seed_invite" rows="4" placeholder="Real talk: … DM me FRESH and you're in. No pitch, no pressure."></textarea>
+          <span class="claim-check" data-check="seed_invite"></span>
+        </label>
+
+        <div class="callout voice">
+          <div class="callout-tag">FROM YOUR TEAM · THE DM IS WHERE IT ACTUALLY HAPPENS</div>
+          <div class="callout-body">Posts open conversations; DMs build them. When someone sends your keyword: reply within a day, <strong>ask a question before you share anything</strong> ("what made you curious?"), and never paste a script wall. Slow is smooth. One real conversation beats fifty broadcast views — and it's the part of this business an algorithm can never take from you.</div>
+        </div>
+
+        <div class="callout compliance">
+          <div class="callout-tag">KEEP IT CLEAN</div>
+          <div class="callout-body">"Here's what <em>I</em> noticed" is your safest <em>and</em> strongest frame. The checker under each draft flags anything that could read as a health claim before you ever post it. And never promise income in an invitation — "come build this with me" is the whole pitch.</div>
+        </div>
+
+        <div class="btn-row">
+          <button class="btn waiting" data-complete="plant" data-ready="Trio drafted → Learn to tend it" data-wait="Draft all three posts to continue">Draft all three posts to continue</button>
+          <span class="save-flash" data-flash="plant">Saved ✓</span>
+        </div>
+      </section>
+
+      <!-- 06 TEND -->
+      <section class="panel" id="panel-tend" data-modes="starter full">
+        <div class="sec-num" id="tendNum">06</div>
+        <h1>Tend It</h1>
+        <p class="sec-sub">Consistency to launch — and you're not doing it alone.</p>
+        <p class="body-p">A garden doesn't grow from one big planting day — it grows from showing up. Pick a rhythm you can actually keep (at least three). Your week lights up below as you choose.</p>
+
+        <div id="rhythmList"></div>
+
+        <div class="week-strip" id="weekStrip"></div>
+
+        <div class="callout voice">
+          <div class="callout-tag">FROM YOUR TEAM · YOU'RE NOT ALONE IN THIS</div>
+          <div class="callout-body">This is the part that matters most: you never have to figure this out by yourself. Bring your questions to the team group, show up to the gatherings, watch what's working for others and borrow it shamelessly. That's the whole point of building together instead of alone.</div>
+        </div>
+
+        <div class="timeline full-only">
+          <div class="tl-row"><div class="tl-when">Now → Oct 1</div><div class="tl-what">Roots, grove, tree, ground, first seeds — everything in this guide. Quiet work, big payoff.</div></div>
+          <div class="tl-row"><div class="tl-when">Oct 1 → Nov 1</div><div class="tl-what">Pre-registration is open. Invite your grove to be first. Keep your posting rhythm — tease, tease, invite. Flip 🌱 to 🌳 in your tree as people say yes.</div></div>
+          <div class="tl-row"><div class="tl-when">Nov 1</div><div class="tl-what">Products launch. Personally message everyone who raised a hand — with your one honest "start here" pick, not a catalog.</div></div>
+        </div>
+
+        <div class="btn-row">
+          <button class="btn waiting" data-complete="tend" data-ready="Commit to my rhythm →" data-wait="Pick at least three to commit to">Pick at least three to commit to</button>
+          <span class="save-flash" data-flash="tend">Saved ✓</span>
+        </div>
+      </section>
+
+      <!-- FINISH -->
+      <section class="panel finish" id="panel-done">
+        <div class="plantbox" id="finishPlant" aria-hidden="true"></div>
+        <div class="eyebrow" style="margin-bottom:10px" id="finishEyebrow">IN FULL BLOOM</div>
+        <h1 id="finishHeadline">Look what you grew.</h1>
+        <p class="body-p" style="max-width:540px;margin-left:auto;margin-right:auto" id="finishBody">You've got your story, your grove, your dream tree, your page, your first seeds, and a rhythm to carry you to launch. That's more than most people have on day <em>one</em> — and you did it before the doors even opened. Now keep showing up — and keep flipping those 🌱 to 🌳.</p>
+        <div class="finish-sign" id="signoff"></div>
+        <div class="btn-row" style="justify-content:center">
+          <button class="btn-ghost" data-goto="roots">Revisit any section</button>
+          <button class="btn" id="levelUpBtn" hidden>Unlock Full runway →</button>
+          <button class="btn" id="exportBtn2">Download my answers</button>
+        </div>
+      </section>
+
+    </div>
+  </main>
+</div>
+
+<!-- ═══ ONBOARDING ═══ -->
+<div class="overlay onboarding" id="onboarding" role="dialog" aria-modal="true" aria-labelledby="onboardTitle">
+  <div class="overlay-card onboarding-card onboarding-welcome" id="onboardingCard">
+    <div class="onboarding-dots" id="onboardingDots" aria-hidden="true"></div>
+
+    <div class="onboarding-pane on" data-onboard-step="0">
+      <p class="onboarding-eyebrow" id="obWelcomeEyebrow">Welcome to the team</p>
+      <h3 id="onboardTitle">You made it in.</h3>
+      <p class="lead" id="obWelcomeBody"></p>
+      <button type="button" class="btn overlay-btn" id="onboardingNext">Let's go</button>
+    </div>
+
+    <div class="onboarding-pane" data-onboard-step="1">
+      <p class="onboarding-eyebrow" id="obNameEyebrow">Step 2 of 3</p>
+      <h3 id="obNameTitle">What should we call you?</h3>
+      <p class="lead" id="obNameHint"></p>
+      <div class="onboard-hype" id="obHype">
+        <div class="onboard-hype-num" id="obHypeDays">—</div>
+        <div class="onboard-hype-meta">
+          <div class="onboard-hype-label">days until pre-reg</div>
+          <div class="onboard-hype-line" id="obHypeLine"></div>
+        </div>
+      </div>
+      <label class="onboard-name-field">
+        <span class="sr-only">First name</span>
+        <input type="text" id="partnerNameInput" maxlength="40" autocomplete="given-name" placeholder="Your first name">
+      </label>
+      <button type="button" class="btn overlay-btn" id="onboardingNameNext" disabled>Continue</button>
+    </div>
+
+    <div class="onboarding-pane" data-onboard-step="2">
+      <p class="onboarding-eyebrow" id="obModeEyebrow">Step 3 of 3</p>
+      <h3 id="obModeTitle">Pick your pace</h3>
+      <p class="lead" id="obModeLead"></p>
+      <button type="button" class="mode-pick" data-hub-mode="starter" id="modePickStarter">
+        <strong id="modePickStarterLabel">Getting started</strong>
+        <span id="modePickStarterDesc"></span>
+      </button>
+      <button type="button" class="mode-pick" data-hub-mode="full" id="modePickFull">
+        <strong id="modePickFullLabel">Full runway</strong>
+        <span id="modePickFullDesc"></span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ MINI TOUR ═══ -->
+<div class="overlay tour" id="tour" role="dialog" aria-modal="true" aria-labelledby="tourTitle">
+  <div class="overlay-card tour-card">
+    <div class="onboarding-dots" id="tourDots" aria-hidden="true"></div>
+    <h3 id="tourTitle"></h3>
+    <p class="lead" id="tourBody"></p>
+    <button type="button" class="btn overlay-btn" id="tourNext">Next</button>
+  </div>
+</div>
+
+<script src="js/config.js"></script>
+<script src="js/data.js"></script>
+<script src="js/plant.js"></script>
+<script src="js/tree.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
