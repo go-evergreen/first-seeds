@@ -214,6 +214,12 @@ button{font-family:inherit;cursor:pointer}
 .leads-gate{background:var(--beige);border-radius:16px;padding:18px 16px;margin:8px 0 20px}
 .leads-mode-note{font-size:13px;line-height:1.45;color:var(--bark);background:#fff8e8;border:1px solid rgba(196,122,74,.35);border-radius:12px;padding:10px 12px;margin:0 0 14px}
 .leads-share-card{margin-bottom:18px}
+.leads-share-main{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.leads-share-main .invite-input{flex:1;min-width:160px}
+.leads-settings-btn{width:42px;height:42px;border-radius:12px;border:1.5px solid var(--sand);background:var(--white);color:var(--green-mid);display:grid;place-items:center;padding:0;cursor:pointer;flex-shrink:0;transition:all .2s}
+.leads-settings-btn:hover,.leads-settings-btn.on{border-color:var(--moss);background:#eef2ec;color:var(--green)}
+.leads-page-settings{margin-top:16px;padding-top:16px;border-top:1px solid var(--sand)}
+.leads-settings-label{font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--moss);margin:0 0 8px}
 .leads-slug-row{display:flex;flex-wrap:wrap;align-items:center;gap:8px}
 .leads-slug-prefix{font-size:12px;color:var(--bark-soft);font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
 .leads-slug-row .invite-input{flex:1;min-width:120px}

@@ -131,9 +131,13 @@ window.FS = window.FS || {};
         sponsor_id: u.sponsor_id || null,
         last_active_at: u.last_active_at,
         lead_slug: u.lead_slug || "",
-        lead_blurb: u.lead_blurb || ""
+        lead_blurb: u.lead_blurb || "",
+        lead_thanks: u.lead_thanks || ""
       };
     },
+
+    DEFAULT_LEAD_THANKS:
+      "Thanks for adding your info! I’ll be in touch with some exciting Ringana details soon!",
 
     _hydrateSupabaseUser: async function (authUser) {
       var { data: profile } = await client.from("profiles").select("*").eq("id", authUser.id).maybeSingle();
@@ -705,6 +709,13 @@ window.FS = window.FS || {};
       return Cloud.updateProfile({ lead_blurb: blurb });
     },
 
+    setLeadPageCopy: async function (blurb, thanks) {
+      if (!sessionUser) throw new Error("Sign in first.");
+      blurb = ((blurb || "") + "").trim().slice(0, 280);
+      thanks = ((thanks || "") + "").trim().slice(0, 280);
+      return Cloud.updateProfile({ lead_blurb: blurb, lead_thanks: thanks });
+    },
+
     getLeadPage: async function (slug) {
       slug = (slug || "").trim().toLowerCase();
       if (!slug) return null;
@@ -721,7 +732,8 @@ window.FS = window.FS || {};
           found = {
             slug: u.lead_slug,
             display_name: u.display_name,
-            blurb: u.lead_blurb || ""
+            blurb: u.lead_blurb || "",
+            thanks: u.lead_thanks || ""
           };
         }
       });

@@ -830,6 +830,10 @@ window.FS = window.FS || {};
       syncLeadsShareUI(slug);
       var blurb = $("leadsBlurbInput");
       if (blurb && document.activeElement !== blurb) blurb.value = user.lead_blurb || "";
+      var thanks = $("leadsThanksInput");
+      if (thanks && document.activeElement !== thanks) {
+        thanks.value = user.lead_thanks || Cloud.DEFAULT_LEAD_THANKS || "";
+      }
       leadsCache = await Cloud.listMyLeads();
       renderLeadsList();
       var badge = document.querySelector('[data-tab="leads"] .bottom-nav-badge');
@@ -889,7 +893,7 @@ window.FS = window.FS || {};
         "[data-cal-day],[data-cal-select],[data-cal-status],[data-cal-swap],[data-cal-week],[data-cal-nav],[data-cal-view],[data-cal-add],[data-cal-clear]," +
         "[data-cal-new],[data-cal-edit],[data-cal-item],[data-cal-accept],[data-cal-cadence],[data-cal-setup-toggle],[data-cal-save],[data-cal-delete]," +
         "[data-lib-tab],[data-lib-add],#calSheetClose,#calSheetX," +
-        "#leadsSignInBtn,#leadsSlugSave,#leadsCopyLink,#leadsBlurbSave,[data-leads-filter],[data-lead-status]"
+        "#leadsSignInBtn,#leadsCopyLink,#leadsPageSettingsBtn,#leadsPageSettingsSave,[data-leads-filter],[data-lead-status]"
       );
       if (!t) return;
 
@@ -900,30 +904,36 @@ window.FS = window.FS || {};
         if (shareIn && navigator.clipboard) {
           navigator.clipboard.writeText(shareIn.value).then(function () {
             t.textContent = "Copied ✓";
-            setTimeout(function () { t.textContent = "Copy link"; }, 1600);
+            setTimeout(function () { t.textContent = "Copy"; }, 1600);
           });
         }
         return;
       }
-      if (t.id === "leadsSlugSave") {
-        var slugMsg = $("leadsSlugMsg");
-        var desired = (($("leadsSlugInput") || {}).value || "").trim();
-        try {
-          var claimed = await Cloud.claimLeadSlug(desired);
-          syncLeadsShareUI(claimed);
-          if (slugMsg) slugMsg.textContent = "Saved — your link is ready.";
-        } catch (err) {
-          if (slugMsg) slugMsg.textContent = (err && err.message) || "Could not save that link.";
-        }
+      if (t.id === "leadsPageSettingsBtn") {
+        var panel = $("leadsPageSettings");
+        if (!panel) return;
+        var open = panel.hidden;
+        panel.hidden = !open;
+        t.classList.toggle("on", open);
+        t.setAttribute("aria-expanded", open ? "true" : "false");
         return;
       }
-      if (t.id === "leadsBlurbSave") {
-        var blurbMsg = $("leadsSlugMsg");
+      if (t.id === "leadsPageSettingsSave") {
+        var settingsMsg = $("leadsSlugMsg");
+        var desired = (($("leadsSlugInput") || {}).value || "").trim();
         try {
-          await Cloud.setLeadBlurb((($("leadsBlurbInput") || {}).value || ""));
-          if (blurbMsg) blurbMsg.textContent = "Intro saved.";
+          t.disabled = true;
+          var claimed = await Cloud.claimLeadSlug(desired);
+          syncLeadsShareUI(claimed);
+          await Cloud.setLeadPageCopy(
+            (($("leadsBlurbInput") || {}).value || ""),
+            (($("leadsThanksInput") || {}).value || "")
+          );
+          if (settingsMsg) settingsMsg.textContent = "Page settings saved.";
         } catch (err) {
-          if (blurbMsg) blurbMsg.textContent = (err && err.message) || "Could not save intro.";
+          if (settingsMsg) settingsMsg.textContent = (err && err.message) || "Could not save page settings.";
+        } finally {
+          t.disabled = false;
         }
         return;
       }

@@ -17,6 +17,12 @@
   var msg = document.getElementById("leadFormMsg");
   var interestInput = document.getElementById("leadInterest");
   var partnerName = "";
+  var thanksMessage = "";
+
+  function defaultThanks() {
+    return (Cloud && Cloud.DEFAULT_LEAD_THANKS) ||
+      "Thanks for adding your info! I’ll be in touch with some exciting Ringana details soon!";
+  }
 
   function show(el) {
     [loading, missing, page, thanks].forEach(function (n) {
@@ -66,11 +72,7 @@
         }
         await Cloud.submitLead(slug, payload);
         var thanksBody = document.getElementById("leadThanksBody");
-        if (thanksBody) {
-          thanksBody.textContent = partnerName
-            ? ("Thanks — " + firstName(partnerName) + " will be in touch soon.")
-            : "Thanks — they’ll be in touch soon.";
-        }
+        if (thanksBody) thanksBody.textContent = thanksMessage || defaultThanks();
         show(thanks);
       } catch (err) {
         if (msg) msg.textContent = (err && err.message) || "Something went wrong. Try again.";
@@ -105,6 +107,9 @@
         blurbEl.textContent = blurb ||
           ("I’m gathering a small founding circle before launch — leave your info and I’ll follow up personally.");
       }
+      thanksMessage = ((info.thanks || "") + "").trim() || defaultThanks();
+      var thanksBody = document.getElementById("leadThanksBody");
+      if (thanksBody) thanksBody.textContent = thanksMessage;
       show(page);
     } catch (err) {
       show(missing);

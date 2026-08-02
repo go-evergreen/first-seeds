@@ -20,7 +20,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,400;1,9..144,500&family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/styles.css?v=66">
+<link rel="stylesheet" href="css/styles.css?v=67">
 </head>
 <body>
 
@@ -673,27 +673,46 @@
           <p class="leads-mode-note" id="leadsModeNote" hidden></p>
           <div class="invite-card leads-share-card">
             <div class="live-tag">YOUR LINK</div>
-            <p class="body-p" style="margin-bottom:10px">Pick a short name for your URL, then copy and share it.</p>
-            <div class="leads-slug-row">
-              <span class="leads-slug-prefix">…/lead.html?p=</span>
-              <input class="invite-input light" id="leadsSlugInput" maxlength="30" spellcheck="false" autocomplete="off">
-              <button type="button" class="btn-ghost" id="leadsSlugSave">Save</button>
-            </div>
-            <div class="invite-row" style="margin-top:12px">
-              <input class="invite-input light" id="leadsShareInput" readonly>
-              <button type="button" class="copy-btn" id="leadsCopyLink">Copy link</button>
+            <div class="leads-share-main">
+              <input class="invite-input light" id="leadsShareInput" readonly aria-label="Your shareable lead link">
+              <button type="button" class="copy-btn" id="leadsCopyLink">Copy</button>
+              <button type="button" class="leads-settings-btn" id="leadsPageSettingsBtn" aria-label="Lead page settings" aria-expanded="false" aria-controls="leadsPageSettings" title="Lead page settings">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                  <path d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z" stroke="currentColor" stroke-width="1.8"/>
+                  <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09A1.65 1.65 0 0 0 15 4.6a1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.32 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>
+                </svg>
+              </button>
             </div>
             <p class="leads-slug-msg" id="leadsSlugMsg" role="status"></p>
-            <div class="btn-row" style="margin-top:12px">
+            <div class="btn-row" style="margin-top:10px">
               <a class="btn-ghost" id="leadsPreviewLink" href="lead.html">Preview page →</a>
             </div>
-          </div>
 
-          <label class="leads-blurb-field">
-            <span class="field-label">A line in your voice (optional)</span>
-            <textarea id="leadsBlurbInput" rows="2" maxlength="280" placeholder="Why should someone leave their info with you?"></textarea>
-            <button type="button" class="btn-ghost" id="leadsBlurbSave">Save intro</button>
-          </label>
+            <div class="leads-page-settings" id="leadsPageSettings" hidden>
+              <div class="leads-settings-label">Lead page settings</div>
+              <p class="hub-menu-note" style="margin:0 0 12px">Customize your short link and the words visitors see.</p>
+
+              <label class="leads-blurb-field" style="margin-bottom:14px">
+                <span class="field-label">Short link name</span>
+                <div class="leads-slug-row">
+                  <span class="leads-slug-prefix">…/lead.html?p=</span>
+                  <input class="invite-input light" id="leadsSlugInput" maxlength="30" spellcheck="false" autocomplete="off">
+                </div>
+              </label>
+
+              <label class="leads-blurb-field" style="margin-bottom:14px">
+                <span class="field-label">Intro on your page</span>
+                <textarea id="leadsBlurbInput" rows="2" maxlength="280" placeholder="I’m gathering a small founding circle before launch…"></textarea>
+              </label>
+
+              <label class="leads-blurb-field" style="margin-bottom:14px">
+                <span class="field-label">Success message (after they submit)</span>
+                <textarea id="leadsThanksInput" rows="2" maxlength="280" placeholder="Thanks for adding your info! I’ll be in touch with some exciting Ringana details soon!"></textarea>
+              </label>
+
+              <button type="button" class="btn" id="leadsPageSettingsSave" style="width:100%">Save page settings</button>
+            </div>
+          </div>
 
           <div class="leads-inbox-head">
             <div class="live-tag">INBOX</div>
@@ -881,17 +900,17 @@
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="js/config.js?v=66"></script>
-<script src="js/supabase-config.js?v=66"></script>
-<script src="js/data.js?v=66"></script>
-<script src="js/content.js?v=66"></script>
-<script src="js/products.js?v=66"></script>
-<script src="js/plant.js?v=66"></script>
-<script src="js/tree.js?v=66"></script>
-<script src="js/calendar.js?v=66"></script>
-<script src="js/cloud.js?v=66"></script>
-<script src="js/bridge-ui.js?v=66"></script>
-<script src="js/app.js?v=66"></script>
-<script src="js/pwa.js?v=66"></script>
+<script src="js/config.js?v=67"></script>
+<script src="js/supabase-config.js?v=67"></script>
+<script src="js/data.js?v=67"></script>
+<script src="js/content.js?v=67"></script>
+<script src="js/products.js?v=67"></script>
+<script src="js/plant.js?v=67"></script>
+<script src="js/tree.js?v=67"></script>
+<script src="js/calendar.js?v=67"></script>
+<script src="js/cloud.js?v=67"></script>
+<script src="js/bridge-ui.js?v=67"></script>
+<script src="js/app.js?v=67"></script>
+<script src="js/pwa.js?v=67"></script>
 </body>
 </html>

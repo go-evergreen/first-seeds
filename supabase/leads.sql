@@ -2,10 +2,11 @@
 -- Run AFTER supabase/schema.sql in the Supabase SQL editor.
 -- Safe to re-run.
 
--- ── slug + optional page intro on each partner ────────────
+-- ── slug + optional page copy on each partner ─────────────
 alter table public.profiles
   add column if not exists lead_slug text,
-  add column if not exists lead_blurb text not null default '';
+  add column if not exists lead_blurb text not null default '',
+  add column if not exists lead_thanks text not null default '';
 
 create unique index if not exists profiles_lead_slug_idx
   on public.profiles (lower(lead_slug))
@@ -73,7 +74,8 @@ begin
   return jsonb_build_object(
     'slug', row.lead_slug,
     'display_name', row.display_name,
-    'blurb', coalesce(nullif(trim(row.lead_blurb), ''), '')
+    'blurb', coalesce(nullif(trim(row.lead_blurb), ''), ''),
+    'thanks', coalesce(nullif(trim(row.lead_thanks), ''), '')
   );
 end;
 $$;
