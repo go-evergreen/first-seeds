@@ -102,6 +102,13 @@ window.FS.CONFIG = {
     nameCta: "That's me →",
     hypeLine: "Pre-registration opens October 1. Prep season is right now — and you're already in it.",
 
+    authEyebrow: "Save your spot",
+    authTitle: "Sign in so nothing gets lost",
+    authBody: "Email yourself a sign-in link. Your runway, lead page, and progress stay with you on any phone or laptop — not locked to this one browser.",
+    authCta: "Email me a sign-in link →",
+    authSkip: "Continue without signing in",
+    authHint: "You can always sign in later from the top bar. Lead pages need a signed-in account to work for real visitors.",
+
     modeEyebrow: "Your path",
     modeTitle: "How deep do you want to go?",
     modeLead: "No wrong answer. Start soft or go all in — you can switch anytime in Settings."

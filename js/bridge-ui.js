@@ -122,7 +122,8 @@ window.FS = window.FS || {};
     var user = Cloud.user();
     var signPane = $("authSignPane");
     var acctPane = $("authAccountPane");
-    if (user && (forceAccount || true)) {
+    var showAccount = !!(user && forceAccount);
+    if (showAccount) {
       if (signPane) signPane.hidden = true;
       if (acctPane) acctPane.hidden = false;
       var nameEl = $("authDisplayName");
@@ -136,10 +137,13 @@ window.FS = window.FS || {};
     } else {
       if (signPane) signPane.hidden = false;
       if (acctPane) acctPane.hidden = true;
-    }
-    if (!user) {
-      if (signPane) signPane.hidden = false;
-      if (acctPane) acctPane.hidden = true;
+      var authName = $("authName");
+      if (authName && getState) {
+        var st = getState();
+        if (st && st.settings && st.settings.partnerName && !authName.value) {
+          authName.value = st.settings.partnerName;
+        }
+      }
     }
     overlay.classList.add("open");
     document.body.classList.add("overlay-open");
@@ -853,6 +857,9 @@ window.FS = window.FS || {};
           badge.textContent = n > 9 ? "9+" : String(n);
         }
       } catch (e) {}
+    }
+    if (typeof window.FS.onAuthReady === "function") {
+      try { window.FS.onAuthReady(Cloud.user()); } catch (e) {}
     }
   }
 

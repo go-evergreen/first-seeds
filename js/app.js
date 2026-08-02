@@ -331,6 +331,14 @@
     setText("obNameTitle", OB.nameTitle);
     setText("obNameHint", OB.nameHint);
     setText("obHypeLine", OB.hypeLine);
+    setText("obAuthEyebrow", OB.authEyebrow);
+    setText("obAuthTitle", OB.authTitle);
+    setText("obAuthBody", obCopy(OB.authBody));
+    setText("obAuthHint", obCopy(OB.authHint));
+    var authCta = document.getElementById("onboardingSignInBtn");
+    if (authCta && OB.authCta) authCta.textContent = OB.authCta;
+    var authSkip = document.getElementById("onboardingSkipAuth");
+    if (authSkip && OB.authSkip) authSkip.textContent = OB.authSkip;
     setText("obModeEyebrow", OB.modeEyebrow);
     setText("obModeTitle", OB.modeTitle);
     setText("obModeLead", OB.modeLead);
@@ -2060,8 +2068,17 @@
 
   /* ── onboarding ──────────────────────────────────────── */
   var onboardingStep = 0;
-  var ONBOARD_STEPS = 4;
-  var ONBOARD_THEMES = ["onboarding-welcome", "onboarding-circle", "onboarding-name", "onboarding-mode"];
+  var ONBOARD_STEPS = 5;
+  var ONBOARD_THEMES = ["onboarding-welcome", "onboarding-circle", "onboarding-name", "onboarding-auth", "onboarding-mode"];
+
+  function cloudSignedIn() {
+    return !!(window.FS.Cloud && window.FS.Cloud.isSignedIn && window.FS.Cloud.isSignedIn());
+  }
+
+  function advanceToModeStep() {
+    onboardingStep = 4;
+    renderOnboardingStep();
+  }
 
   function renderOnboardingStep() {
     var card = document.getElementById("onboardingCard");
@@ -2092,6 +2109,16 @@
         setTimeout(function () { input.focus(); }, 50);
       }
     }
+    if (onboardingStep === 3) {
+      var emailIn = document.getElementById("onboardingEmail");
+      var msg = document.getElementById("onboardingAuthMsg");
+      if (msg) msg.textContent = "";
+      if (cloudSignedIn()) {
+        advanceToModeStep();
+        return;
+      }
+      if (emailIn) setTimeout(function () { emailIn.focus(); }, 50);
+    }
   }
 
   function syncNameNext() {
@@ -2105,7 +2132,10 @@
   function startOnboarding() {
     var wrap = document.getElementById("onboarding");
     if (!wrap || modeChosen()) return;
-    onboardingStep = 0;
+    /* Resume mid-flow if they already shared a name (e.g. returned from magic link). */
+    if (partnerName() && cloudSignedIn()) onboardingStep = 4;
+    else if (partnerName()) onboardingStep = 3;
+    else onboardingStep = 0;
     renderOnboardingStep();
     wrap.classList.add("open");
     setOverlayOpen(true);
@@ -2162,6 +2192,49 @@
         save();
         onboardingStep = 3;
         renderOnboardingStep();
+      });
+    }
+
+    var signInBtn = document.getElementById("onboardingSignInBtn");
+    var skipAuth = document.getElementById("onboardingSkipAuth");
+    var emailInput = document.getElementById("onboardingEmail");
+    if (emailInput) {
+      emailInput.addEventListener("keydown", function (e) {
+        if (e.key === "Enter") {
+          e.preventDefault();
+          if (signInBtn) signInBtn.click();
+        }
+      });
+    }
+    if (signInBtn) {
+      signInBtn.addEventListener("click", async function () {
+        var msg = document.getElementById("onboardingAuthMsg");
+        var email = emailInput ? emailInput.value.trim() : "";
+        var name = partnerName() || "friend";
+        if (!window.FS.Cloud || !window.FS.Cloud.signIn) {
+          if (msg) msg.textContent = "Sign-in isn’t available right now — continue and try from the top bar later.";
+          return;
+        }
+        try {
+          signInBtn.disabled = true;
+          var res = await window.FS.Cloud.signIn(email, name);
+          if (msg) msg.textContent = res.message || "Check your email.";
+          if (res.kind === "local") {
+            advanceToModeStep();
+          } else if (msg) {
+            msg.textContent = (res.message || "Check your email for a sign-in link.") +
+              " After you tap it, you’ll land back here to pick your path.";
+          }
+        } catch (err) {
+          if (msg) msg.textContent = (err && err.message) || "Could not send the link.";
+        } finally {
+          signInBtn.disabled = false;
+        }
+      });
+    }
+    if (skipAuth) {
+      skipAuth.addEventListener("click", function () {
+        advanceToModeStep();
       });
     }
 
@@ -2564,6 +2637,18 @@
   for (var ki = 0; ki < keys.length; ki++) runClaimCheck(keys[ki]);
   liveRefresh({ silent: true });
   setInterval(renderCountdowns, 60000);
+
+  window.FS.onAuthReady = function () {
+    var wrap = document.getElementById("onboarding");
+    if (!wrap || !wrap.classList.contains("open") || modeChosen()) return;
+    if (partnerName() && cloudSignedIn()) {
+      onboardingStep = 4;
+      renderOnboardingStep();
+    } else if (partnerName()) {
+      onboardingStep = 3;
+      renderOnboardingStep();
+    }
+  };
 
   if (window.FS.BridgeUI) {
     window.FS.BridgeUI.init({

@@ -12,7 +12,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,400;1,9..144,500&family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/styles.css?v=55">
+<link rel="stylesheet" href="css/styles.css?v=56">
 </head>
 <body>
 
@@ -745,6 +745,20 @@
     </div>
 
     <div class="onboarding-pane" data-onboard-step="3">
+      <p class="onboarding-eyebrow" id="obAuthEyebrow">Save your spot</p>
+      <h3 id="obAuthTitle">Sign in so nothing gets lost</h3>
+      <p class="lead" id="obAuthBody"></p>
+      <label class="onboard-name-field">
+        <span class="field-label">Email</span>
+        <input type="email" id="onboardingEmail" placeholder="you@email.com" autocomplete="email">
+      </label>
+      <button type="button" class="btn overlay-btn" id="onboardingSignInBtn">Email me a sign-in link →</button>
+      <p class="auth-msg" id="onboardingAuthMsg" role="status"></p>
+      <button type="button" class="btn-ghost overlay-btn" id="onboardingSkipAuth" style="margin-top:8px">Continue without signing in</button>
+      <p class="auth-hint" id="obAuthHint"></p>
+    </div>
+
+    <div class="onboarding-pane" data-onboard-step="4">
       <p class="onboarding-eyebrow" id="obModeEyebrow">Your runway</p>
       <h3 id="obModeTitle">How deep do you want to go?</h3>
       <p class="lead" id="obModeLead"></p>
@@ -780,7 +794,7 @@
       </label>
       <button type="button" class="btn overlay-btn" id="authSubmitBtn">Continue</button>
       <p class="auth-msg" id="authMsg"></p>
-      <p class="auth-hint">Without Supabase keys configured, this runs in local bridge mode (great for testing on one device).</p>
+      <p class="auth-hint">You’ll get a magic link by email. After you tap it, you’re signed in — progress and leads sync to your account.</p>
     </div>
     <div id="authAccountPane" hidden>
       <p class="onboarding-eyebrow">Your account</p>
@@ -808,16 +822,16 @@
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="js/config.js?v=55"></script>
-<script src="js/supabase-config.js?v=55"></script>
-<script src="js/data.js?v=55"></script>
-<script src="js/content.js?v=55"></script>
-<script src="js/products.js?v=55"></script>
-<script src="js/plant.js?v=55"></script>
-<script src="js/tree.js?v=55"></script>
-<script src="js/calendar.js?v=55"></script>
-<script src="js/cloud.js?v=55"></script>
-<script src="js/bridge-ui.js?v=55"></script>
-<script src="js/app.js?v=55"></script>
+<script src="js/config.js?v=56"></script>
+<script src="js/supabase-config.js?v=56"></script>
+<script src="js/data.js?v=56"></script>
+<script src="js/content.js?v=56"></script>
+<script src="js/products.js?v=56"></script>
+<script src="js/plant.js?v=56"></script>
+<script src="js/tree.js?v=56"></script>
+<script src="js/calendar.js?v=56"></script>
+<script src="js/cloud.js?v=56"></script>
+<script src="js/bridge-ui.js?v=56"></script>
+<script src="js/app.js?v=56"></script>
 </body>
 </html>
