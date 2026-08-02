@@ -2510,6 +2510,15 @@
       }
       return;
     }
+    if (t.id === "leadPageBuiltIn") {
+      setPageChoice("generic", { openLeads: true });
+      closeHubMenu();
+      return;
+    }
+    if (t.id === "leadPageCustom") {
+      setPageChoice("custom");
+      return;
+    }
 
     if (t.hasAttribute("data-seedtype")) {
       var sid = t.getAttribute("data-seedtype");
