@@ -397,15 +397,6 @@
   /* ── greetings / personalized copy ───────────────────── */
   function renderGreetings() {
     var name = firstName();
-    var hello = document.getElementById("topbarHello");
-    if (hello) {
-      if (name) {
-        hello.hidden = false;
-        hello.textContent = "Hey " + name;
-      } else {
-        hello.hidden = true;
-      }
-    }
 
     var wh = document.getElementById("welcomeHeadline");
     if (wh) {
