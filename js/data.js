@@ -19,8 +19,8 @@ window.FS.SECTIONS = [
 window.FS.DAY_NAMES = ["SUN","MON","TUE","WED","THU","FRI","SAT"];
 
 /* ═══ THE FIVE SEED TYPES ═══
-   Post frameworks for the Post Studio. Each grounded in a real
-   persuasion principle, executed with class. */
+   Post frameworks for the Post Studio — examples sound like
+   a regular person figuring this out, not a launch script. */
 window.FS.SEED_TYPES = [
   {
     id: "open_loop",
@@ -29,7 +29,7 @@ window.FS.SEED_TYPES = [
     tagline: "Start a true story. Don't finish it — yet.",
     psychology: "Curiosity is the itch of an information gap: once someone knows a specific question exists, not knowing the answer is genuinely uncomfortable. Specificity is what makes it work — vague mystery reads as bait, a concrete unanswered detail reads as a story mid-telling.",
     template: "Specific true moment + the feeling it gave you + \u201cmore on this soon\u201d or \u201cask me\u201d. Never resolve everything in one post.",
-    example: "In January I got on a plane to meet a skincare company most Americans have never heard of. I had a list of 14 questions. The answer to the third one is why I'm doing what I'm about to do. (more this week 🌿)",
+    example: "I stayed up way too late last night reading about a skincare company I'd never heard of. One detail stopped me cold — and I'm still sitting with it. (more this week)",
     classy_rule: "The payoff must be real and worth the wait. One open loop at a time — stacked cliffhangers feel like a soap opera, one feels like a story."
   },
   {
@@ -39,7 +39,7 @@ window.FS.SEED_TYPES = [
     tagline: "Share the journey, not the product.",
     psychology: "People don't argue with stories the way they argue with claims — a narrative gets processed as an experience, not a pitch to evaluate. Documenting your real journey (deciding, learning, doubting, committing) builds parasocial trust that no product shot can.",
     template: "What you're doing right now + what surprised you + what you're still figuring out. Present tense. Imperfect on purpose.",
-    example: "Currently: reading a 30-year-old company's public transparency report at 11pm like it's a novel. I've been in clean beauty a long time and I've never seen a brand publish this much. Still processing what that means for what I do next.",
+    example: "Currently: trying to write about this new thing I joined without sounding like a commercial. Surprised by how much I care about the freshness piece. Still figuring out what to say out loud.",
     classy_rule: "Show real process, including uncertainty. Perfection is forgettable; a documented decision is a story people follow to the end."
   },
   {
@@ -49,7 +49,7 @@ window.FS.SEED_TYPES = [
     tagline: "One product. One specific observation. Include the caveat.",
     psychology: "Two-sided messages — praise that includes a limitation — are consistently rated more credible than pure praise, because admitting a downside signals you're informing, not selling. Specificity does the same work: \u201csoft after 12 hours\u201d is believable where \u201clife-changing\u201d is noise.",
     template: "Product + the one specific thing you noticed + when/how you noticed it + one honest caveat or who it's NOT for.",
-    example: "Honest note on the cleanser: takes off a full face of makeup with just a washcloth, and my skin doesn't feel stripped after. The caveat? If you love a foaming lather, this isn't that — it's a milk. I had to unlearn the squeaky-clean thing.",
+    example: "Honest note on the cleanser: takes makeup off with just a washcloth and my skin doesn't feel tight after. Caveat — if you love a big foamy lather, this isn't that. It's more of a milk. Took me a minute.",
     classy_rule: "Only ever claim what you personally experienced. The caveat isn't a weakness in the post — it's the engine of it."
   },
   {
@@ -59,7 +59,7 @@ window.FS.SEED_TYPES = [
     tagline: "What you stand for — no product mentioned.",
     psychology: "People follow people, and they commit to identities more than to purchases. When someone agrees with your standard (\u201cingredients should need no apology\u201d), saying yes to what you share later is just consistency with who they've already decided they are.",
     template: "A belief you hold about products/ingredients/wellness + why you hold it + zero selling. Let people self-select into your worldview.",
-    example: "Unpopular-ish opinion: a product being 'natural' tells me almost nothing. What I want to know is — who formulated it, what's it in there to DO, and would the founder put it on their own kid. That's the bar. It's always been the bar.",
+    example: "Unpopular-ish opinion: \"natural\" on a label doesn't tell me much. I want to know who made it, why each ingredient is there, and whether they'd put it on their own kid. That's the bar for me.",
     classy_rule: "No product, no link, no CTA. This post's only job is to plant a flag people want to stand near."
   },
   {
@@ -69,7 +69,7 @@ window.FS.SEED_TYPES = [
     tagline: "One clear, tiny, zero-pressure invitation.",
     psychology: "A single small ask converts better than a big one or many: micro-commitments (\u201cDM me a word\u201d) start a consistency ladder, and moving to DMs shifts you from broadcasting to a 1:1 conversation — which is where trust actually converts. One CTA per post; two CTAs compete and both lose.",
     template: "Quick recap of the moment (launch timing) + exactly one action + what they get + explicit no-pressure language.",
-    example: "Real talk: this company opens in the US soon and I'm gathering my first-access list now. If you want my honest notes before launch day, DM me FRESH and you're in. No pitch, no pressure — just first in line. 🌿",
+    example: "This brand opens in the US this fall and I'm putting together a little first-access list for friends who want updates. If that's you, DM me FRESH. No pitch — just first in line if you want it.",
     classy_rule: "Earn the door with the four posts before it. Never post two doors in a row — the ratio is the reputation."
   }
 ];

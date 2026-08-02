@@ -27,6 +27,10 @@
     </div>
 
     <div class="plantbox" id="railPlant" aria-hidden="true"></div>
+    <div class="plant-legend" aria-hidden="true">
+      <span><em>Roots</em> = answers</span>
+      <span><em>Sprout</em> = sections done</span>
+    </div>
     <div class="plant-caption" id="plantCaption"></div>
     <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
 
@@ -73,11 +77,11 @@
       <section class="panel" id="panel-welcome">
         <div class="eyebrow">YOU'RE IN — NOW WHAT</div>
         <h1 id="welcomeHeadline">You said yes.<br>Let's put down roots.</h1>
-        <p class="body-p" id="welcomeBody">You don't have to wait for launch to start. The people who show up strongest on launch day are the ones who did the quiet work first — got clear on their story, mapped who they wanted in their community, and started planting seeds before there was anything to buy.</p>
+        <p class="body-p" id="welcomeBody">You don't have to wait for launch to start. A little quiet work now — your story, a few people you'd actually want beside you, a simple place for them to land — makes October feel a lot less overwhelming.</p>
         <p class="body-p" id="welcomePathNote"></p>
         <div class="callout voice">
           <div class="callout-tag">FROM YOUR TEAM</div>
-          <div class="callout-body">A quick promise: none of this should feel salesy or scripted. If a line doesn't sound like <em>you</em>, change it. Your story in your words is the one thing corporate can never copy — that's the whole edge.</div>
+          <div class="callout-body">Quick promise: if a line doesn't sound like something you'd actually say, change it. Ordinary and true beats polished every time.</div>
         </div>
         <div class="btn-row">
           <button class="btn" data-goto="roots" id="welcomeCta">Plant your first seed →</button>
@@ -89,25 +93,25 @@
         <div class="sec-num">01</div>
         <h1 id="rootsHeadline">Plant Your Roots</h1>
         <p class="sec-sub">Before you share a single thing, get clear on your own story.</p>
-        <p class="body-p">Everything you'll ever post, DM, or say out loud grows from this. Not the company's story — <em>yours</em>. Why this, why now, why you. Watch your story assemble itself below as you answer.</p>
+        <p class="body-p">Everything you'll share later grows from this. Not a brand script — <em>your</em> words. Why this, why now, why you. Watch it come together below as you answer. Each filled box grows a root on the left.</p>
 
         <label class="field" data-field="why">
-          <span class="field-label">Your why — what made you care about clean products in the first place?</span>
-          <span class="field-hint">A health scare, having kids, reading a scary label, years of not feeling well. The real reason, not the polished one.</span>
-          <textarea data-key="why" rows="4" placeholder="I started paying attention to what was in my products when…"></textarea>
+          <span class="field-label">Your why — what made you start caring about what's in your products?</span>
+          <span class="field-hint">Kids, a weird ingredient list, wanting simpler routines — whatever is true for you. Messy is fine.</span>
+          <textarea data-key="why" rows="4" placeholder="I started paying more attention when…"></textarea>
           <span class="claim-check" data-check="why"></span>
         </label>
 
         <label class="field" data-field="moment">
-          <span class="field-label">Your moment — when did Ringana click for you?</span>
-          <span class="field-hint">Think of the founders' toothpaste moment — yours is the story of how you found this and why it felt different.</span>
-          <textarea data-key="moment" rows="4" placeholder="I found Ringana when… and what stopped me in my tracks was…"></textarea>
+          <span class="field-label">Your moment — when did this click for you?</span>
+          <span class="field-hint">How you heard about it, what made you pause, what felt different. Keep it ordinary and true.</span>
+          <textarea data-key="moment" rows="4" placeholder="A friend mentioned it / I saw a post / I got curious when…"></textarea>
           <span class="claim-check" data-check="moment"></span>
         </label>
 
         <label class="field" data-field="said_yes">
           <span class="field-label">Why you said yes — in one or two sentences you'd actually text a friend.</span>
-          <span class="field-hint">This becomes your go-to answer when someone asks "wait, what are you doing?"</span>
+          <span class="field-hint">This is your go-to when someone asks "wait… what are you doing?"</span>
           <textarea data-key="said_yes" rows="2" placeholder="Honestly? I said yes because…"></textarea>
           <span class="claim-check" data-check="said_yes"></span>
         </label>
@@ -133,11 +137,11 @@
         <div class="sec-num">02</div>
         <h1>Map Your Grove</h1>
         <p class="sec-sub">Who do you actually want in your community? Not a spray list — a thoughtful one.</p>
-        <p class="body-p">Forget "who can I sell to." Ask: <em>who do I genuinely want beside me in this?</em> The friend who reads labels too. The one always asking what you use. People who'd be a little hurt if you <em>didn't</em> tell them. Every name you add plants a tree below — aim for a grove of 15–25.</p>
+        <p class="body-p">Forget "who can I sell to." Ask: <em>who would I actually want to tell?</em> The friend who reads labels. The coworker always asking what you use. People who'd be a little hurt if you <em>didn't</em> mention it. Every name plants a tree below — they flash as you type. Aim for 15–25 when you can.</p>
 
         <label class="field" data-field="warm">
           <span class="field-label">Brain-dump your grove — one name per line. Don't filter yet.</span>
-          <span class="field-hint">Phone contacts, close friends, that group chat, the mom from school who asks about your skincare. Just names.</span>
+          <span class="field-hint">Phone contacts, close friends, that group chat, a neighbor, someone from school pickup. Just names.</span>
           <textarea data-key="warm" rows="8" placeholder="Jess&#10;Aunt Carol&#10;Megan from the gym&#10;…"></textarea>
         </label>
 
@@ -291,7 +295,7 @@
         <label class="field" data-field="seed_invite">
           <span class="field-label">Draft 3 — Your Soft Door 🚪</span>
           <span class="field-hint">One tiny ask, zero pressure, keyword included. This one only posts after the gives have gone out.</span>
-          <textarea data-key="seed_invite" rows="4" placeholder="Real talk: … DM me FRESH and you're in. No pitch, no pressure."></textarea>
+          <textarea data-key="seed_invite" rows="4" placeholder="If you want updates when this opens, DM me FRESH — no pitch, promise."></textarea>
           <span class="claim-check" data-check="seed_invite"></span>
         </label>
 

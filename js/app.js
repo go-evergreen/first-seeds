@@ -217,9 +217,9 @@
     var pathNote = document.getElementById("welcomePathNote");
     if (pathNote) {
       if (isStarter()) {
-        pathNote.innerHTML = "You're on <strong>Getting started</strong> — four calm steps. Your answers save automatically. Watch the plant on the left: <strong>roots grow every time you fill something in.</strong>";
+        pathNote.innerHTML = "You're on <strong>Getting started</strong> — four calm steps. <strong>Roots</strong> grow every time you fill a box. Your <strong>sprout</strong> grows when you finish a section.";
       } else if (isFull()) {
-        pathNote.innerHTML = "You're on the <strong>Full runway</strong> — six sections. Your story, grove, dream tree, page, first seeds, and rhythm. Watch the plant: <strong>roots grow with every answer; the plant blooms when you finish.</strong>";
+        pathNote.innerHTML = "You're on the <strong>Full runway</strong> — six sections. <strong>Roots</strong> grow with every answer. Your <strong>sprout</strong> grows when you finish a section — and blooms at the end.";
       } else {
         pathNote.textContent = "";
       }
@@ -365,7 +365,31 @@
     nav.innerHTML = html;
   }
 
-  function renderPlant() {
+  var lastUnits = -1;
+  var lastSecs = -1;
+  var captionTimer;
+
+  function pulsePlant(kind) {
+    if (!railPlant) return;
+    if (window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    railPlant.classList.remove("roots-pulse", "sprout-pulse");
+    void railPlant.offsetWidth;
+    railPlant.classList.add(kind === "sprout" ? "sprout-pulse" : "roots-pulse");
+    setTimeout(function () {
+      railPlant.classList.remove("roots-pulse", "sprout-pulse");
+    }, 1000);
+  }
+
+  function highlightCaption(msg) {
+    if (!caption) return;
+    caption.textContent = msg;
+    caption.classList.add("highlight");
+    clearTimeout(captionTimer);
+    captionTimer = setTimeout(function () { caption.classList.remove("highlight"); }, 1600);
+  }
+
+  function renderPlant(opts) {
+    opts = opts || {};
     var secs = doneCount(), units = unitCount(), total = sectionTotal();
     /* Map starter's 4 sections onto the same 0–6 visual plant stages */
     var visualSecs = isStarter() ? Math.round((secs / Math.max(total, 1)) * 6) : secs;
@@ -374,11 +398,22 @@
     if (finishPlant) finishPlant.innerHTML = window.FS.plantSVG(6, MAX_UNITS, MAX_UNITS);
     var pct = Math.round(((units / MAX_UNITS) * 0.5 + (secs / Math.max(total, 1)) * 0.5) * 100);
     progressFill.style.width = pct + "%";
-    caption.textContent =
-      units === 0 ? "Nothing planted yet — let's start." :
-      secs === 0 ? "Roots are forming underground… (" + units + " answers in)" :
-      secs < total ? (secs + " of " + total + " sections grown · roots at " + Math.round(units / MAX_UNITS * 100) + "%") :
-      "In full bloom. You're ready. 🌱";
+
+    if (!opts.silent && lastUnits >= 0 && units > lastUnits) {
+      pulsePlant("roots");
+      highlightCaption("A root just grew 🌿");
+    } else if (!opts.silent && lastSecs >= 0 && secs > lastSecs) {
+      pulsePlant("sprout");
+      highlightCaption("Your sprout just grew taller 🌱");
+    } else if (!caption.classList.contains("highlight")) {
+      caption.textContent =
+        units === 0 ? "Nothing planted yet — fill a box to grow a root." :
+        secs === 0 ? "Roots forming underground… (" + units + " answers). Finish a section to grow the sprout." :
+        secs < total ? (secs + " of " + total + " sections · roots " + Math.round(units / MAX_UNITS * 100) + "% deep") :
+        "In full bloom. You're ready. 🌱";
+    }
+    lastUnits = units;
+    lastSecs = secs;
   }
 
   function renderPanels() {
@@ -472,7 +507,34 @@
     el.innerHTML = '"' + parts.join(" ") + '"';
   }
 
-  function renderGrove() {
+  var lastGroveCount = 0;
+  var groveFlashTimer;
+
+  function flashGroveTrees(forceAll) {
+    var wrap = document.getElementById("groveTrees");
+    var visual = document.querySelector(".grove-visual");
+    if (!wrap) return;
+    if (window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    var nodes = wrap.querySelectorAll(".gtree");
+    if (!nodes.length) return;
+    if (visual) {
+      visual.classList.add("flashing");
+      clearTimeout(groveFlashTimer);
+      groveFlashTimer = setTimeout(function () { visual.classList.remove("flashing"); }, 450);
+    }
+    for (var i = 0; i < nodes.length; i++) {
+      (function (node, delay) {
+        setTimeout(function () {
+          node.classList.remove("flash");
+          void node.offsetWidth;
+          node.classList.add("flash");
+        }, forceAll ? delay : 0);
+      })(nodes[i], forceAll ? (i % 8) * 40 : 0);
+    }
+  }
+
+  function renderGrove(opts) {
+    opts = opts || {};
     var names = groveNames();
     var count = document.getElementById("groveCount"), trees = document.getElementById("groveTrees"), hint = document.getElementById("groveHint");
     if (!count) return;
@@ -487,9 +549,15 @@
     trees.innerHTML = html;
     hint.textContent = n === 0 ? "" :
       n < 5 ? "Keep going — even 5 warm names is a real start." :
-      n < 15 ? "Beautiful. The sweet spot is 15–25 — who else lights up when you talk about this stuff?" :
+      n < 15 ? "Nice. Aim for 15–25 when you can — who else would you actually tell?" :
       n <= 25 ? "That's a full grove. Quality over quantity from here." :
       "That's a forest! Focus your energy on the warmest 25.";
+
+    if (opts.flash && n > 0) {
+      /* re-apply flash after DOM rebuild */
+      requestAnimationFrame(function () { flashGroveTrees(n > lastGroveCount); });
+    }
+    lastGroveCount = n;
   }
 
   function renderMiniPage() {
@@ -537,9 +605,15 @@
     }
   }
 
-  function liveRefresh() {
-    renderStory(); renderGrove(); renderMiniPage(); renderWeek();
-    markFilledStates(); renderPlant(); refreshButtons();
+  function liveRefresh(opts) {
+    opts = opts || {};
+    renderStory();
+    renderGrove({ flash: !!opts.groveFlash });
+    renderMiniPage();
+    renderWeek();
+    markFilledStates();
+    renderPlant(opts);
+    refreshButtons();
   }
 
   /* ── leaf burst ──────────────────────────────────────── */
@@ -584,7 +658,7 @@
       f.addEventListener("input", function () {
         state.data[k] = f.value;
         runClaimCheck(k);
-        liveRefresh();
+        liveRefresh({ groveFlash: k === "warm" });
         clearTimeout(t);
         t = setTimeout(function () { save(); flash(sectionOf(f)); }, 500);
       });

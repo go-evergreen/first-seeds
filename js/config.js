@@ -29,12 +29,12 @@ window.FS.CONFIG = {
     starter: {
       label: "Getting started",
       badge: "Getting started",
-      desc: "New to Ringana or feeling a little overwhelmed? A calm 4-step path — your story, your warm list, your page, and a simple rhythm. No pressure to do it all."
+      desc: "New to social selling — or just want a calm start? Four simple steps: your story, a short warm list, a page, and a rhythm you can keep."
     },
     full: {
       label: "Full runway",
       badge: "Full runway",
-      desc: "Ready to build? All six sections — story, grove, dream team tree, landing page, Post Studio, and your launch rhythm. The whole toolkit."
+      desc: "Already comfortable sharing online? All six sections — story, grove, dream team, page, Post Studio, and your weekly rhythm."
     }
   },
 
@@ -42,7 +42,7 @@ window.FS.CONFIG = {
   onboarding: {
     welcomeEyebrow: "Welcome to the team",
     welcomeTitle: "You made it in.",
-    welcomeBody: "You're a founding partner of The Fresh Grove — early enough that what you do before October 1 actually shapes the launch.\n\nNo scripts. No pressure. Just quiet work that turns into real momentum. We're glad you're here.",
+    welcomeBody: "You're in The Fresh Grove — early enough that what you do before October 1 actually matters.\n\nNo fancy scripts. No pressure. Just a few quiet steps that make launch day feel less scary. Glad you're here.",
     welcomeCta: "Let's go",
     nameEyebrow: "Step 2 of 3",
     nameTitle: "What should we call you?",
@@ -52,63 +52,61 @@ window.FS.CONFIG = {
     hypeLine: "Pre-registration opens October 1. The quiet work starts now.",
     modeEyebrow: "Step 3 of 3",
     modeTitle: "Pick your pace",
-    modeLead: "No wrong answer — just pick what fits where you are right now. You can switch anytime under Your pace in the sidebar."
+    modeLead: "No wrong answer. Pick what fits today — you can switch anytime under Your pace in the sidebar."
   },
 
-  /* Mini-tour after mode pick (2–3 tips) */
+  /* Mini-tour after mode pick */
   tour: [
     {
-      title: "Your plant grows with you",
-      body: "Every answer you fill in grows the roots. Every section you finish grows the plant above ground. By the end, it blooms — and so do you."
+      title: "Roots grow when you answer",
+      body: "Every box you fill sends a root deeper underground. Watch the soil — your work is happening even when it feels quiet."
     },
     {
-      title: "One section at a time",
-      body: "Work at your own pace. Complete a section when it feels done, then move forward. You can always revisit anything from the sidebar."
+      title: "Your sprout grows when you finish a section",
+      body: "Hit continue on a section and the plant above ground stretches taller. Roots = answers. Sprout = finished sections. Both matter."
     },
     {
       title: "It saves on this device",
-      body: "Leave and come back anytime — your answers stick. Download them when you want a copy for yourself or your team lead."
+      body: "Leave and come back anytime. Download your answers when you want a copy for yourself or your team lead."
     }
   ],
 
-  /* Hook bank — copyable opening lines in the Post Studio.
-     Edit freely; make them sound like your team's voice. */
+  /* Hook bank — everyday voice, not pitchy */
   hookBank: [
-    "I flew across the country in the middle of winter for a skincare company. Worth it. Here's why…",
-    "The ingredient list that made me rethink everything after years of loyalty to another brand…",
-    "A family in Austria has been quietly doing what the clean beauty industry keeps promising…",
-    "I've recommended a lot of products over the years. I've never done this before.",
-    "My skincare has an expiration date like fresh food. That's not a flaw — that's the whole point.",
-    "Nobody in the US can buy this yet. That's exactly why I'm telling you about it now.",
-    "I said I'd never join another one of these. Then I actually read the formulation standards.",
-    "The question I asked their team that changed my mind…"
+    "I've been reading ingredient labels more than I used to. Found something that made me pause…",
+    "Okay so I joined something new and I'm still figuring out how to talk about it without sounding weird.",
+    "Tiny thing I noticed this week that made me rethink my bathroom shelf…",
+    "I used to roll my eyes at \"clean beauty.\" Then I actually looked at what I was putting on my face.",
+    "Not selling anything today — just sharing something I've been learning about freshness in skincare.",
+    "If you've ever stood in a store aisle feeling overwhelmed by options… same.",
+    "I said I'd never do one of these. Then a friend walked me through it slowly and it actually made sense.",
+    "Honest question I've been asking myself lately about the products I buy…"
   ],
 
-  /* The copyable DM starter in the Grove section.
-     Rewrite this in YOUR voice — it's meant to be stolen and personalized. */
-  dmStarter: "hey! random but exciting — that Austrian skincare company I've been obsessed with is finally coming to the US. I got in early and I'm gathering my first people before it officially opens. zero pressure, I just didn't want you finding out from anyone else 💚 want me to keep you in the loop?",
+  /* Soft DM starter — sounds like a text to a friend */
+  dmStarter: "hey! totally random — I joined this Austrian skincare thing that's coming to the US in the fall. still learning, but I thought of you. no pressure at all, just didn't want you hearing about it from a random ad later. want me to send you a little update when it's closer?",
 
   /* Landing page options in "Your Patch of Ground" */
   pageOptions: {
     custom: {
       title: "A custom page from your team lead",
-      desc: "Your own fully designed page — personalized to your story, at a discounted partner rate. Message your team lead to set it up."
+      desc: "Your own page with your story on it. Message your team lead when you're ready — no rush."
     },
     generic: {
       title: "The team template on our board",
-      desc: "Grab the ready-to-go page from the team board and drop in your own name, story, and link. Free, fast, and totally solid to start with. You can always upgrade later."
+      desc: "Grab the ready-made page, drop in your name and a short note about you. Fine to start here and upgrade later."
     }
   },
 
   /* Weekly rhythm options in "Tend It".
      day: 0=Sun 1=Mon ... 6=Sat, or -1 for non-calendar habits */
   rhythms: [
-    { label: "Monday — Story day (why Ringana, the legacy, my why)", day: 1, icon: "📖", short: "Story" },
-    { label: "Wednesday — Product day (one honest note on something I love)", day: 3, icon: "🧴", short: "Product" },
-    { label: "Friday — Founding-moment day (first time in the US / this doesn't repeat)", day: 5, icon: "✨", short: "Moment" },
-    { label: "Sunday — Invitation day (soft \u201cDM me FRESH\u201d)", day: 0, icon: "💌", short: "Invite" },
-    { label: "I'll show up in the team group at least once a week", day: -1, icon: "🌳", short: "" },
-    { label: "I'll DM one new person from my grove list each week", day: -1, icon: "💬", short: "" }
+    { label: "Monday — share a little piece of my why", day: 1, icon: "📖", short: "Story" },
+    { label: "Wednesday — one honest note on something I'm trying", day: 3, icon: "🧴", short: "Product" },
+    { label: "Friday — something real about this founding season", day: 5, icon: "✨", short: "Moment" },
+    { label: "Sunday — soft invite (\"DM me FRESH if you want updates\")", day: 0, icon: "💌", short: "Invite" },
+    { label: "I'll check in with the team group once a week", day: -1, icon: "🌳", short: "" },
+    { label: "I'll message one person from my grove list each week", day: -1, icon: "💬", short: "" }
   ],
 
   /* localStorage key — bump the version if you change data shape */
