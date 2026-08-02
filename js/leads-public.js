@@ -97,7 +97,6 @@
       partnerName = info.display_name || "your friend";
       var first = firstName(partnerName);
       document.title = partnerName + " — Ringana · first access";
-      document.getElementById("leadPartnerName").textContent = partnerName;
       var brand = document.getElementById("leadBrandName");
       if (brand) brand.textContent = first;
       var blurbEl = document.getElementById("leadBlurb");

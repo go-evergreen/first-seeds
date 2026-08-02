@@ -660,7 +660,39 @@
       else if (isFull()) hint.textContent = "All six sections unlocked, plus Team in the bottom nav. Switch to Getting started for a simpler view — your progress stays.";
       else hint.textContent = "";
     }
+    updateLeadPageSettingUI();
     renderGreetings();
+  }
+
+  function updateLeadPageSettingUI() {
+    var builtIn = document.getElementById("leadPageBuiltIn");
+    var custom = document.getElementById("leadPageCustom");
+    var note = document.getElementById("leadPageSettingNote");
+    if (builtIn) builtIn.classList.toggle("on", usesBuiltInLeadPage());
+    if (custom) custom.classList.toggle("on", usesCustomLanding());
+    if (note) {
+      if (usesBuiltInLeadPage()) {
+        note.textContent = "Leads tab is on. Share your First Seeds link — submissions land in your inbox.";
+      } else if (usesCustomLanding()) {
+        note.textContent = "Leads tab is hidden while you use your own page. Switch to First Seeds leads anytime to turn it back on.";
+      } else {
+        note.textContent = "Choose whether curious people use your First Seeds lead form, or a page you built elsewhere.";
+      }
+    }
+  }
+
+  function setPageChoice(value, opts) {
+    opts = opts || {};
+    if (value !== "generic" && value !== "custom") return;
+    state.data.page_choice = value;
+    if (value === "custom" && state.active === "leads") state.active = "ground";
+    if (value === "generic" && opts.openLeads) state.active = "leads";
+    save();
+    updateLeadPageSettingUI();
+    renderChoices();
+    liveRefresh({ silent: true });
+    renderNav();
+    renderPanels();
   }
 
   function setHubMode(mode, opts) {
@@ -2409,7 +2441,7 @@
 
   /* ── clicks ──────────────────────────────────────────── */
   document.addEventListener("click", function (e) {
-    var t = e.target.closest("[data-goto],[data-complete],[data-grove-pick],[data-prod-nav],[data-prod-open],[data-choice],[data-rhythm],[data-copy],[data-tadd],[data-tstatus],[data-tdel],[data-seedtype],[data-menu-goto],[data-soft-unlock],[data-faq],[data-copy-toggle],#exportBtn,#exportBtn2,#resetBtn,#modeStarter,#modeFull,#levelUpBtn,#settingsNavBtn,#menuCloseBtn,#menuCloseBackdrop,#todayAuthBtn,#lockToastClose");
+    var t = e.target.closest("[data-goto],[data-complete],[data-grove-pick],[data-prod-nav],[data-prod-open],[data-choice],[data-rhythm],[data-copy],[data-tadd],[data-tstatus],[data-tdel],[data-seedtype],[data-menu-goto],[data-soft-unlock],[data-faq],[data-copy-toggle],#exportBtn,#exportBtn2,#resetBtn,#modeStarter,#modeFull,#leadPageBuiltIn,#leadPageCustom,#levelUpBtn,#settingsNavBtn,#menuCloseBtn,#menuCloseBackdrop,#todayAuthBtn,#lockToastClose");
     if (!t) return;
 
     if (t.hasAttribute("data-faq")) {
