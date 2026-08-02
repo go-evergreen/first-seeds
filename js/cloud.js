@@ -651,14 +651,18 @@ window.FS = window.FS || {};
       if (!sessionUser) throw new Error("Sign in to get your lead page.");
       if (sessionUser.lead_slug) return sessionUser.lead_slug;
       var desired = Cloud.slugifyName(preferredName || sessionUser.display_name || "friend");
-      return Cloud.claimLeadSlug(desired);
+      return Cloud.claimLeadSlug(desired, { allowSuffix: true });
     },
 
-    claimLeadSlug: async function (desired) {
+    claimLeadSlug: async function (desired, opts) {
       if (!sessionUser) throw new Error("Sign in first.");
       desired = Cloud.slugifyName(desired);
+      var allowSuffix = !!(opts && opts.allowSuffix);
       if (configured() && client) {
-        var { data, error } = await client.rpc("claim_lead_slug", { desired: desired });
+        var { data, error } = await client.rpc("claim_lead_slug", {
+          desired: desired,
+          allow_suffix: allowSuffix
+        });
         if (error) throw error;
         sessionUser.lead_slug = data;
         emit("auth", sessionUser);
@@ -674,13 +678,17 @@ window.FS = window.FS || {};
           return u && u.id !== sessionUser.id && (u.lead_slug || "").toLowerCase() === slug;
         });
       }
-      while (taken(candidate)) {
-        candidate = base + "-" + n;
-        n++;
-        if (n > 99) {
-          candidate = base + "-" + makeCode().slice(0, 4);
-          break;
+      if (allowSuffix) {
+        while (taken(candidate)) {
+          candidate = base + "-" + n;
+          n++;
+          if (n > 99) {
+            candidate = base + "-" + makeCode().slice(0, 4);
+            break;
+          }
         }
+      } else if (taken(candidate)) {
+        throw new Error("That link is already in use — try another.");
       }
       var me = store.users[sessionUser.id];
       me.lead_slug = candidate;

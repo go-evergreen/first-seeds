@@ -759,7 +759,7 @@ window.FS = window.FS || {};
       return r.status === leadsFilter;
     });
     if (!rows.length) {
-      list.innerHTML = '<p class="leads-empty">No leads here yet. Share your link — when someone submits, they’ll show up only in this inbox.</p>';
+      list.innerHTML = '<p class="leads-empty">No leads yet. Share your link — when someone submits, they show up only here.</p>';
       return;
     }
     var html = "";
@@ -907,11 +907,9 @@ window.FS = window.FS || {};
         try {
           var claimed = await Cloud.claimLeadSlug(desired);
           syncLeadsShareUI(claimed);
-          if (slugMsg) slugMsg.textContent = claimed === Cloud.slugifyName(desired)
-            ? "Saved — your link uses “" + claimed + "”."
-            : "“" + Cloud.slugifyName(desired) + "” was taken, so yours is “" + claimed + "”.";
+          if (slugMsg) slugMsg.textContent = "Saved — your link is ready.";
         } catch (err) {
-          if (slugMsg) slugMsg.textContent = (err && err.message) || "Could not save slug.";
+          if (slugMsg) slugMsg.textContent = (err && err.message) || "Could not save that link.";
         }
         return;
       }

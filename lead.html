@@ -3,77 +3,105 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Stay in touch — First Seeds</title>
-<meta name="description" content="Leave your name and how to reach you — products, business, or both.">
-<meta name="theme-color" content="#abb09a">
+<title>Stay in the loop — First Seeds</title>
+<meta name="description" content="Fresh-made, toxin-free wellness from Austria is coming to America. Leave your info to hear first.">
+<meta name="theme-color" content="#1a2f26">
 <meta name="robots" content="noindex">
 <link rel="icon" href="icons/favicon.svg" type="image/svg+xml">
 <link rel="icon" href="icons/favicon-32.png" sizes="32x32" type="image/png">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/styles.css?v=61">
-<link rel="stylesheet" href="css/lead.css?v=61">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,600;1,9..144,500&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/lead.css?v=62">
 </head>
 <body class="lead-body">
+  <div class="lead-arcs" aria-hidden="true"></div>
+
   <main class="lead-shell" id="leadShell">
     <div class="lead-loading" id="leadLoading">Loading…</div>
 
     <div class="lead-missing" id="leadMissing" hidden>
-      <p class="lead-eyebrow">First Seeds</p>
+      <p class="lead-brand">First Seeds</p>
       <h1>This page isn’t live yet</h1>
-      <p>The link may be mistyped, or your friend hasn’t set up their page. Ask them to open <strong>Leads</strong> in First Seeds and share their link again.</p>
+      <p>The link may be mistyped, or your friend hasn’t finished setting it up. Ask them to open <strong>Leads</strong> in First Seeds and share their link again.</p>
     </div>
 
     <div class="lead-page" id="leadPage" hidden>
-      <p class="lead-eyebrow">A note from</p>
-      <h1 class="lead-name" id="leadPartnerName">—</h1>
-      <p class="lead-blurb" id="leadBlurb">Leave your name and how to reach you. They’ll follow up personally — no spam list, no shared spreadsheet.</p>
+      <header class="lead-hero">
+        <p class="lead-brand">Ringana · with <span id="leadBrandName">a friend</span></p>
+        <p class="lead-kicker"><span class="lead-kicker-rule"></span> Coming to America · 2026</p>
+        <h1 class="lead-headline">Wellness that was never meant to <em>compromise.</em></h1>
+        <p class="lead-lede" id="leadLede">For thirty years, a family in Austria has made skincare and supplements the hard way — totally toxin free, made fresh, honest about every ingredient. Now Ringana is coming to America.</p>
+        <p class="lead-from">A note from <strong id="leadPartnerName">—</strong></p>
+        <p class="lead-blurb" id="leadBlurb"></p>
+      </header>
 
-      <form class="lead-form" id="leadForm" novalidate>
-        <label class="lead-field">
-          <span>Your name</span>
-          <input type="text" id="leadName" name="name" maxlength="80" autocomplete="name" required placeholder="First name is perfect">
-        </label>
-
-        <div class="lead-contact-row">
-          <label class="lead-field">
-            <span>Email</span>
-            <input type="email" id="leadEmail" name="email" maxlength="120" autocomplete="email" placeholder="you@email.com">
-          </label>
-          <label class="lead-field">
-            <span>Phone</span>
-            <input type="tel" id="leadPhone" name="phone" maxlength="40" autocomplete="tel" placeholder="Optional if you share email">
-          </label>
+      <section class="lead-proof" aria-label="Why Ringana">
+        <div class="lead-proof-item">
+          <strong>Made fresh</strong>
+          <span>Small batches from their own campus — plant actives at full potency, with an expiration date like food.</span>
         </div>
-        <p class="lead-hint">Email <em>or</em> phone — whichever you prefer.</p>
+        <div class="lead-proof-item">
+          <strong>Toxin free</strong>
+          <span>No synthetic preservatives or fillers. What goes on your body and in your body should need no apology.</span>
+        </div>
+        <div class="lead-proof-item">
+          <strong>Founding moment</strong>
+          <span>$85M U.S. home in Virginia. The community that shows up now helps write the American chapter.</span>
+        </div>
+      </section>
 
-        <fieldset class="lead-interest">
-          <legend>I’m interested in</legend>
-          <div class="lead-interest-row" role="group" aria-label="Interest">
-            <button type="button" class="lead-chip" data-interest="products" aria-pressed="false">Products</button>
-            <button type="button" class="lead-chip" data-interest="business" aria-pressed="false">Business</button>
-            <button type="button" class="lead-chip" data-interest="both" aria-pressed="false">Both</button>
+      <section class="lead-card" id="leadFormCard">
+        <h2 class="lead-card-title">Be first when it arrives</h2>
+        <p class="lead-card-sub">Leave your name and how to reach you. You’ll get launch timing, honest product notes, and a real seat if you want to build alongside — no spam list.</p>
+
+        <form class="lead-form" id="leadForm" novalidate>
+          <label class="lead-field">
+            <span>Your name</span>
+            <input type="text" id="leadName" name="name" maxlength="80" autocomplete="name" required placeholder="First name is perfect">
+          </label>
+
+          <div class="lead-contact-row">
+            <label class="lead-field">
+              <span>Email</span>
+              <input type="email" id="leadEmail" name="email" maxlength="120" autocomplete="email" placeholder="you@email.com">
+            </label>
+            <label class="lead-field">
+              <span>Phone</span>
+              <input type="tel" id="leadPhone" name="phone" maxlength="40" autocomplete="tel" placeholder="Or phone">
+            </label>
           </div>
-          <input type="hidden" id="leadInterest" name="interest" value="">
-        </fieldset>
+          <p class="lead-hint">Email <em>or</em> phone — whichever you prefer.</p>
 
-        <button type="submit" class="btn lead-submit" id="leadSubmit">Send →</button>
-        <p class="lead-form-msg" id="leadFormMsg" role="status"></p>
-      </form>
+          <fieldset class="lead-interest">
+            <legend>I’m curious about</legend>
+            <div class="lead-interest-row" role="group" aria-label="Interest">
+              <button type="button" class="lead-chip" data-interest="products" aria-pressed="false">The products</button>
+              <button type="button" class="lead-chip" data-interest="business" aria-pressed="false">The business</button>
+              <button type="button" class="lead-chip" data-interest="both" aria-pressed="false">Both</button>
+            </div>
+            <input type="hidden" id="leadInterest" name="interest" value="">
+          </fieldset>
+
+          <button type="submit" class="lead-submit" id="leadSubmit">Get first access →</button>
+          <p class="lead-form-msg" id="leadFormMsg" role="status"></p>
+        </form>
+      </section>
+
+      <p class="lead-foot">Independent partner page — not an official Ringana corporate site. Details reflect Ringana’s international offering ahead of U.S. launch.</p>
     </div>
 
     <div class="lead-thanks" id="leadThanks" hidden>
-      <p class="lead-eyebrow">Got it</p>
-      <h1>You’re on the list.</h1>
-      <p id="leadThanksBody">Thanks — they’ll be in touch.</p>
+      <p class="lead-brand">You’re in</p>
+      <h1>Welcome to the founding circle.</h1>
+      <p id="leadThanksBody">Thanks — they’ll be in touch soon.</p>
     </div>
   </main>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="js/supabase-config.js?v=57"></script>
-  <script src="js/cloud.js?v=57"></script>
-  <script src="js/leads-public.js?v=57"></script>
+  <script src="js/supabase-config.js?v=62"></script>
+  <script src="js/cloud.js?v=62"></script>
+  <script src="js/leads-public.js?v=62"></script>
 </body>
 </html>

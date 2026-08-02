@@ -21,6 +21,10 @@
     });
   }
 
+  function firstName(full) {
+    return (full || "").trim().split(/\s+/)[0] || "your friend";
+  }
+
   function setInterest(value) {
     interestInput.value = value || "";
     var chips = document.querySelectorAll(".lead-chip");
@@ -31,44 +35,49 @@
     }
   }
 
-  document.querySelector(".lead-interest-row").addEventListener("click", function (e) {
-    var t = e.target.closest("[data-interest]");
-    if (!t) return;
-    setInterest(t.getAttribute("data-interest"));
-    if (msg) msg.textContent = "";
-  });
+  var interestRow = document.querySelector(".lead-interest-row");
+  if (interestRow) {
+    interestRow.addEventListener("click", function (e) {
+      var t = e.target.closest("[data-interest]");
+      if (!t) return;
+      setInterest(t.getAttribute("data-interest"));
+      if (msg) msg.textContent = "";
+    });
+  }
 
-  form.addEventListener("submit", async function (e) {
-    e.preventDefault();
-    if (msg) msg.textContent = "";
-    var btn = document.getElementById("leadSubmit");
-    var payload = {
-      name: (document.getElementById("leadName").value || "").trim(),
-      email: (document.getElementById("leadEmail").value || "").trim(),
-      phone: (document.getElementById("leadPhone").value || "").trim(),
-      interest: (interestInput.value || "").trim()
-    };
-    try {
-      if (btn) {
-        btn.disabled = true;
-        btn.textContent = "Sending…";
+  if (form) {
+    form.addEventListener("submit", async function (e) {
+      e.preventDefault();
+      if (msg) msg.textContent = "";
+      var btn = document.getElementById("leadSubmit");
+      var payload = {
+        name: (document.getElementById("leadName").value || "").trim(),
+        email: (document.getElementById("leadEmail").value || "").trim(),
+        phone: (document.getElementById("leadPhone").value || "").trim(),
+        interest: (interestInput.value || "").trim()
+      };
+      try {
+        if (btn) {
+          btn.disabled = true;
+          btn.textContent = "Sending…";
+        }
+        await Cloud.submitLead(slug, payload);
+        var thanksBody = document.getElementById("leadThanksBody");
+        if (thanksBody) {
+          thanksBody.textContent = partnerName
+            ? ("Thanks — " + firstName(partnerName) + " will be in touch soon.")
+            : "Thanks — they’ll be in touch soon.";
+        }
+        show(thanks);
+      } catch (err) {
+        if (msg) msg.textContent = (err && err.message) || "Something went wrong. Try again.";
+        if (btn) {
+          btn.disabled = false;
+          btn.textContent = "Get first access →";
+        }
       }
-      await Cloud.submitLead(slug, payload);
-      var thanksBody = document.getElementById("leadThanksBody");
-      if (thanksBody) {
-        thanksBody.textContent = partnerName
-          ? ("Thanks — " + partnerName.split(/\s+/)[0] + " will be in touch.")
-          : "Thanks — they’ll be in touch.";
-      }
-      show(thanks);
-    } catch (err) {
-      if (msg) msg.textContent = (err && err.message) || "Something went wrong. Try again.";
-      if (btn) {
-        btn.disabled = false;
-        btn.textContent = "Send →";
-      }
-    }
-  });
+    });
+  }
 
   async function boot() {
     if (!slug) {
@@ -83,12 +92,17 @@
         return;
       }
       partnerName = info.display_name || "your friend";
-      document.title = partnerName + " — stay in touch";
+      var first = firstName(partnerName);
+      document.title = partnerName + " — Ringana · first access";
       document.getElementById("leadPartnerName").textContent = partnerName;
+      var brand = document.getElementById("leadBrandName");
+      if (brand) brand.textContent = first;
+      var blurbEl = document.getElementById("leadBlurb");
       var blurb = (info.blurb || "").trim();
-      document.getElementById("leadBlurb").textContent = blurb ||
-        ("Leave your name and how to reach you. " + partnerName.split(/\s+/)[0] +
-          " will follow up personally — no spam list.");
+      if (blurbEl) {
+        blurbEl.textContent = blurb ||
+          ("I’m gathering a small founding circle before launch — leave your info and I’ll follow up personally.");
+      }
       show(page);
     } catch (err) {
       show(missing);

@@ -138,7 +138,12 @@ $$;
 grant execute on function public.submit_lead(text, text, text, text, text) to anon, authenticated;
 
 -- ── claim / update own slug (authenticated) ───────────────
-create or replace function public.claim_lead_slug(desired text)
+-- allow_suffix = true  → first-time allocate (quietly pick taylor-2 if needed)
+-- allow_suffix = false → user Save: fail if the exact slug is taken
+drop function if exists public.claim_lead_slug(text);
+drop function if exists public.claim_lead_slug(text, boolean);
+
+create or replace function public.claim_lead_slug(desired text, allow_suffix boolean default false)
 returns text
 language plpgsql
 security definer set search_path = public
@@ -165,19 +170,31 @@ begin
   end if;
 
   candidate := base;
-  while exists (
-    select 1 from public.profiles
-    where lead_slug is not null
-      and lower(lead_slug) = candidate
-      and id <> me
-  ) loop
-    candidate := base || '-' || n::text;
-    n := n + 1;
-    if n > 99 then
-      candidate := base || '-' || substr(replace(gen_random_uuid()::text, '-', ''), 1, 4);
-      exit;
+
+  if allow_suffix then
+    while exists (
+      select 1 from public.profiles
+      where lead_slug is not null
+        and lower(lead_slug) = candidate
+        and id <> me
+    ) loop
+      candidate := base || '-' || n::text;
+      n := n + 1;
+      if n > 99 then
+        candidate := base || '-' || substr(replace(gen_random_uuid()::text, '-', ''), 1, 4);
+        exit;
+      end if;
+    end loop;
+  else
+    if exists (
+      select 1 from public.profiles
+      where lead_slug is not null
+        and lower(lead_slug) = candidate
+        and id <> me
+    ) then
+      raise exception 'That link is already in use — try another.';
     end if;
-  end loop;
+  end if;
 
   update public.profiles
   set lead_slug = candidate
@@ -187,4 +204,4 @@ begin
 end;
 $$;
 
-grant execute on function public.claim_lead_slug(text) to authenticated;
+grant execute on function public.claim_lead_slug(text, boolean) to authenticated;
