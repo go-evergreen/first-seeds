@@ -46,6 +46,10 @@
   text-align: center;
 }
 
+.lead-back[hidden] {
+  display: none !important;
+}
+
 .lead-back:hover {
   color: var(--lead-gold);
 }

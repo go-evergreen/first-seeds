@@ -2,7 +2,7 @@
    Strategy: network-first for app files so PWAs pick up deploys quickly.
    Offline: fall back to last good cache only if the network fails.
 */
-const CACHE_VERSION = "fs-v65";
+const CACHE_VERSION = "fs-v66";
 const CACHE_NAME = "first-seeds-" + CACHE_VERSION;
 
 const PRECACHE = [
