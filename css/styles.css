@@ -207,6 +207,11 @@ button{font-family:inherit;cursor:pointer}
 .bottom-nav-badge{position:absolute;top:4px;right:calc(50% - 22px);min-width:16px;height:16px;padding:0 4px;border-radius:999px;background:#c47a4a;color:#fff;font-size:10px;font-weight:700;line-height:16px;text-align:center}
 
 /* Lead page inbox (in-app) */
+.ground-lead-setup,.ground-custom-note{margin:16px 0 4px}
+.ground-lead-steps{margin:0;padding-left:1.2em;font-size:14px;line-height:1.55;color:var(--bark)}
+.ground-lead-steps li{margin:0 0 4px}
+.ground-lead-steps li.is-done{color:var(--moss);font-weight:600}
+.ground-lead-steps li.is-done::marker{content:"✓ "}
 .leads-gate{background:var(--beige);border-radius:16px;padding:18px 16px;margin:8px 0 20px}
 .leads-mode-note{font-size:13px;line-height:1.45;color:var(--bark);background:#fff8e8;border:1px solid rgba(196,122,74,.35);border-radius:12px;padding:10px 12px;margin:0 0 14px}
 .leads-share-card{margin-bottom:18px}

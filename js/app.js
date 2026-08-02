@@ -103,6 +103,20 @@
   /* ── mode helpers ────────────────────────────────────── */
   function isStarter() { return state.settings.hubMode === "starter"; }
   function isFull() { return state.settings.hubMode === "full"; }
+  function usesCustomLanding() { return state.data.page_choice === "custom"; }
+  function usesBuiltInLeadPage() { return state.data.page_choice === "generic"; }
+  function leadPageReady() {
+    var Cloud = window.FS.Cloud;
+    var u = Cloud && Cloud.user ? Cloud.user() : null;
+    return !!(u && u.lead_slug);
+  }
+  function leadSignedIn() {
+    var Cloud = window.FS.Cloud;
+    return !!(Cloud && Cloud.isSignedIn && Cloud.isSignedIn());
+  }
+  function leadPreviewSeen() {
+    return !!state.data.lead_preview_seen;
+  }
   function modeChosen() { return isStarter() || isFull(); }
 
   function visibleSections() {
@@ -481,8 +495,10 @@
       },
       ground: {
         title: "Claim a patch of ground.",
-        body: "Pick a page option and draft one warm opening line. That's enough for today.",
-        cta: sectionStarted("ground") ? "Finish your page draft →" : "Claim your ground →",
+        body: usesBuiltInLeadPage() && !leadPageReady()
+          ? "You picked the First Seeds page — next, set up your personal lead link (sign in, save your URL, preview)."
+          : "Pick First Seeds lead page or your own page, draft one warm opening line, and finish the steps that follow.",
+        cta: sectionStarted("ground") ? "Finish your page steps →" : "Claim your ground →",
         why: "Curious people need one place to land."
       },
       grove: {
@@ -1099,10 +1115,16 @@
       ];
     }
     if (id === "ground") {
-      return [
+      var items = [
         { done: !!state.data.page_choice, label: "Pick a page option" },
         { done: filledText("page_story"), label: "Draft your opening line" }
       ];
+      if (usesBuiltInLeadPage()) {
+        items.push({ done: leadSignedIn(), label: "Sign in for your lead page" });
+        items.push({ done: leadPageReady(), label: "Save your personal lead link" });
+        items.push({ done: leadPreviewSeen(), label: "Preview your lead page", optional: true });
+      }
+      return items;
     }
     if (id === "plant") {
       return [
@@ -1187,6 +1209,18 @@
   function renderBottomNav() {
     var bar = document.getElementById("bottomNav");
     if (!bar) return;
+    var hideLeads = usesCustomLanding();
+    var leadsBtn = bar.querySelector('[data-tab="leads"]');
+    if (leadsBtn) leadsBtn.hidden = hideLeads;
+    if (hideLeads && state.active === "leads") {
+      state.active = "ground";
+      save();
+      var panels = document.querySelectorAll(".panel");
+      for (var pi = 0; pi < panels.length; pi++) {
+        panels[pi].classList.toggle("active", panels[pi].id === "panel-ground");
+      }
+      renderNav();
+    }
     var tab = "";
     if (state.active === "tend" || state.active === "calendar") tab = "calendar";
     else if (state.active === "know" || state.active === "products") tab = "know";
@@ -1200,6 +1234,32 @@
     }
     var settingsBtn = document.getElementById("settingsNavBtn");
     if (settingsBtn) settingsBtn.classList.toggle("on", document.body.classList.contains("hub-menu-open"));
+  }
+
+  function renderGroundLeadSetup() {
+    var setup = document.getElementById("groundLeadSetup");
+    var note = document.getElementById("groundCustomNote");
+    if (setup) setup.hidden = !usesBuiltInLeadPage();
+    if (note) note.hidden = !usesCustomLanding();
+    if (!usesBuiltInLeadPage()) return;
+    var signed = leadSignedIn();
+    var ready = leadPageReady();
+    var previewed = leadPreviewSeen();
+    var steps = {
+      signin: signed,
+      link: ready,
+      preview: previewed
+    };
+    Object.keys(steps).forEach(function (key) {
+      var el = document.querySelector('[data-lead-step="' + key + '"]');
+      if (el) el.classList.toggle("is-done", !!steps[key]);
+    });
+    var cta = document.getElementById("groundLeadCta");
+    if (cta) {
+      if (!signed) cta.textContent = "Sign in & set up my lead page →";
+      else if (!ready) cta.textContent = "Claim my lead link →";
+      else cta.textContent = "Open Leads · preview again →";
+    }
   }
 
   function filterKnowSearch() {
@@ -1670,7 +1730,11 @@
       })(Tree.ensure(state));
       return named >= 3;
     }
-    if (id === "ground") return !!state.data.page_choice && filledText("page_story");
+    if (id === "ground") {
+      if (!state.data.page_choice || !filledText("page_story")) return false;
+      if (usesBuiltInLeadPage() && !leadPageReady()) return false;
+      return true;
+    }
     if (id === "plant") return filledText("seed_open") && giveDraftFilled() && filledText("seed_invite");
     if (id === "tend") {
       var Cal = window.FS.Calendar;
@@ -1691,7 +1755,17 @@
     for (var i = 0; i < btns.length; i++) {
       var b = btns[i], id = b.getAttribute("data-complete"), ok = canComplete(id);
       b.classList.toggle("waiting", !ok);
-      b.textContent = ok ? ((state.done[id] ? "✓ " : "") + readyLabel(b, id)) : b.getAttribute("data-wait");
+      if (ok) {
+        b.textContent = (state.done[id] ? "✓ " : "") + readyLabel(b, id);
+      } else if (id === "ground") {
+        if (!state.data.page_choice) b.textContent = "Pick a page option first";
+        else if (!filledText("page_story")) b.textContent = "Draft your opening line";
+        else if (usesBuiltInLeadPage() && !leadSignedIn()) b.textContent = "Sign in to set up your lead page";
+        else if (usesBuiltInLeadPage() && !leadPageReady()) b.textContent = "Save your personal lead link";
+        else b.textContent = b.getAttribute("data-wait");
+      } else {
+        b.textContent = b.getAttribute("data-wait");
+      }
     }
   }
 
@@ -1931,6 +2005,7 @@
     renderModuleChecklists();
     renderTodayCard();
     renderHomeRunway();
+    renderGroundLeadSetup();
     renderBottomNav();
   }
 
@@ -2024,6 +2099,8 @@
       c.classList.toggle("selected", sel);
       c.querySelector(".choice-radio").textContent = sel ? "✓" : "";
     }
+    renderGroundLeadSetup();
+    renderBottomNav();
   }
 
   function renderRhythms() {
@@ -2424,6 +2501,7 @@
         save(); renderNav(); renderPanels();
         return;
       }
+      if (goto === "leads" && usesCustomLanding()) return;
       if (goto !== "welcome" && goto !== "done" && goto !== "calendar" && goto !== "leader" && goto !== "know" && goto !== "tend" && goto !== "products" && goto !== "leads" && !sectionVisible(goto)) return;
       if (goto !== "welcome" && goto !== "done" && goto !== "calendar" && goto !== "leader" && goto !== "know" && goto !== "tend" && goto !== "products" && goto !== "leads" && !isModuleUnlocked(goto)) {
         showLockToast(goto);
@@ -2488,7 +2566,12 @@
     }
     if (t.hasAttribute("data-choice")) {
       var beforeSprout = lastSprout;
-      state.data[t.getAttribute("data-choice")] = t.getAttribute("data-value");
+      var choiceKey = t.getAttribute("data-choice");
+      var choiceVal = t.getAttribute("data-value");
+      state.data[choiceKey] = choiceVal;
+      if (choiceKey === "page_choice" && choiceVal === "custom" && state.active === "leads") {
+        state.active = "ground";
+      }
       save(); renderChoices(); liveRefresh({ silent: true });
       if (checklistProgress().sproutDone > beforeSprout) {
         lastSprout = beforeSprout;
@@ -2656,6 +2739,7 @@
   setInterval(renderCountdowns, 60000);
 
   window.FS.onAuthReady = function () {
+    liveRefresh({ silent: true });
     var wrap = document.getElementById("onboarding");
     if (!wrap || !wrap.classList.contains("open") || modeChosen()) return;
     if (partnerName() && cloudSignedIn()) {
@@ -2698,6 +2782,9 @@
       },
       persist: function () { save(); },
       gotoPanel: function (id) {
+        if (id === "leads" && usesCustomLanding()) {
+          id = "ground";
+        }
         if (id !== "welcome" && id !== "done" && id !== "calendar" && id !== "leader" && id !== "know" && id !== "leads" && !isModuleUnlocked(id)) {
           showLockToast(id);
           return;
@@ -2711,7 +2798,25 @@
     });
   }
 
+  /* Deep link back from lead-page preview */
+  try {
+    var bootParams = new URLSearchParams(window.location.search);
+    var go = (bootParams.get("go") || "").trim();
+    if (go === "leads") {
+      state.data.lead_preview_seen = true;
+      if (!usesCustomLanding()) state.active = "leads";
+      save();
+      if (window.history && window.history.replaceState) {
+        window.history.replaceState({}, "", window.location.pathname + window.location.hash);
+      }
+    }
+  } catch (e) {}
+
   /* If they landed on a locked module (old save), send them home */
+  if (state.active && state.active === "leads" && usesCustomLanding()) {
+    state.active = "ground";
+    save();
+  }
   if (state.active && !isModuleUnlocked(state.active)) {
     state.active = "welcome";
     save();

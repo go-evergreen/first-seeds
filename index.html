@@ -20,7 +20,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,400;1,9..144,500&family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/styles.css?v=62">
+<link rel="stylesheet" href="css/styles.css?v=63">
 </head>
 <body>
 
@@ -282,6 +282,28 @@
           <span class="choice-desc" id="customDesc"></span>
         </button>
 
+        <div class="ground-lead-setup" id="groundLeadSetup" hidden>
+          <div class="callout">
+            <div class="callout-tag">GROWTH STEP · YOUR LEAD PAGE</div>
+            <div class="callout-body">
+              <p style="margin:0 0 12px">Next, claim your personal link, add a short intro in your voice, and preview the page visitors will see. Leads from that form land only in your inbox.</p>
+              <ol class="ground-lead-steps" id="groundLeadSteps">
+                <li data-lead-step="signin">Sign in (so the page is yours)</li>
+                <li data-lead-step="link">Save your short link</li>
+                <li data-lead-step="preview">Preview the page</li>
+              </ol>
+              <button type="button" class="btn" data-goto="leads" id="groundLeadCta" style="margin-top:12px">Set up my lead page →</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="ground-custom-note" id="groundCustomNote" hidden>
+          <div class="callout">
+            <div class="callout-tag">YOUR OWN PAGE</div>
+            <div class="callout-body">Got it — you’re building elsewhere. The <strong>Leads</strong> tab stays hidden. Draft your opening line below so you’ve got the words ready for whatever page you use.</div>
+          </div>
+        </div>
+
         <label class="field" data-field="page_story" style="margin-top:24px">
           <span class="field-label">Draft your page's opening line — the first thing a visitor reads.</span>
           <span class="field-hint">Pull straight from your Roots. Your why, in one warm sentence. Watch it appear on your page below.</span>
@@ -305,7 +327,7 @@
         </div>
 
         <div class="btn-row">
-          <button class="btn waiting" data-complete="ground" data-ready-starter="Ground claimed → Map your grove" data-ready-full="Ground claimed → Map your grove" data-ready="Ground claimed → Map your grove" data-wait="Pick a page option and draft your opening line">Pick a page option and draft your opening line</button>
+          <button class="btn waiting" data-complete="ground" data-ready-starter="Ground claimed → Map your grove" data-ready-full="Ground claimed → Map your grove" data-ready="Ground claimed → Map your grove" data-wait="Finish your page steps below">Finish your page steps below</button>
           <span class="save-flash" data-flash="ground">Saved ✓</span>
         </div>
       </section>
@@ -655,7 +677,7 @@
             </div>
             <p class="leads-slug-msg" id="leadsSlugMsg" role="status"></p>
             <div class="btn-row" style="margin-top:12px">
-              <a class="btn-ghost" id="leadsPreviewLink" href="lead.html" target="_blank" rel="noopener">Preview page →</a>
+              <a class="btn-ghost" id="leadsPreviewLink" href="lead.html">Preview page →</a>
             </div>
           </div>
 
@@ -851,17 +873,17 @@
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="js/config.js?v=62"></script>
-<script src="js/supabase-config.js?v=62"></script>
-<script src="js/data.js?v=62"></script>
-<script src="js/content.js?v=62"></script>
-<script src="js/products.js?v=62"></script>
-<script src="js/plant.js?v=62"></script>
-<script src="js/tree.js?v=62"></script>
-<script src="js/calendar.js?v=62"></script>
-<script src="js/cloud.js?v=62"></script>
-<script src="js/bridge-ui.js?v=62"></script>
-<script src="js/app.js?v=62"></script>
-<script src="js/pwa.js?v=62"></script>
+<script src="js/config.js?v=63"></script>
+<script src="js/supabase-config.js?v=63"></script>
+<script src="js/data.js?v=63"></script>
+<script src="js/content.js?v=63"></script>
+<script src="js/products.js?v=63"></script>
+<script src="js/plant.js?v=63"></script>
+<script src="js/tree.js?v=63"></script>
+<script src="js/calendar.js?v=63"></script>
+<script src="js/cloud.js?v=63"></script>
+<script src="js/bridge-ui.js?v=63"></script>
+<script src="js/app.js?v=63"></script>
+<script src="js/pwa.js?v=63"></script>
 </body>
 </html>

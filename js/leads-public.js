@@ -5,6 +5,9 @@
   var Cloud = window.FS.Cloud;
   var params = new URLSearchParams(window.location.search);
   var slug = (params.get("p") || params.get("with") || "").trim().toLowerCase();
+  var fromApp = params.get("from") === "app";
+  var back = document.getElementById("leadBack");
+  if (back) back.hidden = !fromApp;
 
   var loading = document.getElementById("leadLoading");
   var missing = document.getElementById("leadMissing");

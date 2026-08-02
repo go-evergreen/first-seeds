@@ -27,6 +27,29 @@
   overflow-x: hidden;
 }
 
+.lead-back {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  display: block;
+  width: 100%;
+  padding: 12px 16px;
+  padding-top: max(12px, env(safe-area-inset-top));
+  background: rgba(18, 32, 25, 0.92);
+  backdrop-filter: blur(10px);
+  color: var(--lead-ink);
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-decoration: none;
+  border-bottom: 1px solid var(--lead-line);
+  text-align: center;
+}
+
+.lead-back:hover {
+  color: var(--lead-gold);
+}
+
 .lead-arcs {
   pointer-events: none;
   position: fixed;

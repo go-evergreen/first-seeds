@@ -746,8 +746,12 @@ window.FS = window.FS || {};
     var url = slug ? Cloud.leadUrl(slug) : "";
     if (share) share.value = url;
     if (preview) {
-      preview.href = slug ? ("lead.html?p=" + encodeURIComponent(slug)) : "lead.html";
+      preview.href = slug
+        ? ("lead.html?p=" + encodeURIComponent(slug) + "&from=app")
+        : "lead.html";
       preview.hidden = !slug;
+      preview.removeAttribute("target");
+      preview.removeAttribute("rel");
     }
   }
 
