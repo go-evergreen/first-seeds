@@ -2117,7 +2117,25 @@
         advanceToModeStep();
         return;
       }
+      setOnboardingAuthStep("email");
       if (emailIn) setTimeout(function () { emailIn.focus(); }, 50);
+    }
+  }
+
+  function setOnboardingAuthStep(step, email) {
+    var emailStep = document.getElementById("onboardingEmailStep");
+    var codeStep = document.getElementById("onboardingCodeStep");
+    var codeHint = document.getElementById("onboardingCodeHint");
+    var codeInput = document.getElementById("onboardingCode");
+    var showCode = step === "code";
+    if (emailStep) emailStep.hidden = showCode;
+    if (codeStep) codeStep.hidden = !showCode;
+    if (codeHint && showCode) {
+      codeHint.textContent = "Enter the 6-digit code we sent to " + (email || "your email") + ". Stay in this app — don’t open the email link.";
+    }
+    if (showCode && codeInput) {
+      codeInput.value = "";
+      setTimeout(function () { codeInput.focus(); }, 50);
     }
   }
 
@@ -2196,8 +2214,18 @@
     }
 
     var signInBtn = document.getElementById("onboardingSignInBtn");
+    var verifyBtn = document.getElementById("onboardingVerifyBtn");
+    var resendBtn = document.getElementById("onboardingResendBtn");
+    var backEmail = document.getElementById("onboardingBackEmail");
     var skipAuth = document.getElementById("onboardingSkipAuth");
     var emailInput = document.getElementById("onboardingEmail");
+    var codeInput = document.getElementById("onboardingCode");
+
+    function onboardAuthMsg(text) {
+      var msg = document.getElementById("onboardingAuthMsg");
+      if (msg) msg.textContent = text || "";
+    }
+
     if (emailInput) {
       emailInput.addEventListener("keydown", function (e) {
         if (e.key === "Enter") {
@@ -2206,29 +2234,63 @@
         }
       });
     }
-    if (signInBtn) {
-      signInBtn.addEventListener("click", async function () {
-        var msg = document.getElementById("onboardingAuthMsg");
+    if (codeInput) {
+      codeInput.addEventListener("keydown", function (e) {
+        if (e.key === "Enter") {
+          e.preventDefault();
+          if (verifyBtn) verifyBtn.click();
+        }
+      });
+    }
+    if (backEmail) {
+      backEmail.addEventListener("click", function () {
+        setOnboardingAuthStep("email");
+        onboardAuthMsg("");
+      });
+    }
+    async function sendOnboardCode() {
+      var email = emailInput ? emailInput.value.trim() : "";
+      var name = partnerName() || "friend";
+      if (!window.FS.Cloud || !window.FS.Cloud.signIn) {
+        onboardAuthMsg("Sign-in isn’t available right now — continue and try from the top bar later.");
+        return;
+      }
+      try {
+        if (signInBtn) signInBtn.disabled = true;
+        if (resendBtn) resendBtn.disabled = true;
+        var res = await window.FS.Cloud.signIn(email, name);
+        onboardAuthMsg(res.message || "Check your email.");
+        if (res.kind === "local") {
+          advanceToModeStep();
+        } else if (res.kind === "otp") {
+          setOnboardingAuthStep("code", res.email || email);
+        }
+      } catch (err) {
+        onboardAuthMsg((err && err.message) || "Could not send the code.");
+      } finally {
+        if (signInBtn) signInBtn.disabled = false;
+        if (resendBtn) resendBtn.disabled = false;
+      }
+    }
+    if (signInBtn) signInBtn.addEventListener("click", sendOnboardCode);
+    if (resendBtn) resendBtn.addEventListener("click", sendOnboardCode);
+    if (verifyBtn) {
+      verifyBtn.addEventListener("click", async function () {
         var email = emailInput ? emailInput.value.trim() : "";
-        var name = partnerName() || "friend";
-        if (!window.FS.Cloud || !window.FS.Cloud.signIn) {
-          if (msg) msg.textContent = "Sign-in isn’t available right now — continue and try from the top bar later.";
+        var code = codeInput ? codeInput.value.trim() : "";
+        if (!window.FS.Cloud || !window.FS.Cloud.verifyOtp) {
+          onboardAuthMsg("Sign-in isn’t available right now.");
           return;
         }
         try {
-          signInBtn.disabled = true;
-          var res = await window.FS.Cloud.signIn(email, name);
-          if (msg) msg.textContent = res.message || "Check your email.";
-          if (res.kind === "local") {
-            advanceToModeStep();
-          } else if (msg) {
-            msg.textContent = (res.message || "Check your email for a sign-in link.") +
-              " After you tap it, you’ll land back here to pick your path.";
-          }
+          verifyBtn.disabled = true;
+          await window.FS.Cloud.verifyOtp(email, code);
+          onboardAuthMsg("You’re signed in.");
+          advanceToModeStep();
         } catch (err) {
-          if (msg) msg.textContent = (err && err.message) || "Could not send the link.";
+          onboardAuthMsg((err && err.message) || "That code didn’t work — try again or resend.");
         } finally {
-          signInBtn.disabled = false;
+          verifyBtn.disabled = false;
         }
       });
     }

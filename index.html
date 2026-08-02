@@ -20,7 +20,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,400;1,9..144,500&family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/styles.css?v=58">
+<link rel="stylesheet" href="css/styles.css?v=59">
 </head>
 <body>
 
@@ -756,11 +756,23 @@
       <p class="onboarding-eyebrow" id="obAuthEyebrow">Save your spot</p>
       <h3 id="obAuthTitle">Sign in so nothing gets lost</h3>
       <p class="lead" id="obAuthBody"></p>
-      <label class="onboard-name-field">
-        <span class="field-label">Email</span>
-        <input type="email" id="onboardingEmail" placeholder="you@email.com" autocomplete="email">
-      </label>
-      <button type="button" class="btn overlay-btn" id="onboardingSignInBtn">Email me a sign-in link →</button>
+      <div id="onboardingEmailStep">
+        <label class="onboard-name-field">
+          <span class="field-label">Email</span>
+          <input type="email" id="onboardingEmail" placeholder="you@email.com" autocomplete="email">
+        </label>
+        <button type="button" class="btn overlay-btn" id="onboardingSignInBtn">Email me a code →</button>
+      </div>
+      <div id="onboardingCodeStep" hidden>
+        <p class="auth-hint" id="onboardingCodeHint" style="margin-top:0;margin-bottom:12px"></p>
+        <label class="onboard-name-field">
+          <span class="field-label">6-digit code</span>
+          <input type="text" id="onboardingCode" class="auth-code-input" inputmode="numeric" pattern="[0-9]*" maxlength="8" autocomplete="one-time-code" placeholder="••••••" enterkeyhint="done">
+        </label>
+        <button type="button" class="btn overlay-btn" id="onboardingVerifyBtn">Sign in →</button>
+        <button type="button" class="btn-ghost overlay-btn" id="onboardingResendBtn" style="margin-top:8px">Resend code</button>
+        <button type="button" class="btn-ghost overlay-btn" id="onboardingBackEmail" style="margin-top:4px">Use a different email</button>
+      </div>
       <p class="auth-msg" id="onboardingAuthMsg" role="status"></p>
       <button type="button" class="btn-ghost overlay-btn" id="onboardingSkipAuth" style="margin-top:8px">Continue without signing in</button>
       <p class="auth-hint" id="obAuthHint"></p>
@@ -792,17 +804,29 @@
       <p class="onboarding-eyebrow">First Seeds Bridge</p>
       <h3 id="authTitle">Save your progress</h3>
       <p class="lead">Sign in with email so your runway syncs — and so your leader can see how you're doing (no chat, just progress).</p>
-      <label class="onboard-name-field">
-        <span class="field-label">First name</span>
-        <input type="text" id="authName" maxlength="40" placeholder="Your first name">
-      </label>
-      <label class="onboard-name-field">
-        <span class="field-label">Email</span>
-        <input type="email" id="authEmail" placeholder="you@email.com" autocomplete="email">
-      </label>
-      <button type="button" class="btn overlay-btn" id="authSubmitBtn">Continue</button>
+      <div id="authEmailStep">
+        <label class="onboard-name-field">
+          <span class="field-label">First name</span>
+          <input type="text" id="authName" maxlength="40" placeholder="Your first name">
+        </label>
+        <label class="onboard-name-field">
+          <span class="field-label">Email</span>
+          <input type="email" id="authEmail" placeholder="you@email.com" autocomplete="email">
+        </label>
+        <button type="button" class="btn overlay-btn" id="authSubmitBtn">Email me a code →</button>
+      </div>
+      <div id="authCodeStep" hidden>
+        <p class="auth-hint" id="authCodeHint" style="margin-top:0;margin-bottom:12px"></p>
+        <label class="onboard-name-field">
+          <span class="field-label">6-digit code</span>
+          <input type="text" id="authCode" class="auth-code-input" inputmode="numeric" pattern="[0-9]*" maxlength="8" autocomplete="one-time-code" placeholder="••••••" enterkeyhint="done">
+        </label>
+        <button type="button" class="btn overlay-btn" id="authVerifyBtn">Sign in →</button>
+        <button type="button" class="btn-ghost overlay-btn" id="authResendBtn" style="margin-top:8px">Resend code</button>
+        <button type="button" class="btn-ghost overlay-btn" id="authBackEmail" style="margin-top:4px">Use a different email</button>
+      </div>
       <p class="auth-msg" id="authMsg"></p>
-      <p class="auth-hint">You’ll get a magic link by email. After you tap it, you’re signed in — progress and leads sync to your account.</p>
+      <p class="auth-hint" id="authSignHint">We’ll email a 6-digit code. Enter it here — don’t tap the email link (that opens Safari and won’t sign in this app).</p>
     </div>
     <div id="authAccountPane" hidden>
       <p class="onboarding-eyebrow">Your account</p>
@@ -830,17 +854,17 @@
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="js/config.js?v=58"></script>
-<script src="js/supabase-config.js?v=58"></script>
-<script src="js/data.js?v=58"></script>
-<script src="js/content.js?v=58"></script>
-<script src="js/products.js?v=58"></script>
-<script src="js/plant.js?v=58"></script>
-<script src="js/tree.js?v=58"></script>
-<script src="js/calendar.js?v=58"></script>
-<script src="js/cloud.js?v=58"></script>
-<script src="js/bridge-ui.js?v=58"></script>
-<script src="js/app.js?v=58"></script>
-<script src="js/pwa.js?v=58"></script>
+<script src="js/config.js?v=59"></script>
+<script src="js/supabase-config.js?v=59"></script>
+<script src="js/data.js?v=59"></script>
+<script src="js/content.js?v=59"></script>
+<script src="js/products.js?v=59"></script>
+<script src="js/plant.js?v=59"></script>
+<script src="js/tree.js?v=59"></script>
+<script src="js/calendar.js?v=59"></script>
+<script src="js/cloud.js?v=59"></script>
+<script src="js/bridge-ui.js?v=59"></script>
+<script src="js/app.js?v=59"></script>
+<script src="js/pwa.js?v=59"></script>
 </body>
 </html>

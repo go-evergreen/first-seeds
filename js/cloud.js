@@ -163,23 +163,27 @@ window.FS = window.FS || {};
       return Cloud._publicUser(profile);
     },
 
-    /* Magic-link or local passwordless demo sign-in */
+    /* Email OTP (6-digit code) — works inside installed PWAs.
+       Magic links open in Safari and never reach the PWA's storage on iOS. */
     signIn: async function (email, displayName) {
       email = (email || "").trim().toLowerCase();
       if (!email || email.indexOf("@") < 1) throw new Error("Enter a valid email.");
       displayName = (displayName || email.split("@")[0]).trim();
 
       if (configured() && client) {
-        var redirectTo = window.location.origin + window.location.pathname;
         var { error } = await client.auth.signInWithOtp({
           email: email,
           options: {
-            emailRedirectTo: redirectTo,
+            shouldCreateUser: true,
             data: { display_name: displayName }
           }
         });
         if (error) throw error;
-        return { kind: "magic_link", message: "Check your email for a sign-in link." };
+        return {
+          kind: "otp",
+          email: email,
+          message: "Check your email for a 6-digit code — enter it here (don’t tap any link)."
+        };
       }
 
       /* local bridge */
@@ -224,6 +228,35 @@ window.FS = window.FS || {};
       sessionUser = Cloud._publicUser(user);
       emit("auth", sessionUser);
       return { kind: "local", message: "Signed in (local bridge mode)." };
+    },
+
+    verifyOtp: async function (email, token) {
+      email = (email || "").trim().toLowerCase();
+      token = String(token || "").replace(/\s+/g, "");
+      if (!email || email.indexOf("@") < 1) throw new Error("Enter a valid email.");
+      if (!/^\d{6,8}$/.test(token)) throw new Error("Enter the 6-digit code from your email.");
+      if (!configured() || !client) throw new Error("Cloud sign-in isn’t configured.");
+
+      var result = await client.auth.verifyOtp({
+        email: email,
+        token: token,
+        type: "email"
+      });
+      if (result.error) {
+        /* Older templates sometimes issue magiclink-typed tokens */
+        var again = await client.auth.verifyOtp({
+          email: email,
+          token: token,
+          type: "magiclink"
+        });
+        if (again.error) throw result.error;
+        result = again;
+      }
+      if (result.data && result.data.user) {
+        sessionUser = await Cloud._hydrateSupabaseUser(result.data.user);
+        emit("auth", sessionUser);
+      }
+      return { kind: "signed_in", message: "You’re signed in." };
     },
 
     signOut: async function () {

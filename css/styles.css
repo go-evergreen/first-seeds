@@ -124,6 +124,7 @@ button{font-family:inherit;cursor:pointer}
 .overlay-close{position:absolute;top:12px;right:14px;border:none;background:transparent;font-size:22px;color:var(--bark-soft);cursor:pointer;line-height:1}
 .auth-msg{font-size:13px;color:var(--moss);margin-top:12px;min-height:18px}
 .auth-hint{font-size:12px;color:var(--bark-soft);line-height:1.45;margin-top:10px}
+.auth-code-input{letter-spacing:.35em;font-size:22px!important;font-weight:600;text-align:center;font-variant-numeric:tabular-nums}
 .field-label{display:block;font-size:12px;font-weight:600;color:var(--green);margin-bottom:6px}
 
 .module-check{background:var(--white);border:1.5px solid var(--sand);border-radius:14px;padding:14px 16px;margin:0 0 22px;box-shadow:var(--shadow)}

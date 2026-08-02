@@ -104,8 +104,8 @@ window.FS.CONFIG = {
 
     authEyebrow: "Save your spot",
     authTitle: "Sign in so nothing gets lost",
-    authBody: "Email yourself a sign-in link. Your runway, lead page, and progress stay with you on any phone or laptop — not locked to this one browser.",
-    authCta: "Email me a sign-in link →",
+    authBody: "We’ll email a 6-digit code. Enter it here in the app — that keeps you signed in on your home-screen icon (tap links open Safari and won’t work).",
+    authCta: "Email me a code →",
     authSkip: "Continue without signing in",
     authHint: "You can always sign in later from the top bar. Lead pages need a signed-in account to work for real visitors.",
 

@@ -1,0 +1,13 @@
+<!--
+  Paste into Supabase → Authentication → Email Templates → Magic Link
+  (Subject: e.g. "Your First Seeds code")
+
+  The {{ .Token }} line is required for PWA sign-in.
+  Do not rely on the confirmation link — on iPhone it opens Safari,
+  which has separate storage from the home-screen app.
+-->
+<h2>Your First Seeds code</h2>
+<p>Enter this code in the First Seeds app to sign in:</p>
+<p style="font-size:28px;letter-spacing:6px;font-weight:700;font-family:monospace;">{{ .Token }}</p>
+<p>Stay in the app — don’t tap any link (that opens Safari and won’t sign you in on your home-screen icon).</p>
+<p style="color:#666;font-size:13px;">Code expires in about an hour. If you didn’t request this, you can ignore it.</p>
