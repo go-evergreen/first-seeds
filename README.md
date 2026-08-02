@@ -1,82 +1,72 @@
 # First Seeds 🌱
 
-A self-paced onboarding runway for founding Ringana partners — from "I'm in" to a story, a warm list, a dream team tree, a landing page, and first seeds planted, before pre-registration opens.
+A self-paced onboarding runway for founding Ringana partners — and the **Fresh Grove bridge** until Evergreen Co launches (Jan 2027).
 
-Built with zero dependencies: plain HTML/CSS/JS, deploys anywhere static files work (GitHub Pages, Netlify, etc.). No build step.
+Zero build step: plain HTML/CSS/JS. Optional Supabase for accounts, invite links, leader visibility, and cloud sync.
+
+## Bridge Hub features
+
+| Feature | What it does |
+|---|---|
+| **Sign in** | Magic link (Supabase) or local bridge mode for demos |
+| **Join links** | `?join=CODE` attaches a new partner to their sponsor |
+| **Cloud save** | Runway answers sync when signed in |
+| **My people** | Leader triage: Needs a nudge / In motion / Blooming + copy-paste nudges + leave a note |
+| **Post calendar** | Suggested posts (4:1 give/ask + rest days); Drafted / Posted / Skipped |
+| **Cheers** | Leader one-tap encouragement (no chat) |
+| **Notify leader** | Finish-screen one-tap ping so your sponsor sees you asked for eyes |
+| **Team pulse** | Aggregate grove names / blooming counts on Home |
+| **Handoff export** | JSON for Evergreen import — see [`docs/EVERGREEN-HANDOFF.md`](docs/EVERGREEN-HANDOFF.md) |
+
+**Not building:** team chat, auto-posting to social, income dashboards.
 
 ## Dual modes
 
-Partners choose a pace at the end of onboarding (switch anytime in the rail):
-
-| Mode | Path | Best for |
-|---|---|---|
-| **Getting started** | Roots → Grove → Ground → Tend (4 steps) | New or overwhelmed — calm foundation without the tree or Post Studio |
-| **Full runway** | All 6 sections | Ready to go — dream team tree, Post Studio frameworks, hooks, starter trio |
-
-Progress and answers persist across mode switches. Starter finish offers **Unlock Full runway**.
-
-## Onboarding
-
-First visit (or after Start over):
-
-1. Welcome to the team (hype + founding-partner energy)
-2. First name + Oct 1 countdown
-3. Mode pick (Getting started / Full runway)
-4. Mini-tour (plant growth, one-section-at-a-time, auto-save)
-
-Name appears in greetings throughout ("Hey Maya — let's put down roots.").
+| Mode | Path |
+|---|---|
+| **Getting started** | Roots → Grove → Ground → Tend |
+| **Full runway** | All 6 sections (+ tree + Post Studio) |
 
 ## Structure
 
 ```
 first-seeds/
-├── index.html          ← markup, onboarding + tour overlays
-├── css/
-│   └── styles.css      ← design system + overlays
+├── index.html
+├── css/styles.css
+├── docs/EVERGREEN-HANDOFF.md
+├── supabase/schema.sql      ← run in Supabase SQL editor
 └── js/
-    ├── config.js       ← ⭐ THE ONLY FILE LEADERS NEED TO EDIT
-    ├── data.js         ← sections (with modes), claim-checker, seed types
-    ├── plant.js        ← growing plant SVG
-    ├── tree.js         ← family tree builder
-    └── app.js          ← state, modes, onboarding, tour, widgets (loads last)
+    ├── config.js            ← leader-editable copy, nudges, dates
+    ├── supabase-config.js   ← paste project URL + anon key
+    ├── data.js
+    ├── plant.js / tree.js
+    ├── calendar.js
+    ├── cloud.js             ← auth + sync + downline
+    ├── bridge-ui.js         ← account, leader, calendar UI
+    └── app.js
 ```
 
-Script load order: `config → data → plant → tree → app`.
+## Supabase setup
 
-## Customizing for a leader
+1. Create a project at [supabase.com](https://supabase.com)
+2. Run [`supabase/schema.sql`](supabase/schema.sql) in the SQL editor
+3. Enable **Email** auth (magic link) under Authentication
+4. Paste URL + anon key into [`js/supabase-config.js`](js/supabase-config.js)
+5. Add your site URL to Auth → Redirect URLs
 
-Everything a leader should personalize lives in `js/config.js`:
+Leave keys blank to use **local bridge mode** (same browser only — perfect for testing join links with two accounts).
 
-- `teamName` / `teamDisplayName` — sidebar eyebrow + onboarding copy
-- `tagline` — sidebar subtitle
-- `preRegDate` / `launchDate` — countdown targets (auto-roll to next year)
-- `signoff` — finish-screen sign-off
-- `modes.starter` / `modes.full` — labels + descriptions on the mode-pick cards
-- `onboarding` — welcome / name / mode-step copy
-- `tour` — mini-tour tip cards after mode pick
-- `dmStarter` — copyable DM template in the Grove section
-- `hookBank` — copyable first-lines in the Post Studio
-- `pageOptions` — landing-page option cards
-- `rhythms` — weekly rhythm checklist (day: 0=Sun…6=Sat, -1 for habits)
-- `storeKey` / `legacyStoreKey` — localStorage keys; bump `storeKey` if you change data shape
+## Customizing
 
-## How it works
+Edit [`js/config.js`](js/config.js): team name, dates, modes, hooks, DM starter, **nudges**, cheer templates, rhythms.
 
-- **Persistence**: everything saves to `localStorage` on the partner's device, debounced 500ms after typing. "Start over" clears it (with confirm) and reopens onboarding.
-- **Growth**: the sidebar plant's *roots* grow per answer; the *plant* above ground grows per completed section (scaled to the active mode's section count). Bloom at full completion.
-- **Claim checker**: `data.js` → `RISKY` array of `{re, word, tip}`. Runs live on writing fields.
-- **Post Studio (Full only)**: five frameworks in `SEED_TYPES`. Starter trio + 4:1 give:ask cadence.
-- **Family tree (Full only)**: nested `{name, status, children}`. Included in text export.
-- **Export**: "Download my answers" produces a plain-text summary (includes name + mode).
+## Deploy
 
-## Deploy (GitHub Pages)
+Static host (GitHub Pages, Netlify, etc.). For Supabase magic links, use HTTPS and configure redirect URLs.
 
-Drop the whole folder into your repo (e.g. as `/first-seeds/`) and it's live at
-`https://<user>.github.io/<repo>/first-seeds/`.
+## Success metrics (bridge season)
 
-## Ideas for later
-
-- Sync progress to a backend so leaders see team progress
-- Shareable read-only tree snapshot
-- Per-leader config via URL param (`?team=grove`)
-- Reminder emails when someone stalls mid-guide
+- % of invitees finishing Roots in 7 days
+- Runway completion before Oct 1
+- Drop in “what do I post?” DMs you send manually
+- Partners marking ≥3 calendar posts Posted / week in October

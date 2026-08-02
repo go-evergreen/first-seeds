@@ -39,9 +39,9 @@
           state.data = old.data || {};
           state.done = old.done || {};
           state.active = old.active || "welcome";
-          /* v4 had no mode — force onboarding so they pick pace */
-          state.settings = { hubMode: "", partnerName: "" };
-          state.tourDone = false;
+          state.settings = old.settings || { hubMode: "", partnerName: "" };
+          state.tourDone = !!old.tourDone;
+          if (!state.data.calendar) state.data.calendar = {};
           save();
           return;
         }
@@ -56,11 +56,17 @@
         if (!state.settings.partnerName) state.settings.partnerName = "";
         state.tourDone = !!p.tourDone;
       }
+      if (!state.data.calendar) state.data.calendar = {};
     } catch (e) {}
   }
 
+  var cloudSyncTimer;
   function save() {
     try { localStorage.setItem(CFG.storeKey, JSON.stringify(state)); } catch (e) {}
+    clearTimeout(cloudSyncTimer);
+    cloudSyncTimer = setTimeout(function () {
+      if (window.FS.BridgeUI) window.FS.BridgeUI.syncNow();
+    }, 800);
   }
 
   loadState();
@@ -240,6 +246,174 @@
     }
 
     renderFinishCopy();
+    renderTodayCard();
+  }
+
+  /* ── "What should I do today?" — one next move, no overwhelm ─ */
+  function sectionStarted(id) {
+    if (id === "roots") return filledText("why") || filledText("moment") || filledText("said_yes");
+    if (id === "grove") return groveNames().length > 0 || filledText("warm_pick");
+    if (id === "tree") return Tree.counts(Tree.ensure(state)).total > 0;
+    if (id === "ground") return !!state.data.page_choice || filledText("page_story");
+    if (id === "plant") return filledText("seed_open") || filledText("seed_value") || filledText("seed_invite");
+    if (id === "tend") return (state.data.rhythm || []).length > 0;
+    return false;
+  }
+
+  function calendarWeekPulse() {
+    if (!window.FS.Calendar) return { posted: 0, drafted: 0, total: 0, restToday: false };
+    var cal = state.data.calendar || {};
+    var plan = window.FS.Calendar.plan(CFG, cal, state.data);
+    var week = window.FS.Calendar.weekSlice(plan);
+    var stats = window.FS.Calendar.weekStats(week);
+    var today = window.FS.Calendar.ymd(new Date());
+    var todaySlot = null;
+    for (var i = 0; i < week.length; i++) if (week[i].date === today) todaySlot = week[i];
+    return {
+      posted: stats.posted,
+      drafted: stats.drafted,
+      total: stats.total,
+      restToday: !!(todaySlot && todaySlot.reactive),
+      todayStatus: todaySlot ? todaySlot.status : "todo"
+    };
+  }
+
+  function pickTodayMove() {
+    var name = firstName();
+    var hey = name ? name : "friend";
+    var secs = visibleSections();
+    var tips = {
+      roots: {
+        title: "Plant one root.",
+        body: "Ten quiet minutes. Answer the three Roots questions in your own words — messy is fine.",
+        cta: sectionStarted("roots") ? "Finish your Roots →" : "Start with Roots →",
+        why: "Everything you share later grows from this."
+      },
+      grove: {
+        title: "Map a few names.",
+        body: "Brain-dump people you'd actually want to tell. Even five warm names is a real win.",
+        cta: sectionStarted("grove") ? "Keep mapping your grove →" : "Open your grove →",
+        why: "You're not building a spray list — just people who matter."
+      },
+      tree: {
+        title: "Sketch your dream team.",
+        body: "Add three people you'd love building with. Hopeful is fine — flip them to committed when they say yes.",
+        cta: sectionStarted("tree") ? "Keep growing your tree →" : "Open Grow Your Tree →",
+        why: "Seeing faces makes “downline” feel like family."
+      },
+      ground: {
+        title: "Claim a patch of ground.",
+        body: "Pick a page option and draft one warm opening line. That's enough for today.",
+        cta: sectionStarted("ground") ? "Finish your page draft →" : "Claim your ground →",
+        why: "Curious people need one place to land."
+      },
+      plant: {
+        title: "Draft today's seeds.",
+        body: "Write your starter trio — an open loop, a give, and a soft door. No posting required yet.",
+        cta: sectionStarted("plant") ? "Keep drafting →" : "Open Post Studio →",
+        why: "Launch feels calmer when the words are already yours."
+      },
+      tend: {
+        title: "Pick a rhythm you can keep.",
+        body: "Choose at least three weekly habits. Consistency beats a perfect plan you abandon.",
+        cta: sectionStarted("tend") ? "Lock in your rhythm →" : "Open Tend It →",
+        why: "A garden grows from showing up, not one big planting day."
+      }
+    };
+
+    for (var i = 0; i < secs.length; i++) {
+      var s = secs[i];
+      if (!state.done[s.id]) {
+        var tip = tips[s.id] || {
+          title: "Keep going.",
+          body: "Your next section is waiting — one small step.",
+          cta: "Continue →",
+          why: ""
+        };
+        return {
+          title: tip.title,
+          body: tip.body,
+          why: tip.why,
+          primary: { label: tip.cta, goto: s.id },
+          secondary: state.done.roots
+            ? { label: "Or peek at the calendar", goto: "calendar" }
+            : null
+        };
+      }
+    }
+
+    var pulse = calendarWeekPulse();
+    if (pulse.restToday && pulse.todayStatus === "todo") {
+      return {
+        title: "Rest counts.",
+        body: "Today's a real-life / reply day on your calendar. Answer a comment, text one grove person, or just live your life.",
+        why: "Consistency includes rest, " + hey + ".",
+        primary: { label: "See today's calendar →", goto: "calendar" },
+        secondary: { label: "Revisit any section", goto: "roots" }
+      };
+    }
+    if (pulse.posted < 3 && pulse.total > 0) {
+      return {
+        title: "Share one true thing.",
+        body: pulse.posted === 0
+          ? "Your runway's done — nice. Grab one gentle idea from the calendar and mark it Posted when you share (or Skipped if today isn't the day)."
+          : ("You've marked " + pulse.posted + " posted this week. One more true post keeps the habit warm."),
+        why: "No auto-post. Just a nudge so you don't go silent.",
+        primary: { label: "Open post calendar →", goto: "calendar" },
+        secondary: { label: "Notify my leader", goto: "done" }
+      };
+    }
+
+    var Cloud = window.FS.Cloud;
+    if (Cloud && Cloud.isSignedIn && Cloud.isSignedIn()) {
+      return {
+        title: "You're in motion.",
+        body: "Runway done and calendar humming. Check My people if you're leading — or leave your leader a quiet ping that you're still here.",
+        why: "Showing up is the whole game, " + hey + ".",
+        primary: { label: "My people →", goto: "leader" },
+        secondary: { label: "Notify my leader", goto: "done" }
+      };
+    }
+
+    return {
+      title: "Look at you.",
+      body: "You've done the quiet work most people skip. Keep the calendar warm, and sign in so your progress can travel with you.",
+      why: "October will feel different because of this.",
+      primary: { label: "Open post calendar →", goto: "calendar" },
+      secondary: { label: "Sign in / Account", action: "auth" }
+    };
+  }
+
+  function renderTodayCard() {
+    var card = document.getElementById("todayCard");
+    if (!card) return;
+    var move = pickTodayMove();
+    var title = document.getElementById("todayTitle");
+    var body = document.getElementById("todayBody");
+    var why = document.getElementById("todayWhy");
+    var actions = document.getElementById("todayActions");
+    if (title) title.textContent = move.title;
+    if (body) body.textContent = move.body;
+    if (why) why.textContent = move.why || "";
+    if (!actions) return;
+    var html = "";
+    if (move.primary) {
+      if (move.primary.action === "auth") {
+        html += '<button type="button" class="btn" id="todayAuthBtn">' + esc(move.primary.label) + "</button>";
+      } else {
+        html += '<button type="button" class="btn" data-goto="' + esc(move.primary.goto) + '" id="welcomeCta">' +
+          esc(move.primary.label) + "</button>";
+      }
+    }
+    if (move.secondary) {
+      if (move.secondary.action === "auth") {
+        html += '<button type="button" class="btn-ghost" id="todayAuthBtn">' + esc(move.secondary.label) + "</button>";
+      } else {
+        html += '<button type="button" class="btn-ghost" data-goto="' + esc(move.secondary.goto) + '">' +
+          esc(move.secondary.label) + "</button>";
+      }
+    }
+    actions.innerHTML = html;
   }
 
   function renderFinishCopy() {
@@ -365,6 +539,20 @@
     nav.innerHTML = html;
   }
 
+  function openHubMenu() {
+    var menu = document.getElementById("hubMenu");
+    if (!menu) return;
+    menu.hidden = false;
+    document.body.classList.add("hub-menu-open");
+  }
+
+  function closeHubMenu() {
+    var menu = document.getElementById("hubMenu");
+    if (!menu) return;
+    menu.hidden = true;
+    document.body.classList.remove("hub-menu-open");
+  }
+
   var lastUnits = -1;
   var lastSecs = -1;
   var captionTimer;
@@ -422,6 +610,12 @@
       panels[i].classList.toggle("active", panels[i].id === "panel-" + state.active);
     }
     window.scrollTo({ top: 0, behavior: "auto" });
+    if (window.FS.BridgeUI) {
+      if (state.active === "calendar") window.FS.BridgeUI.renderCalendar();
+      if (state.active === "leader") window.FS.BridgeUI.renderLeader();
+      if (state.active === "welcome") window.FS.BridgeUI.renderPulse();
+      if (window.FS.BridgeUI.renderLeaderNoteBanner) window.FS.BridgeUI.renderLeaderNoteBanner();
+    }
   }
 
   /* ── countdowns ──────────────────────────────────────── */
@@ -614,6 +808,7 @@
     markFilledStates();
     renderPlant(opts);
     refreshButtons();
+    renderTodayCard();
   }
 
   /* ── leaf burst ──────────────────────────────────────── */
@@ -866,10 +1061,30 @@
     });
   }
 
+  document.addEventListener("keydown", function (e) {
+    if (e.key === "Escape") closeHubMenu();
+  });
+
   /* ── clicks ──────────────────────────────────────────── */
   document.addEventListener("click", function (e) {
-    var t = e.target.closest("[data-goto],[data-complete],[data-choice],[data-rhythm],[data-copy],[data-tadd],[data-tstatus],[data-tdel],[data-seedtype],#exportBtn,#exportBtn2,#resetBtn,#modeStarter,#modeFull,#levelUpBtn");
+    var t = e.target.closest("[data-goto],[data-complete],[data-choice],[data-rhythm],[data-copy],[data-tadd],[data-tstatus],[data-tdel],[data-seedtype],[data-menu-goto],#exportBtn,#exportBtn2,#resetBtn,#modeStarter,#modeFull,#levelUpBtn,#menuOpenBtn,#menuCloseBtn,#menuCloseBackdrop,#todayAuthBtn");
     if (!t) return;
+
+    if (t.id === "todayAuthBtn") {
+      if (window.FS.BridgeUI && window.FS.BridgeUI.openAuth) window.FS.BridgeUI.openAuth(true);
+      return;
+    }
+    if (t.id === "menuOpenBtn") { openHubMenu(); return; }
+    if (t.id === "menuCloseBtn" || t.id === "menuCloseBackdrop") { closeHubMenu(); return; }
+    if (t.hasAttribute("data-menu-goto")) {
+      var dest = t.getAttribute("data-menu-goto");
+      closeHubMenu();
+      state.active = dest;
+      save();
+      renderNav();
+      renderPanels();
+      return;
+    }
 
     if (t.id === "modeStarter") {
       setHubMode("starter");
@@ -878,6 +1093,7 @@
     if (t.id === "modeFull" || t.id === "levelUpBtn") {
       setHubMode("full");
       if (t.id === "levelUpBtn") {
+        closeHubMenu();
         state.active = "welcome";
         save();
         renderNav();
@@ -895,7 +1111,7 @@
 
     if (t.hasAttribute("data-goto")) {
       var goto = t.getAttribute("data-goto");
-      if (goto !== "welcome" && goto !== "done" && !sectionVisible(goto)) return;
+      if (goto !== "welcome" && goto !== "done" && goto !== "calendar" && goto !== "leader" && !sectionVisible(goto)) return;
       state.active = goto;
       save(); renderNav(); renderPanels();
       return;
@@ -1047,8 +1263,45 @@
   renderCountdowns();
   var keys = ["why", "moment", "said_yes", "page_story", "seed_open", "seed_value", "seed_invite"];
   for (var ki = 0; ki < keys.length; ki++) runClaimCheck(keys[ki]);
-  liveRefresh();
+  liveRefresh({ silent: true });
   setInterval(renderCountdowns, 60000);
+
+  if (window.FS.BridgeUI) {
+    window.FS.BridgeUI.init({
+      getState: function () { return state; },
+      setStateFromCloud: function (next) {
+        state.data = next.data || state.data;
+        state.done = next.done || state.done;
+        state.active = next.active || state.active;
+        state.settings = next.settings || state.settings;
+        state.tourDone = !!next.tourDone;
+        state.cheers = next.cheers || [];
+        if (!state.data.calendar) state.data.calendar = {};
+        /* hydrate fields */
+        var fs = document.querySelectorAll("[data-key]");
+        for (var j = 0; j < fs.length; j++) {
+          var k = fs[j].getAttribute("data-key");
+          if (state.data[k] != null) fs[j].value = state.data[k];
+        }
+        save();
+        updateModeUI();
+        renderNav();
+        renderPanels();
+        renderChoices();
+        renderRhythms();
+        Tree.render(state);
+        liveRefresh({ silent: true });
+        renderGreetings();
+      },
+      persist: function () { save(); },
+      gotoPanel: function (id) {
+        state.active = id;
+        save();
+        renderNav();
+        renderPanels();
+      }
+    });
+  }
 
   if (!modeChosen()) {
     startOnboarding();

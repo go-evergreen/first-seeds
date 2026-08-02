@@ -151,6 +151,60 @@ window.FS = window.FS || {};
         }
       })(tree, "");
       return lines.length ? lines : ["—"];
+    },
+
+    /* Merge live join-link people into the dream tree as committed 🌳.
+       Returns { added, updated } counts. Does not remove hopeful dream names. */
+    mergeLiveTeam: function (state, roots) {
+      var tree = this.ensure(state);
+      var added = 0;
+      var updated = 0;
+      roots = roots || [];
+
+      function findByName(arr, name) {
+        var n = (name || "").trim().toLowerCase();
+        if (!n) return null;
+        for (var i = 0; i < arr.length; i++) {
+          if ((arr[i].name || "").trim().toLowerCase() === n) return arr[i];
+        }
+        return null;
+      }
+
+      function ensureNode(arr, person) {
+        var name = (person.display_name || person.email || "").trim();
+        if (!name) return null;
+        var existing = findByName(arr, name);
+        if (existing) {
+          if (existing.status !== "committed") {
+            existing.status = "committed";
+            updated++;
+          }
+          if (!existing.liveId) existing.liveId = person.id;
+          return existing;
+        }
+        var node = {
+          name: name,
+          status: "committed",
+          children: [],
+          liveId: person.id
+        };
+        arr.push(node);
+        added++;
+        return node;
+      }
+
+      roots.forEach(function (front) {
+        (function walk(person, arr) {
+          var node = ensureNode(arr, person);
+          if (!node) return;
+          if (!node.children) node.children = [];
+          (person.children || []).forEach(function (kid) {
+            walk(kid, node.children);
+          });
+        })(front, tree);
+      });
+
+      return { added: added, updated: updated };
     }
   };
 })();

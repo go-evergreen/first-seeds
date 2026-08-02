@@ -11,21 +11,30 @@ window.FS = window.FS || {};
   /* 6 sections map to visual stages; full bloom only when all done */
   var STAGE_MAP = [0, 1, 2, 3, 4, 5, 6];
 
-  /* Root strands — each unlocks as answer-progress (rf) rises */
+  /* Final organic root paths — all start under the seed at (60, 122).
+     Growth uses pathLength + dash so curves stay attached (no floating sticks). */
   var ROOTS = [
-    { x1: 60, c1x: 50, c1y: 138, c2x: 38, c2y: 152, x2: 28,  y2: 172, th: 0.02, w: 3.2 },
-    { x1: 60, c1x: 70, c1y: 136, c2x: 82, c2y: 150, x2: 94,  y2: 168, th: 0.12, w: 2.8 },
-    { x1: 60, c1x: 56, c1y: 140, c2x: 52, c2y: 158, x2: 50,  y2: 178, th: 0.24, w: 3.4 },
-    { x1: 60, c1x: 44, c1y: 134, c2x: 26, c2y: 142, x2: 14,  y2: 156, th: 0.40, w: 2.4 },
-    { x1: 60, c1x: 76, c1y: 134, c2x: 96, c2y: 142, x2: 108, y2: 154, th: 0.55, w: 2.4 },
-    { x1: 60, c1x: 48, c1y: 142, c2x: 36, c2y: 160, x2: 32,  y2: 180, th: 0.70, w: 2.0 },
-    { x1: 60, c1x: 72, c1y: 142, c2x: 88, c2y: 162, x2: 96,  y2: 178, th: 0.82, w: 2.0 }
+    { d: "M60 122 C54 132, 42 142, 34 156 C28 166, 24 174, 22 182", th: 0.02, w: 2.8 },
+    { d: "M60 122 C66 132, 78 142, 86 156 C92 166, 96 174, 98 182", th: 0.10, w: 2.8 },
+    { d: "M60 122 C58 134, 56 148, 54 164 C52 174, 52 180, 53 186", th: 0.20, w: 3.0 },
+    { d: "M60 122 C48 128, 34 134, 24 144 C16 152, 12 160, 10 168", th: 0.34, w: 2.2 },
+    { d: "M60 122 C72 128, 86 134, 96 144 C104 152, 108 160, 110 168", th: 0.46, w: 2.2 },
+    { d: "M60 122 C52 136, 44 150, 40 166 C37 176, 36 182, 38 188", th: 0.62, w: 1.9 },
+    { d: "M60 122 C68 136, 76 150, 80 166 C83 176, 84 182, 82 188", th: 0.74, w: 1.9 },
+    /* soft side whiskers — unlock late */
+    { d: "M60 122 C50 130, 40 138, 30 140 C22 142, 18 146, 16 152", th: 0.86, w: 1.5 },
+    { d: "M60 122 C70 130, 80 138, 90 140 C98 142, 102 146, 104 152", th: 0.92, w: 1.5 }
   ];
 
   function leaf(cx, cy, rx, ry, rot, fill, opacity) {
     return '<ellipse cx="' + cx + '" cy="' + cy + '" rx="' + rx + '" ry="' + ry +
       '" fill="' + fill + '" opacity="' + (opacity || 1) +
       '" transform="rotate(' + rot + ' ' + cx + ' ' + cy + ')"/>';
+  }
+
+  function rootProgress(rf, th) {
+    /* Each strand fades in over ~18% of total root fill after its threshold */
+    return Math.max(0, Math.min(1, (rf - th) / 0.18));
   }
 
   /* sectionsDone: 0..6 · units / maxUnits drive root growth */
@@ -38,31 +47,30 @@ window.FS = window.FS || {};
     s += '<linearGradient id="soilGrad" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#6b5844"/><stop offset="100%" stop-color="#3d3226"/></linearGradient>';
     s += '<linearGradient id="stemGrad" x1="0" y1="1" x2="0" y2="0"><stop offset="0%" stop-color="#4a6a56"/><stop offset="100%" stop-color="#7ba07b"/></linearGradient>';
     s += '<radialGradient id="bloomGrad" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="#f5e6a8"/><stop offset="70%" stop-color="#e8c86a"/><stop offset="100%" stop-color="#c9a24b"/></radialGradient>';
+    s += '<linearGradient id="rootGrad" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#e8d9b0"/><stop offset="100%" stop-color="#b9a47a"/></linearGradient>';
     s += '</defs>';
 
     /* underground bed */
     s += '<rect class="plant-soil-bed" x="6" y="118" width="108" height="66" rx="12" fill="url(#soilGrad)" opacity=".9"/>';
     s += '<ellipse cx="60" cy="120" rx="50" ry="9" fill="#4a3d2e" opacity=".55"/>';
 
-    /* roots — grow as answers fill in */
+    /* roots — same curve always; dash reveals length from the seed down */
     s += '<g class="plant-roots">';
     for (var j = 0; j < ROOTS.length; j++) {
       var q = ROOTS[j];
-      var loc = Math.max(0, Math.min(1, (rf - q.th) / 0.22));
-      if (loc <= 0) continue;
-      var qx = q.x1 + (q.x2 - q.x1) * loc;
-      var qy = 122 + (q.y2 - 122) * loc;
-      var qc1y = 122 + (q.c1y - 122) * loc;
-      var qc2y = 122 + (q.c2y - 122) * loc;
-      s += '<path class="root-strand" d="M' + q.x1 + ' 122 C' + q.c1x + ' ' + qc1y.toFixed(1) + ', ' +
-        q.c2x + ' ' + qc2y.toFixed(1) + ', ' + qx.toFixed(1) + ' ' + qy.toFixed(1) +
-        '" stroke="#d4c09a" stroke-width="' + q.w + '" fill="none" stroke-linecap="round" opacity="' +
-        (0.55 + loc * 0.4).toFixed(2) + '"/>';
-      if (loc > 0.55) {
-        s += '<circle cx="' + qx.toFixed(1) + '" cy="' + qy.toFixed(1) + '" r="1.6" fill="#e8d5a8" opacity=".75"/>';
-        s += '<path d="M' + qx.toFixed(1) + ' ' + qy.toFixed(1) + ' l-3.5 3.5 M' + qx.toFixed(1) + ' ' +
-          qy.toFixed(1) + ' l3.5 2.8" stroke="#cbb892" stroke-width="1.1" opacity=".7" stroke-linecap="round"/>';
-      }
+      var loc = rootProgress(rf, q.th);
+      if (loc <= 0.02) continue;
+      var visible = Math.max(4, Math.round(loc * 100));
+      var gap = 100 - visible;
+      s += '<path class="root-strand" pathLength="100" d="' + q.d +
+        '" stroke="url(#rootGrad)" stroke-width="' + q.w +
+        '" fill="none" stroke-linecap="round" stroke-linejoin="round" opacity="' +
+        (0.45 + loc * 0.5).toFixed(2) +
+        '" stroke-dasharray="' + visible + ' ' + gap + '" stroke-dashoffset="0"/>';
+    }
+    /* tiny crown under the seed so roots feel connected even at low fill */
+    if (rf > 0.01) {
+      s += '<path d="M56 122 Q60 126 64 122" stroke="#dccba0" stroke-width="2.4" fill="none" stroke-linecap="round" opacity=".85"/>';
     }
     s += '</g>';
 

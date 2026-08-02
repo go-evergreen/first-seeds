@@ -52,7 +52,7 @@ window.FS.CONFIG = {
     hypeLine: "Pre-registration opens October 1. The quiet work starts now.",
     modeEyebrow: "Step 3 of 3",
     modeTitle: "Pick your pace",
-    modeLead: "No wrong answer. Pick what fits today — you can switch anytime under Your pace in the sidebar."
+    modeLead: "No wrong answer. Pick what fits today — you can switch anytime in Menu."
   },
 
   /* Mini-tour after mode pick */
@@ -109,9 +109,55 @@ window.FS.CONFIG = {
     { label: "I'll message one person from my grove list each week", day: -1, icon: "💬", short: "" }
   ],
 
-  /* localStorage key — bump the version if you change data shape */
-  storeKey: "firstSeeds_v5",
+  /* Stall-based nudge templates for leaders (copy-paste) */
+  nudges: [
+    {
+      id: "no_roots",
+      when: "Hasn't finished Roots yet",
+      match: function (ctx) { return !ctx.done.roots; },
+      body: "Hey {name} — no rush at all. When you have 10 quiet minutes, just answer the three Roots questions in First Seeds. Your words, not a script. That's the whole first step 🌱"
+    },
+    {
+      id: "stuck_grove",
+      when: "Finished Roots, stalled on Grove",
+      match: function (ctx) { return ctx.done.roots && !ctx.done.grove; },
+      body: "Hey {name}! Your story's in — nice. Next is just a brain-dump of names (even 5 is a win). No pitching yet. Want me to brainstorm a couple with you?"
+    },
+    {
+      id: "silent_week",
+      when: "Inactive 5+ days",
+      match: function (ctx) { return ctx.daysSinceActive >= 5 && ctx.sectionsDone < ctx.sectionTotal; },
+      body: "Thinking of you, {name}. Life gets busy — First Seeds will be right where you left it. Even one tiny answer grows a root. Here if you want company on a section."
+    },
+    {
+      id: "calendar_quiet",
+      when: "Suggested posts not marked this week",
+      match: function (ctx) { return ctx.weekPosted === 0 && ctx.sectionsDone >= 1; },
+      body: "Hey {name} — the calendar in First Seeds has gentle post ideas (including rest days). Mark one as Posted when you share something true. No pressure to be perfect."
+    },
+    {
+      id: "pre_reg",
+      when: "Pre-reg week energy",
+      match: function (ctx) { return ctx.daysToPreReg <= 14 && ctx.daysToPreReg >= 0; },
+      body: "Pre-reg is close, {name}! If you've got your first five names, you're ahead. Soft invites only — \"want me to keep you in the loop?\" is enough."
+    },
+    {
+      id: "blooming",
+      when: "Runway mostly done — cheer",
+      match: function (ctx) { return ctx.sectionsDone >= Math.max(3, ctx.sectionTotal - 1); },
+      body: "Look at you, {name}. You've done the quiet work most people skip. So proud of you — keep flipping those hopefuls to committed as people say yes 🌳"
+    }
+  ],
+
+  cheerTemplates: [
+    "I see you showing up — that matters more than perfect posts.",
+    "Root by root. You're doing the real work.",
+    "Proud of you. Keep going at your pace."
+  ],
+
+  /* localStorage key — bump when data shape changes */
+  storeKey: "firstSeeds_v6",
 
   /* Previous key — one-time migrate answers if present */
-  legacyStoreKey: "firstSeeds_v4"
+  legacyStoreKey: "firstSeeds_v5"
 };

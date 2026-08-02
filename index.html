@@ -12,7 +12,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,400;1,9..144,500&family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/styles.css">
+<link rel="stylesheet" href="css/styles.css?v=11">
 </head>
 <body>
 
@@ -26,32 +26,78 @@
       <div class="mode-badge" id="modeBadge" hidden></div>
     </div>
 
-    <div class="plantbox" id="railPlant" aria-hidden="true"></div>
-    <div class="plant-legend" aria-hidden="true">
-      <span><em>Roots</em> = answers</span>
-      <span><em>Sprout</em> = sections done</span>
+    <div class="plant-zone">
+      <div class="plantbox" id="railPlant" aria-hidden="true"></div>
+      <div class="plant-legend" aria-hidden="true">
+        <span><em>Roots</em> = answers</span>
+        <span><em>Sprout</em> = sections done</span>
+      </div>
+      <div class="plant-caption" id="plantCaption"></div>
+      <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
     </div>
-    <div class="plant-caption" id="plantCaption"></div>
-    <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
 
-    <nav class="nav" id="nav" aria-label="Sections"></nav>
+    <nav class="nav" id="nav" aria-label="Your runway"></nav>
 
     <div class="rail-foot">
-      <div class="rail-mode">
-        <div class="rail-mode-label">Your pace</div>
+      <button type="button" class="menu-open-btn" id="menuOpenBtn" aria-haspopup="dialog" aria-controls="hubMenu">
+        <span class="menu-open-label">Menu</span>
+        <span class="menu-open-hint">pace · calendar · my people · more</span>
+      </button>
+    </div>
+  </aside>
+
+  <!-- ═══ HUB MENU ═══ -->
+  <div class="hub-menu" id="hubMenu" hidden>
+    <button type="button" class="hub-menu-backdrop" id="menuCloseBackdrop" aria-label="Close menu"></button>
+    <div class="hub-menu-panel" role="dialog" aria-modal="true" aria-labelledby="hubMenuTitle">
+      <div class="hub-menu-head">
+        <div>
+          <div class="hub-menu-eyebrow">First Seeds</div>
+          <h2 id="hubMenuTitle">Menu</h2>
+        </div>
+        <button type="button" class="hub-menu-close" id="menuCloseBtn" aria-label="Close">×</button>
+      </div>
+      <p class="hub-menu-sync"><span id="syncLabel">Saving on this device only</span></p>
+
+      <div class="hub-menu-section">
+        <div class="hub-menu-label">Your pace</div>
         <div class="hub-mode-row">
           <button type="button" class="hub-mode-btn" id="modeStarter">Getting started</button>
           <button type="button" class="hub-mode-btn" id="modeFull">Full runway</button>
         </div>
         <p class="hub-mode-hint" id="hubModeHint"></p>
       </div>
-      Your answers save automatically on this device.
-      <div class="rail-actions">
-        <button class="rail-btn" id="exportBtn">Download my answers</button>
-        <button class="rail-btn" id="resetBtn">Start over</button>
+
+      <div class="hub-menu-section">
+        <div class="hub-menu-label">Tools</div>
+        <div class="hub-menu-tools">
+          <button type="button" class="hub-menu-tool" data-menu-goto="calendar">
+            <span class="hub-menu-tool-title">Post calendar</span>
+            <span class="hub-menu-tool-sub">Gentle ideas for what to share</span>
+          </button>
+          <button type="button" class="hub-menu-tool" data-menu-goto="leader">
+            <span class="hub-menu-tool-title">My people</span>
+            <span class="hub-menu-tool-sub">Who's growing · nudges · your team tree</span>
+          </button>
+        </div>
+      </div>
+
+      <div class="hub-menu-section invite-block" id="inviteBlock" hidden>
+        <div class="hub-menu-label">Your join link</div>
+        <p class="hub-menu-note">Send this when someone says yes. They sign in — they're with you.</p>
+        <input class="invite-input light" id="railInviteInput" readonly>
+        <button type="button" class="btn" id="railCopyInvite" style="margin-top:10px;width:100%">Copy join link</button>
+      </div>
+
+      <div class="hub-menu-section">
+        <div class="hub-menu-label">Your answers</div>
+        <div class="hub-menu-actions">
+          <button type="button" class="btn-ghost" id="exportBtn">Download my answers</button>
+          <button type="button" class="btn-ghost danger-ghost" id="resetBtn">Start over</button>
+        </div>
       </div>
     </div>
-  </aside>
+  </div>
 
   <!-- ═══ MAIN ═══ -->
   <main class="main">
@@ -68,8 +114,12 @@
           <span class="cd-num" id="cdLaunch">—</span><span class="cd-unit">DAYS</span>
           <span class="cd-label" id="cdLaunchLabel">Products Launch</span>
         </div>
+        <button type="button" class="topbar-account" id="authOpenBtn">Sign in</button>
       </div>
     </div>
+
+    <div class="cheer-banner" id="cheerBanner" hidden></div>
+    <div class="leader-note-banner live-card" id="leaderNoteBanner" hidden></div>
 
     <div class="content">
 
@@ -79,12 +129,21 @@
         <h1 id="welcomeHeadline">You said yes.<br>Let's put down roots.</h1>
         <p class="body-p" id="welcomeBody">You don't have to wait for launch to start. A little quiet work now — your story, a few people you'd actually want beside you, a simple place for them to land — makes October feel a lot less overwhelming.</p>
         <p class="body-p" id="welcomePathNote"></p>
+
+        <div class="today-card" id="todayCard">
+          <div class="today-tag">WHAT SHOULD I DO TODAY?</div>
+          <h3 class="today-title" id="todayTitle">One small thing.</h3>
+          <p class="today-body" id="todayBody">We'll point you at the next quiet step — no overwhelm, no homework list.</p>
+          <div class="btn-row" id="todayActions">
+            <button type="button" class="btn" data-goto="roots" id="welcomeCta">Let's go →</button>
+          </div>
+          <p class="today-why" id="todayWhy"></p>
+        </div>
+
+        <div class="team-pulse" id="teamPulse" hidden></div>
         <div class="callout voice">
           <div class="callout-tag">FROM YOUR TEAM</div>
           <div class="callout-body">Quick promise: if a line doesn't sound like something you'd actually say, change it. Ordinary and true beats polished every time.</div>
-        </div>
-        <div class="btn-row">
-          <button class="btn" data-goto="roots" id="welcomeCta">Plant your first seed →</button>
         </div>
       </section>
 
@@ -185,6 +244,7 @@
           <div class="tree-stats" id="treeStats"></div>
           <div id="familyTree"></div>
           <div class="tree-legend">🌱 <strong>hopeful</strong> — you'd love them in this · 🌳 <strong>committed</strong> — they're in · tap a status to switch it · ＋ branch adds someone under them</div>
+          <p class="body-p" style="margin-top:12px;margin-bottom:0">Dream it here first — then when people actually say yes and sign up, pull them in as 🌳 committed from <strong>My people</strong>. Your hopeful names stay put until they're real.</p>
         </div>
 
         <div class="callout voice">
@@ -353,7 +413,44 @@
         <div class="btn-row" style="justify-content:center">
           <button class="btn-ghost" data-goto="roots">Revisit any section</button>
           <button class="btn" id="levelUpBtn" hidden>Unlock Full runway →</button>
+          <button class="btn" id="notifySponsorBtn">Notify my leader</button>
           <button class="btn" id="exportBtn2">Download my answers</button>
+        </div>
+      </section>
+
+      <!-- CALENDAR -->
+      <section class="panel" id="panel-calendar">
+        <div class="eyebrow">BRIDGE · SUGGESTED POSTS</div>
+        <h1>Your post calendar</h1>
+        <p class="sec-sub">One gentle idea a day — four gives, then a soft door, plus rest days so you don't burn out.</p>
+        <p class="body-p">Mark Drafted / Posted / Skipped. Nothing auto-posts. Drafts pull from your Roots when you have them.</p>
+        <p class="calendar-stats" id="calendarStats"></p>
+        <div class="cal-week" id="calendarWeek"></div>
+        <div class="live-card" id="calendarDetail"></div>
+        <div class="callout voice">
+          <div class="callout-tag">2026 REMINDER</div>
+          <div class="callout-body">Warm DMs beat cold pitches. Earn the ask. Rest days count as consistency.</div>
+        </div>
+      </section>
+
+      <!-- LEADER -->
+      <section class="panel" id="panel-leader">
+        <div class="eyebrow">FOR LEADERS</div>
+        <h1>My people</h1>
+        <p class="sec-sub">Who needs a gentle nudge, who's moving, who's blooming — plus messages you can copy so you're not retyping the same thing forty times.</p>
+        <div class="invite-card">
+          <div class="live-tag">YOUR PERSONAL JOIN LINK</div>
+          <p class="body-p" style="margin-bottom:10px">Send this to someone new. When they sign in, they're linked to you — forever (unless you move them later).</p>
+          <div class="invite-row">
+            <input class="invite-input light" id="leaderInviteInput" readonly>
+            <button type="button" class="copy-btn" id="leaderCopyInvite">Copy link</button>
+          </div>
+        </div>
+        <div class="live-card" id="liveTeamGraph" hidden></div>
+        <div class="leader-board" id="leaderLists"></div>
+        <div class="btn-row">
+          <button type="button" class="btn-ghost" id="importLiveTreeBtn">Pull real names into Grow Your Tree</button>
+          <button type="button" class="btn-ghost" id="exportBridgeBtn">Export Evergreen handoff JSON</button>
         </div>
       </section>
 
@@ -407,6 +504,41 @@
   </div>
 </div>
 
+<!-- ═══ AUTH ═══ -->
+<div class="overlay auth" id="authOverlay" role="dialog" aria-modal="true" aria-labelledby="authTitle">
+  <div class="overlay-card">
+    <button type="button" class="overlay-close" id="authCloseBtn" aria-label="Close">×</button>
+    <div id="authSignPane">
+      <p class="onboarding-eyebrow">First Seeds Bridge</p>
+      <h3 id="authTitle">Save your progress</h3>
+      <p class="lead">Sign in with email so your runway syncs — and so your leader can see how you're doing (no chat, just progress).</p>
+      <label class="onboard-name-field">
+        <span class="field-label">First name</span>
+        <input type="text" id="authName" maxlength="40" placeholder="Your first name">
+      </label>
+      <label class="onboard-name-field">
+        <span class="field-label">Email</span>
+        <input type="email" id="authEmail" placeholder="you@email.com" autocomplete="email">
+      </label>
+      <button type="button" class="btn overlay-btn" id="authSubmitBtn">Continue</button>
+      <p class="auth-msg" id="authMsg"></p>
+      <p class="auth-hint">Without Supabase keys configured, this runs in local bridge mode (great for testing on one device).</p>
+    </div>
+    <div id="authAccountPane" hidden>
+      <p class="onboarding-eyebrow">Your account</p>
+      <h3 id="authDisplayName"></h3>
+      <p class="lead" id="authEmailLine"></p>
+      <p class="auth-hint" id="authModeLine"></p>
+      <label class="onboard-name-field">
+        <span class="field-label">Your join link</span>
+        <input type="text" id="authInviteInput" readonly>
+      </label>
+      <button type="button" class="btn overlay-btn" id="authCopyInvite">Copy join link</button>
+      <button type="button" class="btn-ghost overlay-btn" id="authSignOutBtn" style="margin-top:10px">Sign out</button>
+    </div>
+  </div>
+</div>
+
 <!-- ═══ MINI TOUR ═══ -->
 <div class="overlay tour" id="tour" role="dialog" aria-modal="true" aria-labelledby="tourTitle">
   <div class="overlay-card tour-card">
@@ -417,10 +549,15 @@
   </div>
 </div>
 
-<script src="js/config.js"></script>
-<script src="js/data.js"></script>
-<script src="js/plant.js"></script>
-<script src="js/tree.js"></script>
-<script src="js/app.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="js/config.js?v=11"></script>
+<script src="js/supabase-config.js?v=11"></script>
+<script src="js/data.js?v=11"></script>
+<script src="js/plant.js?v=11"></script>
+<script src="js/tree.js?v=11"></script>
+<script src="js/calendar.js?v=11"></script>
+<script src="js/cloud.js?v=11"></script>
+<script src="js/bridge-ui.js?v=11"></script>
+<script src="js/app.js?v=11"></script>
 </body>
 </html>
