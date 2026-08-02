@@ -394,7 +394,7 @@
 
     var pathNote = document.getElementById("welcomePathNote");
     if (pathNote) {
-      pathNote.innerHTML = "Your plant lives here. The steps on the left grow it — Calendar, Know, and more stay one tap away at the bottom.";
+      pathNote.innerHTML = "Your plant lives here. Calendar, Leads, Know, and your path stay one tap away at the bottom.";
     }
 
     var rh = document.getElementById("rootsHeadline");
