@@ -163,30 +163,15 @@ window.FS = window.FS || {};
       return Cloud._publicUser(profile);
     },
 
-    /* Email OTP (6-digit code) — works inside installed PWAs.
-       Magic links open in Safari and never reach the PWA's storage on iOS. */
-    signIn: async function (email, displayName) {
+    _assertEmailPassword: function (email, password) {
       email = (email || "").trim().toLowerCase();
+      password = String(password || "");
       if (!email || email.indexOf("@") < 1) throw new Error("Enter a valid email.");
-      displayName = (displayName || email.split("@")[0]).trim();
+      if (password.length < 6) throw new Error("Password needs at least 6 characters.");
+      return { email: email, password: password };
+    },
 
-      if (configured() && client) {
-        var { error } = await client.auth.signInWithOtp({
-          email: email,
-          options: {
-            shouldCreateUser: true,
-            data: { display_name: displayName }
-          }
-        });
-        if (error) throw error;
-        return {
-          kind: "otp",
-          email: email,
-          message: "Check your email for a 6-digit code — enter it here (don’t tap any link)."
-        };
-      }
-
-      /* local bridge */
+    _finishLocalSignIn: function (email, displayName) {
       var store = localStore();
       var existingId = null;
       Object.keys(store.users).forEach(function (id) {
@@ -230,33 +215,53 @@ window.FS = window.FS || {};
       return { kind: "local", message: "Signed in (local bridge mode)." };
     },
 
-    verifyOtp: async function (email, token) {
-      email = (email || "").trim().toLowerCase();
-      token = String(token || "").replace(/\s+/g, "");
-      if (!email || email.indexOf("@") < 1) throw new Error("Enter a valid email.");
-      if (!/^\d{6,8}$/.test(token)) throw new Error("Enter the 6-digit code from your email.");
-      if (!configured() || !client) throw new Error("Cloud sign-in isn’t configured.");
+    /* Email + password — stays inside the PWA (no Safari redirect). */
+    signIn: async function (email, displayName, password) {
+      var creds = Cloud._assertEmailPassword(email, password);
+      displayName = (displayName || creds.email.split("@")[0]).trim();
 
-      var result = await client.auth.verifyOtp({
-        email: email,
-        token: token,
-        type: "email"
-      });
-      if (result.error) {
-        /* Older templates sometimes issue magiclink-typed tokens */
-        var again = await client.auth.verifyOtp({
-          email: email,
-          token: token,
-          type: "magiclink"
+      if (configured() && client) {
+        var { data, error } = await client.auth.signInWithPassword({
+          email: creds.email,
+          password: creds.password
         });
-        if (again.error) throw result.error;
-        result = again;
+        if (error) throw error;
+        if (data && data.user) {
+          sessionUser = await Cloud._hydrateSupabaseUser(data.user);
+          emit("auth", sessionUser);
+        }
+        return { kind: "signed_in", message: "You’re signed in." };
       }
-      if (result.data && result.data.user) {
-        sessionUser = await Cloud._hydrateSupabaseUser(result.data.user);
-        emit("auth", sessionUser);
+
+      return Cloud._finishLocalSignIn(creds.email, displayName);
+    },
+
+    signUp: async function (email, displayName, password) {
+      var creds = Cloud._assertEmailPassword(email, password);
+      displayName = (displayName || creds.email.split("@")[0]).trim();
+
+      if (configured() && client) {
+        var { data, error } = await client.auth.signUp({
+          email: creds.email,
+          password: creds.password,
+          options: {
+            data: { display_name: displayName }
+          }
+        });
+        if (error) throw error;
+        if (!data.session) {
+          throw new Error(
+            "Account created, but email confirmation is still on in Supabase. Turn off Authentication → Providers → Email → Confirm email, then sign in."
+          );
+        }
+        if (data.user) {
+          sessionUser = await Cloud._hydrateSupabaseUser(data.user);
+          emit("auth", sessionUser);
+        }
+        return { kind: "signed_in", message: "Account created — you’re signed in." };
       }
-      return { kind: "signed_in", message: "You’re signed in." };
+
+      return Cloud._finishLocalSignIn(creds.email, displayName);
     },
 
     signOut: async function () {

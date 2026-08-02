@@ -116,25 +116,6 @@ window.FS = window.FS || {};
     }
   }
 
-  function setAuthSignStep(step, email) {
-    var emailStep = $("authEmailStep");
-    var codeStep = $("authCodeStep");
-    var hint = $("authSignHint");
-    var codeHint = $("authCodeHint");
-    var codeInput = $("authCode");
-    var showCode = step === "code";
-    if (emailStep) emailStep.hidden = showCode;
-    if (codeStep) codeStep.hidden = !showCode;
-    if (hint) hint.hidden = showCode;
-    if (codeHint && showCode) {
-      codeHint.textContent = "Enter the 6-digit code we sent to " + (email || "your email") + ". Stay in this app — don’t open the email link.";
-    }
-    if (showCode && codeInput) {
-      codeInput.value = "";
-      setTimeout(function () { codeInput.focus(); }, 50);
-    }
-  }
-
   function openAuth(forceAccount) {
     var overlay = $("authOverlay");
     if (!overlay) return;
@@ -156,7 +137,6 @@ window.FS = window.FS || {};
     } else {
       if (signPane) signPane.hidden = false;
       if (acctPane) acctPane.hidden = true;
-      setAuthSignStep("email");
       var msg = $("authMsg");
       if (msg) msg.textContent = "";
       var authName = $("authName");
@@ -892,16 +872,15 @@ window.FS = window.FS || {};
       if (e.key !== "Enter") return;
       var overlay = $("authOverlay");
       if (!overlay || !overlay.classList.contains("open")) return;
-      var codeStep = $("authCodeStep");
-      if (codeStep && !codeStep.hidden && document.activeElement && document.activeElement.id === "authCode") {
+      if (document.activeElement && (document.activeElement.id === "authPassword" || document.activeElement.id === "authEmail")) {
         e.preventDefault();
-        var vb = $("authVerifyBtn");
-        if (vb) vb.click();
+        var sb = $("authSubmitBtn");
+        if (sb) sb.click();
       }
     });
     document.addEventListener("click", async function (e) {
       var t = e.target.closest(
-        "#authOpenBtn,#authCloseBtn,#authSubmitBtn,#authVerifyBtn,#authResendBtn,#authBackEmail,#authSignOutBtn,#railCopyInvite,#leaderCopyInvite,#authCopyInvite," +
+        "#authOpenBtn,#authCloseBtn,#authSubmitBtn,#authCreateBtn,#authSignOutBtn,#railCopyInvite,#leaderCopyInvite,#authCopyInvite," +
         "#exportBridgeBtn,#importLiveTreeBtn,#cheerDismiss,#notifySponsorBtn,[data-goto-bridge],[data-copy-nudge],[data-cheer],[data-note]," +
         "[data-cal-day],[data-cal-select],[data-cal-status],[data-cal-swap],[data-cal-week],[data-cal-nav],[data-cal-view],[data-cal-add],[data-cal-clear]," +
         "[data-cal-new],[data-cal-edit],[data-cal-item],[data-cal-accept],[data-cal-cadence],[data-cal-setup-toggle],[data-cal-save],[data-cal-delete]," +
@@ -967,47 +946,25 @@ window.FS = window.FS || {};
         return;
       }
       if (t.id === "authCloseBtn") { closeAuth(); return; }
-      if (t.id === "authBackEmail") {
-        setAuthSignStep("email");
-        var backMsg = $("authMsg");
-        if (backMsg) backMsg.textContent = "";
-        return;
-      }
-      if (t.id === "authSubmitBtn" || t.id === "authResendBtn") {
+      if (t.id === "authSubmitBtn" || t.id === "authCreateBtn") {
         var email = ($("authEmail") || {}).value;
         var name = ($("authName") || {}).value;
+        var password = ($("authPassword") || {}).value;
         var msg = $("authMsg");
+        var creating = t.id === "authCreateBtn";
         try {
           t.disabled = true;
-          var res = await Cloud.signIn(email, name);
+          var res = creating
+            ? await Cloud.signUp(email, name, password)
+            : await Cloud.signIn(email, name, password);
           if (msg) msg.textContent = res.message;
-          if (res.kind === "local") {
+          if (res.kind === "local" || res.kind === "signed_in") {
             await mergeCloudProgress();
             closeAuth();
             await afterAuth();
-          } else if (res.kind === "otp") {
-            setAuthSignStep("code", res.email || email);
           }
         } catch (err) {
-          if (msg) msg.textContent = err.message || "Could not sign in.";
-        } finally {
-          t.disabled = false;
-        }
-        return;
-      }
-      if (t.id === "authVerifyBtn") {
-        var verifyEmail = ($("authEmail") || {}).value;
-        var code = ($("authCode") || {}).value;
-        var vmsg = $("authMsg");
-        try {
-          t.disabled = true;
-          await Cloud.verifyOtp(verifyEmail, code);
-          if (vmsg) vmsg.textContent = "You’re signed in.";
-          await mergeCloudProgress();
-          closeAuth();
-          await afterAuth();
-        } catch (err) {
-          if (vmsg) vmsg.textContent = (err && err.message) || "That code didn’t work — try again or resend.";
+          if (msg) msg.textContent = (err && err.message) || (creating ? "Could not create account." : "Could not sign in.");
         } finally {
           t.disabled = false;
         }
