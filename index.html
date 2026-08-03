@@ -20,7 +20,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,400;1,9..144,500&family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/styles.css?v=72">
+<link rel="stylesheet" href="css/styles.css?v=75">
 </head>
 <body>
 
@@ -53,7 +53,7 @@
   <nav class="bottom-nav" id="bottomNav" aria-label="Main">
     <button type="button" class="bottom-nav-btn" data-goto="welcome" data-tab="home">
       <span class="bottom-nav-ico" aria-hidden="true">🌱</span>
-      <span>Home</span>
+      <span>Sprout</span>
     </button>
     <button type="button" class="bottom-nav-btn" data-goto="tend" data-tab="calendar">
       <span class="bottom-nav-ico" aria-hidden="true">📅</span>
@@ -185,7 +185,7 @@
 
       <!-- HOME = plant progress -->
       <section class="panel" id="panel-welcome">
-        <div class="eyebrow">YOUR RUNWAY</div>
+        <div class="eyebrow">YOUR SPROUT</div>
         <h1 id="welcomeHeadline">Watch it grow.</h1>
         <p class="body-p" id="welcomeBody">Quiet prep now — your story, a few people you'd actually want beside you, clear facts — makes October feel a lot less overwhelming.</p>
         <p class="body-p" id="welcomePathNote"></p>
@@ -219,14 +219,9 @@
         </div>
 
         <div class="home-runway">
-          <div class="live-tag">YOUR PATH</div>
+          <div class="live-tag">YOUR PATH · STEP BY STEP</div>
+          <p class="home-runway-intro">Tap a step anytime. Locked steps open after you finish the one before — or you can open them early from Settings.</p>
           <div class="home-runway-strip" id="homeRunway"></div>
-        </div>
-
-        <div class="team-pulse" id="teamPulse" hidden></div>
-        <div class="callout voice">
-          <div class="callout-tag">FROM THE FRESH GROVE</div>
-          <div class="callout-body">We're excited — and excitement doesn't replace due diligence. If a line doesn't sound like something you'd actually say, change it. Ordinary and true beats polished every time.</div>
         </div>
       </section>
 
@@ -650,13 +645,6 @@
           <div class="callout-tag">OUR PROMISE</div>
           <div class="callout-body">Not through hype. Not through exaggerated claims. Through education, transparency, and honest conversation. If you've heard something different, bring it to your lead — that's one advantage of preparing together.</div>
         </div>
-
-        <div class="btn-row">
-          <button type="button" class="btn" data-goto="welcome">Back to home</button>
-          <button type="button" class="btn-ghost" data-goto="tend">Open content calendar →</button>
-          <button type="button" class="btn-ghost full-only" data-goto="plant">Post Studio copy banks →</button>
-          <button type="button" class="btn-ghost" data-goto="roots">Continue the runway →</button>
-        </div>
       </section>
 
       <!-- PRODUCT LEARNING LIBRARY -->
@@ -683,10 +671,9 @@
         <div id="leadsStudio" hidden>
           <p class="leads-mode-note" id="leadsModeNote" hidden></p>
           <div class="invite-card leads-share-card">
-            <div class="live-tag">SHARE WITH INTERESTED PEOPLE</div>
-            <p class="leads-share-explain">This is your interest page — not your team join link. Copy it into a text, Story, or bio when someone wants the scoop.</p>
+            <div class="live-tag">LEAD GENERATION PAGE</div>
             <div class="leads-share-main">
-              <input class="invite-input light" id="leadsShareInput" readonly aria-label="Link to share with interested people">
+              <input class="invite-input light" id="leadsShareInput" readonly aria-label="Your lead generation page link">
               <button type="button" class="copy-btn" id="leadsCopyLink">Copy</button>
               <button type="button" class="leads-settings-btn" id="leadsPageSettingsBtn" aria-label="Lead page settings" aria-expanded="false" aria-controls="leadsPageSettings" title="Lead page settings">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
@@ -695,6 +682,7 @@
                 </svg>
               </button>
             </div>
+            <p class="leads-share-explain">Your lead generation page — curious people leave their name and how to reach them. Not your team join link (that’s under Team).</p>
             <p class="leads-slug-msg" id="leadsSlugMsg" role="status"></p>
             <div class="btn-row" style="margin-top:10px">
               <a class="btn-ghost" id="leadsPreviewLink" href="lead.html">Preview page →</a>
@@ -745,11 +733,11 @@
         <p class="sec-sub">Who needs a check-in, who's moving, who's blooming — plus your join link and messages you can copy so you're not retyping the same thing forty times.</p>
         <div class="invite-card">
           <div class="live-tag">TEAM JOIN LINK</div>
-          <p class="body-p" style="margin-bottom:10px">Different from your interest page. Send <em>this</em> only to someone ready to partner with you in First Seeds. When they sign in, they’re linked to you.</p>
           <div class="invite-row">
-            <input class="invite-input light" id="leaderInviteInput" readonly>
+            <input class="invite-input light" id="leaderInviteInput" readonly aria-label="Your team join link">
             <button type="button" class="copy-btn" id="leaderCopyInvite">Copy link</button>
           </div>
+          <p class="invite-explain">Send this to someone ready to join your team in First Seeds. When they sign in, they’re linked to you. This is <strong>not</strong> your lead generation page (that’s under Leads) — that one is for curious people leaving their contact info.</p>
         </div>
         <div class="live-card" id="liveTeamGraph" hidden></div>
         <div class="leader-board" id="leaderLists"></div>
@@ -912,17 +900,17 @@
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="js/config.js?v=72"></script>
-<script src="js/supabase-config.js?v=72"></script>
-<script src="js/data.js?v=72"></script>
-<script src="js/content.js?v=72"></script>
-<script src="js/products.js?v=72"></script>
-<script src="js/plant.js?v=72"></script>
-<script src="js/tree.js?v=72"></script>
-<script src="js/calendar.js?v=72"></script>
-<script src="js/cloud.js?v=72"></script>
-<script src="js/bridge-ui.js?v=72"></script>
-<script src="js/app.js?v=72"></script>
-<script src="js/pwa.js?v=72"></script>
+<script src="js/config.js?v=75"></script>
+<script src="js/supabase-config.js?v=75"></script>
+<script src="js/data.js?v=75"></script>
+<script src="js/content.js?v=75"></script>
+<script src="js/products.js?v=75"></script>
+<script src="js/plant.js?v=75"></script>
+<script src="js/tree.js?v=75"></script>
+<script src="js/calendar.js?v=75"></script>
+<script src="js/cloud.js?v=75"></script>
+<script src="js/bridge-ui.js?v=75"></script>
+<script src="js/app.js?v=75"></script>
+<script src="js/pwa.js?v=75"></script>
 </body>
 </html>

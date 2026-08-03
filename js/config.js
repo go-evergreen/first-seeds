@@ -39,7 +39,7 @@ window.FS.CONFIG = {
   terms: [
     {
       term: "Growth",
-      def: "The percentage on Home. It shows how many checklist steps you've finished — real prep done, not how loud you've been online."
+      def: "The percentage on Sprout. It shows how many checklist steps you've finished — real prep done, not how loud you've been online."
     },
     {
       term: "Runway",
@@ -63,7 +63,7 @@ window.FS.CONFIG = {
     },
     {
       term: "Leads",
-      def: "The link you share with interested people. They leave name + email or phone, and whether they care about products, business, or both. Entries land only in your inbox — different from your team join link."
+      def: "Your lead generation page. Share the link — people leave name + email or phone, and whether they care about products, business, or both. Entries land only in your inbox — different from your team join link."
     },
     {
       term: "Learn the products",
@@ -97,7 +97,7 @@ window.FS.CONFIG = {
 
     nameEyebrow: "Make it yours",
     nameTitle: "What should we call you?",
-    nameHint: "First name is perfect — we'll use it on Home so this feels like yours.",
+    nameHint: "First name is perfect — we'll use it on Sprout so this feels like yours.",
     namePlaceholder: "Your first name",
     nameCta: "That's me →",
     hypeLine: "Pre-registration opens October 1. Prep season is right now — and you're already in it.",
@@ -116,7 +116,7 @@ window.FS.CONFIG = {
 
   tour: [
     {
-      title: "This is your home base",
+      title: "Sprout is your home base",
       body: "You'll see a little plant and a Growth % here. Answer the three Roots questions and it starts growing — every real step you finish helps it along. No pressure to finish everything today."
     },
     {

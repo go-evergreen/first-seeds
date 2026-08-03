@@ -932,7 +932,14 @@
 
   function categorySubs(cat) {
     if (!cat || !cat.subs) return [];
-    return cat.subs.filter(function (s) { return !isHiddenSunSub(s.id); });
+    var products = visibleProducts();
+    return cat.subs.filter(function (s) {
+      if (isHiddenSunSub(s.id)) return false;
+      for (var i = 0; i < products.length; i++) {
+        if (products[i].category === cat.id && products[i].subcategory === s.id) return true;
+      }
+      return false;
+    });
   }
 
   function cleanProdSquares(text) {
@@ -1017,9 +1024,7 @@
     if (!items.length) return '<p class="prod-empty">No products match that search in this view. Try another word, or clear search.</p>';
     return '<div class="prod-list">' + items.map(function (p) {
       return '<button type="button" class="prod-row" data-prod-open="' + esc(p.id) + '">' +
-        '<span class="prod-row-step">' + esc(p.step || p.subcategory || "") + "</span>" +
         '<span class="prod-row-name">' + esc(p.name) + "</span>" +
-        '<span class="prod-row-tag">' + esc(p.tagline || p.summary.slice(0, 110)) + "</span>" +
         "</button>";
     }).join("") + "</div>";
   }
@@ -1035,11 +1040,11 @@
     }
 
     var html = "";
-    html += '<div class="prod-detail-bar">' +
-      '<button type="button" class="prod-back-main" data-prod-nav="hub">← All products</button>' +
+    html += '<div class="prod-nav-bar">' +
       (cat
-        ? '<button type="button" class="prod-back-cat" data-prod-nav="cat" data-prod-cat="' + esc(p.category) + '">' + esc(cat.label) + "</button>"
+        ? '<button type="button" class="prod-pill on" data-prod-nav="cat" data-prod-cat="' + esc(p.category) + '">← ' + esc(cat.label) + "</button>"
         : "") +
+      '<button type="button" class="prod-pill" data-prod-nav="hub">All products</button>' +
       "</div>";
     html += '<div class="prod-detail-kicker">' + esc((cat ? cat.label : "") + (p.step ? " · " + p.step : "")) + "</div>";
     html += '<h1 class="prod-detail-title">' + esc(p.name) + "</h1>";
@@ -1078,12 +1083,6 @@
     html += "</div>";
 
     html += '<p class="prod-source">Source: <a href="' + esc(p.sourceUrl) + '" target="_blank" rel="noopener noreferrer">View on ringana.com</a></p>';
-    html += '<div class="prod-back-row">' +
-      '<button type="button" class="btn" data-prod-nav="hub">← Back to all products</button>' +
-      (cat
-        ? '<button type="button" class="btn-ghost" data-prod-nav="cat" data-prod-cat="' + esc(p.category) + '">← ' + esc(cat.label) + "</button>"
-        : "") +
-      "</div>";
     return html;
   }
 
@@ -1103,6 +1102,14 @@
     var lib = productLib();
     var browse = ensureProductBrowse();
     if (browse.subcategory && isHiddenSunSub(browse.subcategory)) browse.subcategory = null;
+    if (browse.category && browse.subcategory) {
+      var earlySubs = categorySubs(categoryById(browse.category));
+      var subOk = false;
+      for (var esi = 0; esi < earlySubs.length; esi++) {
+        if (earlySubs[esi].id === browse.subcategory) { subOk = true; break; }
+      }
+      if (!subOk) browse.subcategory = null;
+    }
     var html = "";
 
     if (browse.productId) {
@@ -1115,14 +1122,9 @@
       }
     }
 
-    html += '<div class="prod-crumb">';
-    html += '<button type="button" data-goto="know">← Know Ringana</button>';
     if (browse.category) {
-      var catCrumb = categoryById(browse.category);
-      html += '<span>/</span><button type="button" data-prod-nav="hub">All products</button>';
-      html += '<span>/</span><span>' + esc(catCrumb ? catCrumb.label : browse.category) + "</span>";
+      html += '<div class="prod-nav-bar"><button type="button" class="prod-pill on" data-prod-nav="hub">← All products</button></div>';
     }
-    html += "</div>";
 
     if (!browse.category) {
       html += '<h1 class="prod-head-title">Learn the products</h1>';
@@ -1158,9 +1160,9 @@
       var subs = categorySubs(catObj);
       if (subs.length && !browse.q) {
         html += '<div class="prod-sub-row">';
-        html += '<button type="button" class="prod-sub-chip' + (!browse.subcategory ? " on" : "") + '" data-prod-nav="cat" data-prod-cat="' + esc(browse.category) + '" data-prod-sub="">All</button>';
+        html += '<button type="button" class="prod-pill' + (!browse.subcategory ? " on" : "") + '" data-prod-nav="cat" data-prod-cat="' + esc(browse.category) + '" data-prod-sub="">All</button>';
         subs.forEach(function (s) {
-          html += '<button type="button" class="prod-sub-chip' + (browse.subcategory === s.id ? " on" : "") +
+          html += '<button type="button" class="prod-pill' + (browse.subcategory === s.id ? " on" : "") +
             '" data-prod-nav="cat" data-prod-cat="' + esc(browse.category) + '" data-prod-sub="' + esc(s.id) + '">' +
             esc(s.label) + "</button>";
         });
@@ -1441,19 +1443,31 @@
     if (!wrap) return;
     var secs = visibleSections();
     var html = "";
+    var nextOpen = null;
+    for (var n = 0; n < secs.length; n++) {
+      if (!state.done[secs[n].id] && isModuleUnlocked(secs[n].id)) {
+        nextOpen = secs[n].id;
+        break;
+      }
+    }
     for (var i = 0; i < secs.length; i++) {
       var s = secs[i];
       var locked = !isModuleUnlocked(s.id);
-      var cls = "home-chip" +
-        (state.active === s.id ? " on" : "") +
-        (state.done[s.id] ? " done" : "") +
-        (locked ? " locked" : "");
-      var status = state.done[s.id] ? "Done" : (locked ? "Locked" : s.sub);
+      var done = !!state.done[s.id];
+      var isNext = !done && !locked && s.id === nextOpen;
+      var cls = "home-step" +
+        (done ? " done" : "") +
+        (locked ? " locked" : "") +
+        (isNext ? " next" : "");
+      var status = done ? "Done" : (locked ? "Locked · finish the step above first" : (isNext ? "Up next" : "Ready when you are"));
       html += '<button type="button" class="' + cls + '" data-goto="' + s.id + '"' +
         (locked ? ' aria-disabled="true"' : "") + ">" +
-        '<span class="home-chip-num">' + (state.done[s.id] ? "✓" : String(i + 1)) + "</span>" +
-        '<span class="home-chip-label">' + esc(s.label) + "</span>" +
-        '<span class="home-chip-sub">' + esc(status) + "</span></button>";
+        '<span class="home-step-num" aria-hidden="true">' + (done ? "✓" : String(i + 1)) + "</span>" +
+        '<span class="home-step-main">' +
+        '<span class="home-step-label">' + esc(s.label) + "</span>" +
+        '<span class="home-step-sub">' + esc(s.sub) + "</span>" +
+        '<span class="home-step-status">' + esc(status) + "</span>" +
+        "</span></button>";
     }
     wrap.innerHTML = html;
   }
