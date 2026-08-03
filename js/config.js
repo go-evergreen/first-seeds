@@ -67,11 +67,15 @@ window.FS.CONFIG = {
     },
     {
       term: "Learn the products",
-      def: "A searchable product library inside Know — skincare, body, hair, baby, and supplements."
+      def: "A searchable product library inside Learn — skincare, body, hair, baby, and supplements."
     },
     {
-      term: "Know",
-      def: "Clear Ringana + U.S. launch facts — and a conversation guide for when someone asks. Clarity over hype."
+      term: "Talking fresh",
+      def: "A conversation guide inside Learn — what to say when someone comments, objects, goes quiet, or asks about partnering."
+    },
+    {
+      term: "Learn",
+      def: "Clear Ringana + U.S. launch facts — and Talking fresh for when someone asks. Clarity over hype."
     },
     {
       term: "Founding circle",
@@ -136,8 +140,8 @@ window.FS.CONFIG = {
       placement: "above"
     },
     {
-      title: "When someone asks, open Know",
-      body: "Launch dates, product differences, and Talking fresh (how to handle the real moments) live under Know. Clear facts first — so you never have to bluff.",
+      title: "When someone asks, open Learn",
+      body: "Launch dates, product differences, and Talking fresh (how to handle the real moments) live under Learn. Clear facts first — so you never have to bluff.",
       panel: "welcome",
       target: '#bottomNav [data-tab="know"]',
       placement: "above"

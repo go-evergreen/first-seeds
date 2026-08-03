@@ -167,7 +167,7 @@
   }
 
   function isModuleUnlocked(id) {
-    if (!id || id === "welcome" || id === "done" || id === "calendar" || id === "leader" || id === "know" || id === "tend" || id === "products" || id === "curiosity-photos" || id === "leads") return true;
+    if (!id || id === "welcome" || id === "done" || id === "calendar" || id === "leader" || id === "know" || id === "tend" || id === "products" || id === "talk" || id === "curiosity-photos" || id === "leads") return true;
     if (!sectionVisible(id)) return false;
     if (softUnlocked(id)) return true;
     if (state.done[id]) return true;
@@ -414,7 +414,7 @@
 
     var pathNote = document.getElementById("welcomePathNote");
     if (pathNote) {
-      pathNote.innerHTML = "Your plant lives here. Content, Leads, Know, and your path stay one tap away at the bottom.";
+      pathNote.innerHTML = "Your plant lives here. Content, Leads, Learn, and your path stay one tap away at the bottom.";
     }
 
     var rh = document.getElementById("rootsHeadline");
@@ -635,7 +635,7 @@
     } else {
       if (eyebrow) eyebrow.textContent = "IN FULL BLOOM";
       if (headline) headline.textContent = name ? ("Look what you grew, " + name + ".") : "Look what you grew.";
-      if (body) body.innerHTML = "You've got your story, your grove, clear facts in Know Ringana, and a rhythm you can keep. That's calm prep — not a scramble. Keep showing up, keep flipping 🌱 to 🌳, and let launch feel like opening a door you already helped build.";
+      if (body) body.innerHTML = "You've got your story, your grove, clear facts in Learn, and a rhythm you can keep. That's calm prep — not a scramble. Keep showing up, keep flipping 🌱 to 🌳, and let launch feel like opening a door you already helped build.";
       if (levelUp) levelUp.hidden = true;
     }
   }
@@ -887,7 +887,6 @@
           '</div>';
       }).join("");
     }
-    renderTalkGuide(C.talkGuide);
   }
 
   function talkPlayCopy(m) {
@@ -1469,7 +1468,7 @@
     }
     var tab = "";
     if (state.active === "tend" || state.active === "calendar" || state.active === "curiosity-photos") tab = "content";
-    else if (state.active === "know" || state.active === "products") tab = "know";
+    else if (state.active === "know" || state.active === "products" || state.active === "talk") tab = "know";
     else if (state.active === "leader") tab = "team";
     else if (state.active === "leads") tab = "leads";
     else if (state.active === "welcome" || state.active === "done") tab = "home";
@@ -1834,6 +1833,9 @@
       renderKnowPanel();
       wireKnowSearch();
       filterKnowSearch();
+    }
+    if (state.active === "talk") {
+      renderTalkGuide((window.FS.CONTENT || {}).talkGuide);
     }
     if (state.active === "products") {
       renderProductLibrary();
@@ -3011,8 +3013,7 @@
       var talkId = t.getAttribute("data-talk");
       state.data.openTalk = state.data.openTalk === talkId ? "" : talkId;
       save();
-      renderKnowPanel();
-      filterKnowSearch();
+      renderTalkGuide((window.FS.CONTENT || {}).talkGuide);
       return;
     }
     if (t.hasAttribute("data-faq")) {
@@ -3120,9 +3121,16 @@
         save(); renderNav(); renderPanels();
         return;
       }
+      if (goto === "talk") {
+        hideLockToast();
+        closeHubMenu();
+        state.active = "talk";
+        save(); renderNav(); renderPanels();
+        return;
+      }
       if (goto === "leads" && usesCustomLanding()) return;
-      if (goto !== "welcome" && goto !== "done" && goto !== "calendar" && goto !== "leader" && goto !== "know" && goto !== "tend" && goto !== "products" && goto !== "curiosity-photos" && goto !== "leads" && !sectionVisible(goto)) return;
-      if (goto !== "welcome" && goto !== "done" && goto !== "calendar" && goto !== "leader" && goto !== "know" && goto !== "tend" && goto !== "products" && goto !== "curiosity-photos" && goto !== "leads" && !isModuleUnlocked(goto)) {
+      if (goto !== "welcome" && goto !== "done" && goto !== "calendar" && goto !== "leader" && goto !== "know" && goto !== "tend" && goto !== "products" && goto !== "talk" && goto !== "curiosity-photos" && goto !== "leads" && !sectionVisible(goto)) return;
+      if (goto !== "welcome" && goto !== "done" && goto !== "calendar" && goto !== "leader" && goto !== "know" && goto !== "tend" && goto !== "products" && goto !== "talk" && goto !== "curiosity-photos" && goto !== "leads" && !isModuleUnlocked(goto)) {
         showLockToast(goto);
         return;
       }
@@ -3408,7 +3416,7 @@
         if (id === "leads" && usesCustomLanding()) {
           id = "ground";
         }
-        if (id === "curiosity-photos" || id === "products" || id === "tend" || id === "know") {
+        if (id === "curiosity-photos" || id === "products" || id === "talk" || id === "tend" || id === "know") {
           hideLockToast();
           state.active = id;
           save();
@@ -3416,7 +3424,7 @@
           renderPanels();
           return;
         }
-        if (id !== "welcome" && id !== "done" && id !== "calendar" && id !== "leader" && id !== "know" && id !== "leads" && !isModuleUnlocked(id)) {
+        if (id !== "welcome" && id !== "done" && id !== "calendar" && id !== "leader" && id !== "know" && id !== "talk" && id !== "products" && id !== "leads" && !isModuleUnlocked(id)) {
           showLockToast(id);
           return;
         }

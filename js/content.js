@@ -3,7 +3,7 @@
    Soft invites → calendar / Post Studio
    Curiosity posts + product sparks → calendar / Post Studio
    Product & business story posts → calendar / Post Studio
-   Pillars · fun facts · FAQs → Know Ringana
+   Pillars · fun facts · FAQs → Learn
    ═══════════════════════════════════════════════════════════ */
 
 window.FS = window.FS || {};
@@ -317,7 +317,7 @@ window.FS.CONTENT = {
     }
   ],
 
-  /* ── Pillars (Know Ringana + values posts) ── */
+  /* ── Pillars (Learn + values posts) ── */
   pillars: [
     {
       id: "fresh",
@@ -341,7 +341,7 @@ window.FS.CONTENT = {
 
   pillarsIntro: "This company doesn't just have a mission statement. They've built everything around three simple words: Fresh. Trendsetting. Excellence. Every product, every decision, every innovation seems to come back to those three ideas — deeply enshrined in their DNA, according to the company.",
 
-  /* ── Fun facts (Know Ringana + calendar fun-fact drafts) ── */
+  /* ── Fun facts (Learn + calendar fun-fact drafts) ── */
   funFacts: [
     {
       id: "family",
@@ -390,7 +390,7 @@ window.FS.CONTENT = {
     }
   ],
 
-  /* ── Talking Fresh · Conversation guide (Know) ── */
+  /* ── Talking Fresh · Conversation guide (Learn) ── */
   talkGuide: {
     lede: "Ringana handed us something rare: a story that's actually true. The partners who win don't have better scripts — they have better judgment, and they understand why people say yes.",
     thesis: {
@@ -596,7 +596,7 @@ window.FS.CONTENT = {
     closing: "Talk to people like you're telling a friend a secret — because if it's true, that's exactly what you're doing."
   },
 
-  /* ── FAQs (Know Ringana) ── */
+  /* ── FAQs (Learn) ── */
   faqs: [
     {
       q: "What even is Ringana?",

@@ -20,7 +20,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,400;1,9..144,500&family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/styles.css?v=85">
+<link rel="stylesheet" href="css/styles.css?v=87">
 </head>
 <body>
 
@@ -66,7 +66,7 @@
     </button>
     <button type="button" class="bottom-nav-btn" data-goto="know" data-tab="know">
       <span class="bottom-nav-ico" aria-hidden="true">💡</span>
-      <span>Know</span>
+      <span>Learn</span>
     </button>
     <button type="button" class="bottom-nav-btn full-only" data-goto="leader" data-tab="team">
       <span class="bottom-nav-ico" aria-hidden="true">🌳</span>
@@ -456,7 +456,7 @@
 
         <p class="body-p plant-trio-note">To continue: one <strong>curiosity post</strong>, one <strong>helpful share</strong> (behind the scenes, honest note, or values), and one <strong>soft invite</strong>.</p>
 
-        <p class="plant-footnote">Ready-made drafts live under <button type="button" class="inline-link" data-goto="tend">Content → Post ideas</button>. Facts in <button type="button" class="inline-link" data-goto="know">Know Ringana</button>.</p>
+        <p class="plant-footnote">Ready-made drafts live under <button type="button" class="inline-link" data-goto="tend">Content → Post ideas</button>. Facts in <button type="button" class="inline-link" data-goto="know">Learn</button>.</p>
 
         <div class="btn-row">
           <button class="btn waiting" data-complete="plant" data-ready="Trio drafted → Open Content" data-wait="Draft a curiosity post, a helpful share, and a soft invite to continue">Draft a curiosity post, a helpful share, and a soft invite to continue</button>
@@ -533,7 +533,7 @@
         <div class="plantbox" id="finishPlant" aria-hidden="true"></div>
         <div class="eyebrow" style="margin-bottom:10px" id="finishEyebrow">IN FULL BLOOM</div>
         <h1 id="finishHeadline">Look what you grew.</h1>
-        <p class="body-p" style="max-width:540px;margin-left:auto;margin-right:auto" id="finishBody">You've got your story, your grove, clear facts in Know Ringana, and a rhythm you can keep. That's calm prep — not a scramble. Keep showing up, keep flipping 🌱 to 🌳, and let launch feel like opening a door you already helped build.</p>
+        <p class="body-p" style="max-width:540px;margin-left:auto;margin-right:auto" id="finishBody">You've got your story, your grove, clear facts in Learn, and a rhythm you can keep. That's calm prep — not a scramble. Keep showing up, keep flipping 🌱 to 🌳, and let launch feel like opening a door you already helped build.</p>
         <div class="finish-sign" id="signoff"></div>
         <div class="btn-row" style="justify-content:center">
           <button class="btn-ghost" data-goto="roots">Revisit any section</button>
@@ -543,15 +543,15 @@
         </div>
       </section>
 
-      <!-- KNOW Ringana -->
+      <!-- LEARN -->
       <section class="panel" id="panel-know">
         <div class="eyebrow">CLARITY · NOT HYPE</div>
-        <h1>Know Ringana</h1>
+        <h1>Learn</h1>
         <p class="sec-sub">Fresh Grove facts for informed, confident decisions.</p>
         <p class="body-p">Are we excited? Absolutely. Excitement doesn't replace due diligence. We want everyone here equipped to decide with clarity — not pressure.</p>
 
         <label class="know-search-wrap">
-          <span class="sr-only">Search Know Ringana</span>
+          <span class="sr-only">Search Learn</span>
           <input type="search" id="knowSearch" class="know-search" placeholder="Search facts, FAQs, talking points, products…" autocomplete="off">
         </label>
         <p class="know-search-empty" id="knowSearchEmpty" hidden>No sections match that search.</p>
@@ -566,6 +566,13 @@
           <span class="prod-know-cta-title">Learn the products</span>
           <span class="prod-know-cta-sub">Skincare, body, hair, baby, and supplements — browse by category and search.</span>
           <span class="prod-know-cta-go">Open library →</span>
+        </button>
+
+        <button type="button" class="prod-know-cta" data-goto="talk">
+          <span class="prod-know-cta-eyebrow">Conversation guide</span>
+          <span class="prod-know-cta-title">Talking fresh</span>
+          <span class="prod-know-cta-sub">What to say when someone comments, objects, goes quiet, or asks about the business — judgment, not scripts.</span>
+          <span class="prod-know-cta-go">Open guide →</span>
         </button>
 
         <details class="know-acc" id="know-launch" data-know-sec="launch">
@@ -627,13 +634,6 @@
           </div>
         </details>
 
-        <details class="know-acc" id="know-talk" data-know-sec="talk">
-          <summary class="know-acc-sum">Talking fresh · Conversation guide <span class="know-acc-chev" aria-hidden="true"></span></summary>
-          <div class="know-acc-body" id="talkGuideRoot">
-            <!-- rendered by app.js from CONTENT.talkGuide -->
-          </div>
-        </details>
-
         <details class="know-acc" id="know-business" data-know-sec="business">
           <summary class="know-acc-sum">What makes the business approach different <span class="know-acc-chev" aria-hidden="true"></span></summary>
           <div class="know-acc-body">
@@ -668,6 +668,20 @@
       <section class="panel" id="panel-products">
         <div class="prod-lib" id="productLibRoot">
           <!-- rendered by app.js -->
+        </div>
+      </section>
+
+      <!-- TALKING FRESH · CONVERSATION GUIDE -->
+      <section class="panel" id="panel-talk">
+        <div class="talk-guide">
+          <div class="talk-guide-nav">
+            <button type="button" class="prod-pill on" data-goto="know">← Back to Learn</button>
+          </div>
+          <h1 class="prod-head-title">Talking fresh</h1>
+          <p class="prod-head-sub">In-the-moment judgment for real conversations — steal the structure, write it in your voice.</p>
+          <div id="talkGuideRoot">
+            <!-- rendered by app.js from CONTENT.talkGuide -->
+          </div>
         </div>
       </section>
 
@@ -952,17 +966,17 @@
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="js/config.js?v=85"></script>
-<script src="js/supabase-config.js?v=85"></script>
-<script src="js/data.js?v=85"></script>
-<script src="js/content.js?v=85"></script>
-<script src="js/products.js?v=85"></script>
-<script src="js/plant.js?v=85"></script>
-<script src="js/tree.js?v=85"></script>
-<script src="js/calendar.js?v=85"></script>
-<script src="js/cloud.js?v=85"></script>
-<script src="js/bridge-ui.js?v=85"></script>
-<script src="js/app.js?v=85"></script>
-<script src="js/pwa.js?v=85"></script>
+<script src="js/config.js?v=87"></script>
+<script src="js/supabase-config.js?v=87"></script>
+<script src="js/data.js?v=87"></script>
+<script src="js/content.js?v=87"></script>
+<script src="js/products.js?v=87"></script>
+<script src="js/plant.js?v=87"></script>
+<script src="js/tree.js?v=87"></script>
+<script src="js/calendar.js?v=87"></script>
+<script src="js/cloud.js?v=87"></script>
+<script src="js/bridge-ui.js?v=87"></script>
+<script src="js/app.js?v=87"></script>
+<script src="js/pwa.js?v=87"></script>
 </body>
 </html>
