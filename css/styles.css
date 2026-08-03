@@ -183,6 +183,47 @@ button{font-family:inherit;cursor:pointer}
 .faq-chev{color:var(--moss);font-size:18px;line-height:1}
 .faq-a{padding:0 16px 14px;border-top:1px solid var(--sand)}
 .faq-a p{margin:12px 0;font-size:14.5px;line-height:1.55;color:var(--green);white-space:pre-line}
+
+/* Talking fresh · conversation guide (Know) */
+.talk-stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:14px 0 18px}
+.talk-stat{background:var(--white);border:1.5px solid var(--sand);border-radius:12px;padding:12px 12px 11px}
+.talk-stat-num{font-family:'Fraunces',serif;font-size:1.55rem;font-weight:600;color:var(--green);line-height:1;margin-bottom:6px}
+.talk-stat-lbl{font-size:11.5px;line-height:1.4;color:var(--green-soft)}
+.talk-pull{margin:8px 0 18px;padding:12px 0 12px 14px;border-left:3px solid var(--moss);font-family:'Fraunces',serif;font-size:1.05rem;font-style:italic;line-height:1.4;color:var(--green)}
+.talk-sec-label{margin:22px 0 8px;font-size:11px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--moss)}
+.talk-principles{margin-bottom:8px}
+.talk-q-wrap{display:flex;flex-direction:column;align-items:flex-start;gap:5px;min-width:0;flex:1}
+.talk-cat{font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--moss)}
+.talk-why{background:rgba(171,176,154,.22);border-radius:10px;padding:12px 13px;margin:12px 0}
+.talk-why-label{font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--moss);margin-bottom:6px}
+.talk-why p{margin:0!important;font-size:13.5px;line-height:1.5;color:var(--green)}
+.talk-play{margin:10px 0 4px}
+.talk-play-label{font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--green-soft);margin-bottom:8px}
+.talk-exchange{display:flex;flex-direction:column;gap:8px;margin-bottom:10px}
+.talk-line{display:flex;gap:8px;align-items:flex-start;font-size:13.5px;line-height:1.45;color:var(--green)}
+.talk-line.them{color:var(--green-soft)}
+.talk-who{flex-shrink:0;font-size:9.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;padding:2px 6px;border-radius:5px;margin-top:1px;min-width:42px;text-align:center;background:rgba(171,176,154,.35);color:var(--green-soft)}
+.talk-line.you .talk-who{background:var(--green);color:#fff}
+.talk-line.you span:last-child{font-weight:500}
+.talk-trap{margin:12px 0 4px;padding:10px 12px;border-radius:10px;border-left:2px solid var(--moss);background:rgba(245,246,242,.9);font-size:13px;line-height:1.45;color:var(--green-soft)}
+.talk-trap strong{color:var(--green)}
+.talk-arc{display:flex;flex-direction:column;gap:0;margin:4px 0 16px}
+.talk-stage{display:flex;gap:12px;padding:14px 0;border-bottom:1px solid var(--sand)}
+.talk-stage:last-child{border-bottom:none}
+.talk-stage-n{flex-shrink:0;width:32px;height:32px;border-radius:50%;background:var(--green);color:#fff;display:flex;align-items:center;justify-content:center;font-family:'Fraunces',serif;font-size:15px;font-weight:600}
+.talk-stage-body{min-width:0;flex:1}
+.talk-stage-goal{font-size:11px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--moss);margin:-2px 0 6px}
+.talk-stage-body p{margin:0;font-size:13.5px;line-height:1.5;color:var(--green-soft)}
+.talk-redlines{margin:8px 0 14px}
+.talk-rl-list{margin:0;padding-left:1.1em}
+.talk-rl-list li{margin:0 0 10px;font-size:14px;line-height:1.5}
+.talk-rl-list li:last-child{margin-bottom:0}
+.talk-closing{margin:8px 0 4px;font-family:'Fraunces',serif;font-size:1.15rem;font-style:italic;line-height:1.4;color:var(--green);text-align:center}
+@media (max-width:560px){
+  .talk-stats{grid-template-columns:1fr}
+  .talk-principles{grid-template-columns:1fr}
+}
+
 .copy-shelf{background:var(--paper-warm);border:1.5px solid var(--sand);border-radius:14px;padding:18px 20px;margin:22px 0}
 .copy-shelf.compact{margin-top:18px}
 .copy-card{background:var(--white);border:1px solid var(--sand);border-radius:12px;margin-bottom:8px;overflow:hidden}
@@ -548,24 +589,24 @@ textarea::placeholder{color:#b3a894}
 .cal-setup-switch{border:none;background:transparent;color:var(--moss);font-size:12.5px;font-weight:700;cursor:pointer;text-decoration:underline;font-family:inherit}
 
 .cal-grid-week{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:8px}
-.cal-grid-month{display:block;background:rgba(255,255,255,.55);border-radius:16px;padding:10px 8px 12px;border:1px solid rgba(61,69,60,.08)}
-.cal-month-dows{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:5px;margin-bottom:6px}
+.cal-grid-month{display:block;background:rgba(255,255,255,.55);border-radius:16px;padding:12px 10px 14px;border:1px solid rgba(61,69,60,.08)}
+.cal-month-dows{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:6px;margin-bottom:8px}
 .cal-month-dows span{text-align:center;font-size:10px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--bark-soft);padding:2px 0}
-.cal-month-cells{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:5px}
+.cal-month-cells{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:6px}
 
-.cal-cell{display:flex;flex-direction:column;align-items:stretch;gap:4px;min-height:52px;border:1.5px solid transparent;background:rgba(255,255,255,.9);border-radius:12px;padding:6px 5px 7px;transition:border-color .15s,box-shadow .15s;font-family:inherit;cursor:pointer;text-align:left;-webkit-tap-highlight-color:transparent;touch-action:manipulation}
+.cal-cell{display:flex;flex-direction:column;align-items:stretch;gap:5px;min-height:72px;border:1.5px solid transparent;background:rgba(255,255,255,.9);border-radius:12px;padding:7px 6px 8px;transition:border-color .15s,box-shadow .15s;font-family:inherit;cursor:pointer;text-align:left;-webkit-tap-highlight-color:transparent;touch-action:manipulation}
 .cal-cell.week{min-height:200px;cursor:default;border-color:rgba(61,69,60,.1)}
 .cal-cell.on{border-color:var(--moss);box-shadow:0 0 0 1px rgba(107,143,107,.25);background:#fff}
 .cal-cell.today .cal-cell-num{color:var(--moss)}
 .cal-cell.out{opacity:.38}
 .cal-cell-top{display:flex;align-items:flex-start;justify-content:space-between;gap:6px}
 .cal-dow{display:block;font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--bark-soft)}
-.cal-cell-num{font-family:'Fraunces',serif;font-size:14px;font-weight:600;color:var(--ink);line-height:1.1}
-.cal-cell.week .cal-cell-num{font-size:18px}
+.cal-cell-num{font-family:'Fraunces',serif;font-size:11px;font-weight:600;color:var(--ink);line-height:1.1}
+.cal-cell.week .cal-cell-num{font-size:16px}
 .cal-cell-add{border:none;background:transparent;color:var(--bark-soft);font-size:16px;line-height:1;cursor:pointer;padding:2px 4px;border-radius:8px}
 .cal-cell-add:hover{background:rgba(61,69,60,.06);color:var(--green)}
 .cal-cell-bars{display:flex;flex-direction:column;gap:3px;margin-top:auto;min-height:0;width:100%}
-.cal-bar{display:block;height:4px;border-radius:999px;width:100%;background:var(--green-soft)}
+.cal-bar{display:block;height:5px;border-radius:999px;width:100%;background:var(--green-soft)}
 .cal-bar.cat-content{background:#7a9a78}
 .cal-bar.cat-outreach{background:#6a8fad}
 .cal-bar.cat-followup{background:#c4a35a}

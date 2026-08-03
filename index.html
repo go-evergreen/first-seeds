@@ -20,7 +20,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,400;1,9..144,500&family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/styles.css?v=82">
+<link rel="stylesheet" href="css/styles.css?v=85">
 </head>
 <body>
 
@@ -56,7 +56,7 @@
       <span>Sprout</span>
     </button>
     <button type="button" class="bottom-nav-btn" data-goto="tend" data-tab="content">
-      <span class="bottom-nav-ico" aria-hidden="true">✦</span>
+      <span class="bottom-nav-ico" aria-hidden="true">📝</span>
       <span>Content</span>
     </button>
     <button type="button" class="bottom-nav-btn" data-goto="leads" data-tab="leads">
@@ -552,7 +552,7 @@
 
         <label class="know-search-wrap">
           <span class="sr-only">Search Know Ringana</span>
-          <input type="search" id="knowSearch" class="know-search" placeholder="Search facts, FAQs, dates, products…" autocomplete="off">
+          <input type="search" id="knowSearch" class="know-search" placeholder="Search facts, FAQs, talking points, products…" autocomplete="off">
         </label>
         <p class="know-search-empty" id="knowSearchEmpty" hidden>No sections match that search.</p>
 
@@ -624,6 +624,13 @@
           <div class="know-acc-body">
             <p class="body-p">It's not one slogan — it's a stack of intentional decisions. Ready-to-adapt posts live in Content → Post ideas (and Post Studio on Full runway).</p>
             <div id="productKnowList" class="fact-grid"></div>
+          </div>
+        </details>
+
+        <details class="know-acc" id="know-talk" data-know-sec="talk">
+          <summary class="know-acc-sum">Talking fresh · Conversation guide <span class="know-acc-chev" aria-hidden="true"></span></summary>
+          <div class="know-acc-body" id="talkGuideRoot">
+            <!-- rendered by app.js from CONTENT.talkGuide -->
           </div>
         </details>
 
@@ -945,17 +952,17 @@
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="js/config.js?v=82"></script>
-<script src="js/supabase-config.js?v=82"></script>
-<script src="js/data.js?v=82"></script>
-<script src="js/content.js?v=82"></script>
-<script src="js/products.js?v=82"></script>
-<script src="js/plant.js?v=82"></script>
-<script src="js/tree.js?v=82"></script>
-<script src="js/calendar.js?v=82"></script>
-<script src="js/cloud.js?v=82"></script>
-<script src="js/bridge-ui.js?v=82"></script>
-<script src="js/app.js?v=82"></script>
-<script src="js/pwa.js?v=82"></script>
+<script src="js/config.js?v=85"></script>
+<script src="js/supabase-config.js?v=85"></script>
+<script src="js/data.js?v=85"></script>
+<script src="js/content.js?v=85"></script>
+<script src="js/products.js?v=85"></script>
+<script src="js/plant.js?v=85"></script>
+<script src="js/tree.js?v=85"></script>
+<script src="js/calendar.js?v=85"></script>
+<script src="js/cloud.js?v=85"></script>
+<script src="js/bridge-ui.js?v=85"></script>
+<script src="js/app.js?v=85"></script>
+<script src="js/pwa.js?v=85"></script>
 </body>
 </html>

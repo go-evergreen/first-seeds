@@ -399,18 +399,12 @@ window.FS = window.FS || {};
       items: (C.openLoops || []).map(function (it, i) {
         var body = typeof it === "string" ? it : (it.body || "");
         var title = (typeof it === "object" && it.title) ? it.title : ("Curiosity " + (i + 1));
-        var imageId = (typeof it === "object" && it.imageId) ? it.imageId : "";
-        var resolved = resolveCuriosityImage(imageId);
         return {
           id: "hook-" + i,
           type: "open_loop",
           title: title,
           body: body,
-          icon: "✨",
-          imageId: imageId,
-          image: resolved ? resolved.src : "",
-          thumb: resolved ? resolved.thumb : "",
-          alt: resolved ? resolved.alt : ""
+          icon: "✨"
         };
       })
     });

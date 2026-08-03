@@ -887,6 +887,106 @@
           '</div>';
       }).join("");
     }
+    renderTalkGuide(C.talkGuide);
+  }
+
+  function talkPlayCopy(m) {
+    return (m.lines || []).map(function (ln) {
+      return ln.who + ": " + ln.text;
+    }).join("\n");
+  }
+
+  function renderTalkGuide(G) {
+    var root = document.getElementById("talkGuideRoot");
+    if (!root || !G) return;
+    var openTalk = state.data.openTalk || "";
+    var html = "";
+    html += '<p class="body-p">' + esc(G.lede || "") + "</p>";
+    if (G.thesis) {
+      html += '<div class="talk-stats">';
+      (G.thesis.stats || []).forEach(function (s) {
+        html += '<div class="talk-stat"><div class="talk-stat-num">' + esc(s.num) +
+          '</div><div class="talk-stat-lbl">' + esc(s.lbl) + "</div></div>";
+      });
+      html += "</div>";
+      (G.thesis.paras || []).forEach(function (p) {
+        html += '<p class="body-p">' + esc(p) + "</p>";
+      });
+      if (G.thesis.pull) {
+        html += '<p class="talk-pull">' + esc(G.thesis.pull) + "</p>";
+      }
+    }
+    if (G.principles && G.principles.length) {
+      html += '<p class="talk-sec-label">The posture</p>';
+      html += '<div class="fact-grid talk-principles">';
+      G.principles.forEach(function (p, i) {
+        html += '<div class="fact-card"><div class="fact-label">' +
+          esc(String(i + 1)) + " · " + esc(p.title) +
+          "</div><p>" + esc(p.body) + "</p></div>";
+      });
+      html += "</div>";
+    }
+    if (G.moments && G.moments.length) {
+      html += '<p class="talk-sec-label">In the moment</p>';
+      html += '<p class="body-p">' + esc(G.momentsIntro || "") + "</p>";
+      html += '<div class="faq-list talk-moments">';
+      G.moments.forEach(function (m) {
+        var id = "talk_" + m.id;
+        var isOpen = openTalk === id;
+        html += '<div class="faq-item' + (isOpen ? " open" : "") + '">';
+        html += '<button type="button" class="faq-q" data-talk="' + id + '">' +
+          '<span class="talk-q-wrap"><span class="talk-cat">' + esc(m.cat) + "</span>" +
+          esc(m.q) + '</span><span class="faq-chev">' + (isOpen ? "−" : "+") + "</span></button>";
+        if (isOpen) {
+          html += '<div class="faq-a talk-moment-body">';
+          html += '<div class="talk-why"><div class="talk-why-label">The mechanism</div><p>' +
+            esc(m.mechanism) + "</p></div>";
+          if (m.note) html += "<p>" + esc(m.note) + "</p>";
+          html += '<div class="talk-play"><div class="talk-play-label">' + esc(m.playLabel || "The play") + "</div>";
+          html += '<div class="talk-exchange">';
+          (m.lines || []).forEach(function (ln) {
+            var cls = ln.who === "You" ? "you" : "them";
+            html += '<div class="talk-line ' + cls + '"><span class="talk-who">' + esc(ln.who) +
+              "</span><span>" + esc(ln.text) + "</span></div>";
+          });
+          html += "</div>";
+          var copyId = id + "_play";
+          html += '<p class="talk-play-copy" id="' + copyId + '" hidden>' + esc(talkPlayCopy(m)) + "</p>";
+          html += '<button type="button" class="copy-btn small" data-copy="' + copyId + '">Copy the play</button>';
+          html += "</div>";
+          if (m.trap) {
+            html += '<div class="talk-trap"><strong>The trap:</strong> ' + esc(m.trap) + "</div>";
+          }
+          html += "</div>";
+        }
+        html += "</div>";
+      });
+      html += "</div>";
+    }
+    if (G.arc && G.arc.length) {
+      html += '<p class="talk-sec-label">The full arc</p>';
+      html += '<div class="talk-arc">';
+      G.arc.forEach(function (s) {
+        html += '<div class="talk-stage"><div class="talk-stage-n" aria-hidden="true">' + esc(s.n) +
+          '</div><div class="talk-stage-body"><div class="fact-label">' + esc(s.title) +
+          '</div><div class="talk-stage-goal">' + esc(s.goal) + "</div><p>" + esc(s.body) +
+          "</p></div></div>";
+      });
+      html += "</div>";
+    }
+    if (G.redlines && G.redlines.length) {
+      html += '<div class="callout compliance talk-redlines">';
+      html += '<div class="callout-tag">Bright lines · non-negotiable</div>';
+      html += '<div class="callout-body"><ul class="talk-rl-list">';
+      G.redlines.forEach(function (r) {
+        html += "<li><strong>" + esc(r.title) + "</strong> " + esc(r.body) + "</li>";
+      });
+      html += "</ul></div></div>";
+    }
+    if (G.closing) {
+      html += '<p class="talk-closing">' + esc(G.closing) + "</p>";
+    }
+    root.innerHTML = html;
   }
 
   /* ── Product learning library ─────────────────────────── */
@@ -2904,9 +3004,17 @@
 
   /* ── clicks ──────────────────────────────────────────── */
   document.addEventListener("click", function (e) {
-    var t = e.target.closest("[data-goto],[data-complete],[data-grove-pick],[data-prod-nav],[data-prod-open],[data-choice],[data-rhythm],[data-copy],[data-tadd],[data-tstatus],[data-tdel],[data-seedtype],[data-menu-goto],[data-soft-unlock],[data-faq],[data-copy-toggle],#exportBtn,#exportBtn2,#resetBtn,#modeStarter,#modeFull,#leadPageBuiltIn,#leadPageCustom,#levelUpBtn,#settingsNavBtn,#menuCloseBtn,#menuCloseBackdrop,#todayAuthBtn,#lockToastClose");
+    var t = e.target.closest("[data-goto],[data-complete],[data-grove-pick],[data-prod-nav],[data-prod-open],[data-choice],[data-rhythm],[data-copy],[data-tadd],[data-tstatus],[data-tdel],[data-seedtype],[data-menu-goto],[data-soft-unlock],[data-faq],[data-talk],[data-copy-toggle],#exportBtn,#exportBtn2,#resetBtn,#modeStarter,#modeFull,#leadPageBuiltIn,#leadPageCustom,#levelUpBtn,#settingsNavBtn,#menuCloseBtn,#menuCloseBackdrop,#todayAuthBtn,#lockToastClose");
     if (!t) return;
 
+    if (t.hasAttribute("data-talk")) {
+      var talkId = t.getAttribute("data-talk");
+      state.data.openTalk = state.data.openTalk === talkId ? "" : talkId;
+      save();
+      renderKnowPanel();
+      filterKnowSearch();
+      return;
+    }
     if (t.hasAttribute("data-faq")) {
       var faqId = t.getAttribute("data-faq");
       state.data.openFaq = state.data.openFaq === faqId ? "" : faqId;

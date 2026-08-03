@@ -71,7 +71,7 @@ window.FS.CONFIG = {
     },
     {
       term: "Know",
-      def: "Clear Ringana + U.S. launch facts you can lean on when someone asks. Clarity over hype."
+      def: "Clear Ringana + U.S. launch facts — and a conversation guide for when someone asks. Clarity over hype."
     },
     {
       term: "Founding circle",
@@ -137,7 +137,7 @@ window.FS.CONFIG = {
     },
     {
       title: "When someone asks, open Know",
-      body: "Launch dates, what makes Ringana different, and the U.S. snapshot live under Know in the bottom bar. Clear facts first — so you never have to bluff.",
+      body: "Launch dates, product differences, and Talking fresh (how to handle the real moments) live under Know. Clear facts first — so you never have to bluff.",
       panel: "welcome",
       target: '#bottomNav [data-tab="know"]',
       placement: "above"

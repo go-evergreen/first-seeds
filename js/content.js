@@ -71,6 +71,69 @@ window.FS.CONTENT = {
       alt: "White pump bottle listing peptides, hyaluronic acid, and ceramides",
       pairsWith: "Ingredients · clean labels · skin questions",
       body: "Show the label, ask the question. Pair with a curiosity line about what's actually in the bottle — not a hard sell."
+    },
+    {
+      id: "product-haul-towel",
+      title: "The full lineup",
+      alt: "Ringana products and branded towel arranged on a wooden table",
+      pairsWith: "Freshness · in-house · founding season",
+      body: "A quiet haul shot — let people wonder what you've been researching."
+    },
+    {
+      id: "bathroom-counter",
+      title: "Morning counter",
+      alt: "Travel-sized fresh products and tooth oil on a bathroom counter",
+      pairsWith: "Everyday use · tooth oil · routines",
+      body: "Real-life counter energy. Pair with a noticing post — not a product dump."
+    },
+    {
+      id: "cotton-wraps-close",
+      title: "Wrapped on purpose",
+      alt: "Close-up of products wrapped in organic cotton fabric sleeves",
+      pairsWith: "Packaging · sustainability · glass",
+      body: "The wrap is the hook. Ask what packaging says about a brand."
+    },
+    {
+      id: "cotton-wraps-haul",
+      title: "Cotton-wrapped haul",
+      alt: "Dense cluster of cotton-wrapped Ringana bottles on wood",
+      pairsWith: "Packaging · freshness · no plastic dump",
+      body: "Texture does the stopping. Keep the caption unfinished."
+    },
+    {
+      id: "cotton-wraps-glow",
+      title: "Glowing glass",
+      alt: "Cotton-wrapped bottles on backlit marble",
+      pairsWith: "Glass · packaging · eye serum",
+      body: "Soft light, soft ask. Pair with a freshness or glass open loop."
+    },
+    {
+      id: "sunny-table-haul",
+      title: "Sun on the table",
+      alt: "White bottles and tubes scattered in sunlight on a wooden table",
+      pairsWith: "Everyday products · baby · body care",
+      body: "Lived-in light. Good for a midweek noticing post."
+    },
+    {
+      id: "fresh-pour",
+      title: "Pouring fresh",
+      alt: "Dark red fresh concentrate being poured into iced strawberry water",
+      pairsWith: "Supplements · fresh · taste ritual",
+      body: "Motion stops the scroll. Pair with a curious line about what you're drinking."
+    },
+    {
+      id: "fresh-drink",
+      title: "After the pour",
+      alt: "Iced red drink in a ribbed glass beside an empty amber bottle",
+      pairsWith: "Supplements · everyday ritual",
+      body: "The finished glass. Short caption. No hard sell."
+    },
+    {
+      id: "fresh-water",
+      title: "Before the mix",
+      alt: "Glass of iced water beside a small dark fresh bottle",
+      pairsWith: "Supplements · simple ritual",
+      body: "Quiet setup shot — invite the question, don't answer it yet."
     }
   ],
 
@@ -85,8 +148,7 @@ window.FS.CONTENT = {
     },
     {
       title: "Paused on the word fresh",
-      body: "I've been reading ingredient labels more carefully. One brand from Austria made me pause on the word fresh…",
-      imageId: "ingredient-bottle"
+      body: "I've been reading ingredient labels more carefully. One brand from Austria made me pause on the word fresh…"
     },
     {
       title: "Expiry is the point",
@@ -94,18 +156,15 @@ window.FS.CONTENT = {
     },
     {
       title: "Clean… but who made it?",
-      body: "Tiny thing I noticed: a lot of \"clean\" labels still don't tell me who made it or why each ingredient is there.",
-      imageId: "ingredient-bottle"
+      body: "Tiny thing I noticed: a lot of \"clean\" labels still don't tell me who made it or why each ingredient is there."
     },
     {
       title: "Not selling — just learning",
-      body: "Not selling anything today — just sharing what I'm learning about freshness, glass packaging, and in-house production.",
-      imageId: "cotton-towels"
+      body: "Not selling anything today — just sharing what I'm learning about freshness, glass packaging, and in-house production."
     },
     {
       title: "Store aisle question",
-      body: "If you've ever stood in a store aisle wondering what's actually in the bottle… same.",
-      imageId: "ingredient-bottle"
+      body: "If you've ever stood in a store aisle wondering what's actually in the bottle… same."
     },
     {
       title: "Would I put this on my kid?",
@@ -121,8 +180,7 @@ window.FS.CONTENT = {
     },
     {
       title: "Glass you can send back",
-      body: "Heard about a brand that pays you to ship empty glass bottles back so they can sanitize them into new ones… and now I can't stop noticing every plastic pump in my bathroom.",
-      imageId: "cotton-towels"
+      body: "Heard about a brand that pays you to ship empty glass bottles back so they can sanitize them into new ones… and now I can't stop noticing every plastic pump in my bathroom."
     },
     {
       title: "Made like food",
@@ -331,6 +389,212 @@ window.FS.CONTENT = {
       body: "You don't have to build a team to earn commissions. Compensation starts with recommending products. Building a team is optional — not required to earn on customer sales and advance."
     }
   ],
+
+  /* ── Talking Fresh · Conversation guide (Know) ── */
+  talkGuide: {
+    lede: "Ringana handed us something rare: a story that's actually true. The partners who win don't have better scripts — they have better judgment, and they understand why people say yes.",
+    thesis: {
+      stats: [
+        { num: "81%", lbl: "trust rate for wellness micro-creators who share honest, long-term use — highest of any category" },
+        { num: "+44%", lbl: "more credibility for creators who share real failures than positive-only posters" },
+        { num: "1st", lbl: "objection is almost never the real one — the first \"no\" is a placeholder for the true concern" }
+      ],
+      paras: [
+        "Here's the shift: a person who pushes back is still in the conversation. Silence is the rejection you should fear — an objection is someone handing you information about what they actually need to hear. Your job was never to \"overcome\" anything. It's to decode what's underneath and respond to that.",
+        "And the thing that feels like good selling — polish, a clean copy-paste opener, relentless positivity — is exactly what triggers a buyer's guard. Every move here is designed to lower that pressure, not raise it.",
+        "Ringana makes this easier than most brands. A family in Austria has been doing this the hard way since 1996 — fresh, made to order, with an expiration date like real food. That's not a tagline. It's a fact you get to tell like a human."
+      ],
+      pull: "Your edge isn't a script. It's that you actually use these products, you understand why they're built this way, and you're willing to say what doesn't work too."
+    },
+    principles: [
+      {
+        title: "Decode, don't defend",
+        body: "When someone pushes back, resist the reflex to answer the words. Ask what's underneath first — \"what's making you hesitate?\" The first objection is a placeholder; the second one is the truth."
+      },
+      {
+        title: "Let freshness carry it",
+        body: "Ringana's real difference is subtractive — no artificial preservatives, small batches, actives at full potency, an expiration date as proof. Explain the model accurately and it qualifies the right person for you."
+      },
+      {
+        title: "The admission is the proof",
+        body: "\"That one wasn't for me\" isn't a leak — it's load-bearing. A voluntary negative tells the listener you're not performing, which makes every positive after it credible."
+      },
+      {
+        title: "Specific beats superlative",
+        body: "\"Still soft twelve hours later\" outperforms \"life-changing\" every time. Concrete detail from a product you actually used is unfakeable — and unfakeable is the currency now."
+      },
+      {
+        title: "Lower the stakes to raise the yes",
+        body: "Pressure activates the threat response and kills real decisions. \"No rush, it's not even launched\" removes the exact thing that makes people freeze."
+      }
+    ],
+    momentsIntro: "Each moment has three layers: the mechanism (why the move works), the play (language for the stuck moment), and the trap (the reflex that quietly costs you). Steal the structure — write it in your voice.",
+    moments: [
+      {
+        id: "warm-comment",
+        cat: "Warm",
+        q: "Someone commented \"obsessed 😍\" or \"need this\"",
+        mechanism: "A public comment is an emotional impulse, not a decision. If you answer it with a link, you convert a warm human feeling into a cold transaction. Meeting the feeling with curiosity keeps you in the trusted category.",
+        note: "Reply warmly in public so others see a real human. Then, only if it's genuine, move to DMs — and the first DM's only job is to earn a second one.",
+        playLabel: "The play",
+        lines: [
+          { who: "Them", text: "obsessed 😍" },
+          { who: "You", text: "right?? okay i have to know — skincare person or secretly here for the supplements 👀 (it's not even launched in the US yet so i'm just gathering my people early)" }
+        ],
+        trap: "Dropping a link in the first reply. It reads as \"you were a lead the whole time,\" and it retroactively makes your content feel like bait."
+      },
+      {
+        id: "warm-expires",
+        cat: "Warm",
+        q: "\"Wait, it expires? Isn't that a bad thing?\"",
+        mechanism: "This is a reframe opportunity disguised as an objection. They're using an old reference point — \"long shelf life = quality.\" You don't argue it; you replace the reference point. Once \"fresh food expires, so does fresh skincare\" clicks, the supposed flaw becomes the differentiator.",
+        note: "Don't get defensive about the short shelf life. Flip the frame: the expiration date is evidence there's nothing synthetic engineered to keep it stable on a shelf for three years.",
+        playLabel: "The play",
+        lines: [
+          { who: "Them", text: "wait it expires? isn't that bad" },
+          { who: "You", text: "i had the exact same reaction 😂 but that's the whole point — it expires because nothing artificial is holding it together on a shelf. made fresh in small batches, like actual food. the date is the proof, not the problem" }
+        ],
+        trap: "Over-claiming \"zero preservatives.\" It's no artificial / Annex-V preservatives — plant-based preservation still exists. Precision is literally the brand."
+      },
+      {
+        id: "warm-safety",
+        cat: "Warm",
+        q: "\"Is this safe for pregnancy / sensitive skin / my kids?\"",
+        mechanism: "Reassurance and information do opposite things to trust. \"Totally safe!\" makes you sound like you want the sale; \"let me check the actual ingredient list\" makes you sound like you want them safe.",
+        note: "Ringana publishes full INCI lists — use them, don't wing it. Skin perfection carries 3% bakuchiol; that's exactly the kind of ingredient a pregnant person should run past their own provider.",
+        playLabel: "The play",
+        lines: [
+          { who: "Them", text: "is it pregnancy safe?" },
+          { who: "You", text: "great question and i don't want to eyeball it. one i use has bakuchiol in it, which is worth running by your OB — let me send you the full ingredient list for anything you're eyeing so you and your doctor have the real thing, not my guess 💚" }
+        ],
+        trap: "\"Totally safe!\" about anything medical. That's a health claim, an FTC/FDA exposure, and the fastest way to turn a trust moment into a liability. Facts and the ingredient list only."
+      },
+      {
+        id: "cold-reach",
+        cat: "Cold-ish",
+        q: "You want to reach out to someone who hasn't engaged yet",
+        mechanism: "This is social warming. A name the brain has seen before gets processed as safer. A cold DM to a true stranger fails not because the message is bad but because there's no prior recognition to cushion it.",
+        note: "Before you ever message, engage for real over a week or two — specific comments on their actual content. When you do reach out, the opener is about them. If you couldn't send it with nothing to sell, don't send it.",
+        playLabel: "The play",
+        lines: [
+          { who: "You", text: "okay your ingredient-label rants are my entire personality lately 😂 that post about \"fragrance\" hiding on labels — YES. had to say hi, following along." },
+          { who: "Them", text: "haha thank you!! finally someone gets it" }
+        ],
+        trap: "The same opener sent to twenty people. If it could go to anyone, it reads as sent to everyone — and one screenshot of your copy-paste ends your reputation in that circle."
+      },
+      {
+        id: "obj-price",
+        cat: "Objection",
+        q: "\"It's kind of expensive though…\"",
+        mechanism: "Price is the safest doubt to voice, so it's usually a stand-in for \"I'm not sure it's worth it.\" Validate → isolate → reframe: agree it's an investment, find out if price is really the blocker, then change the reference point from \"vs. drugstore\" to \"vs. what made-fresh actually costs.\"",
+        note: "Never discount-talk or get defensive. Made-to-order small batches with actives at full potency cost more than mass-produced product engineered to survive years in a warehouse. And \"now might not be the time\" is completely acceptable.",
+        playLabel: "The play — isolate, then reframe",
+        lines: [
+          { who: "Them", text: "it's kind of expensive though" },
+          { who: "You", text: "it's not cheap and i won't pretend it is. can i ask — is it the price itself, or not being sure it's worth it yet? totally different answers 💚" },
+          { who: "Them", text: "i guess whether it's worth it" },
+          { who: "You", text: "fair. so it's made fresh to order in tiny batches — you're paying for actives at full strength instead of a formula built to sit on a shelf for three years. that's the cost. if now's not the time though, genuinely no rush" }
+        ],
+        trap: "\"But think what you spend on coffee!\" Everyone's heard it, it's condescending, and it argues the number instead of the value."
+      },
+      {
+        id: "obj-mlm",
+        cat: "Objection",
+        q: "\"Wait… is this one of those MLM / pyramid things?\"",
+        mechanism: "This is a trust test, and your composure is the actual answer. They're watching your reaction more than listening to your words — a flinch or defensive speech confirms their fear; calm honesty disconfirms it faster than any explanation.",
+        note: "Name the skepticism as fair. Be plainly transparent that it's a partner model, and lead with the truth that most people just buy the products and never sell. Under-claim the income side hard.",
+        playLabel: "The play",
+        lines: [
+          { who: "Them", text: "wait is this an MLM 😬" },
+          { who: "You", text: "totally fair to ask, i'd ask too. yeah it's a partner model — but honestly most people just buy the products and never sell a thing, that's completely normal. i share it because i actually use it every day. zero pressure either way, promise" }
+        ],
+        trap: "Any income claim, or painting it as easy money — even to win this moment. It's a trust-killer and a compliance landmine."
+      },
+      {
+        id: "warm-start",
+        cat: "Warm",
+        q: "\"Okay I'm in — what should I even start with?\"",
+        mechanism: "Choice overload kills momentum. Someone ready to buy who gets handed a catalog goes cold. Narrow to one product tied to their stated concern and your real experience.",
+        note: "Anchor to one thing they'll actually feel. Be honest about the edges of your own experience — that honesty is why your recommendation carries weight.",
+        playLabel: "The play — narrow, don't list",
+        lines: [
+          { who: "Them", text: "okay i'm in, where do i even start" },
+          { who: "You", text: "honestly? the hydro serum. it's the one that made me go \"oh.\" my skin was still soft hours later, not that fake-dewy thing gone by lunch. but tell me what your skin actually does day to day and i'll point you better — i'd rather get you the right one than the most expensive one" }
+        ],
+        trap: "Raving about supplements (or anything) you haven't lived with. \"Haven't tried those myself yet, so I won't oversell them\" beats a hollow rave every time."
+      },
+      {
+        id: "biz-curious",
+        cat: "Business",
+        q: "Someone seems curious about becoming a partner too",
+        mechanism: "Diagnosis before prescription. You cannot pitch the opportunity until you know what they're solving for — creative outlet, income, community, and early-timing are four different conversations.",
+        note: "The founding-era U.S. timing is genuinely uncommon and worth naming honestly, but lead with the work, not the upside. Clear eyes come from you telling the truth about effort.",
+        playLabel: "The play — question, then a real next step",
+        lines: [
+          { who: "Them", text: "how do i do what you're doing?" },
+          { who: "You", text: "i'd genuinely love to talk about it — but before i info-dump, what's pulling you toward it? creative thing, extra income, the early-timing? changes everything i'd tell you. the US is brand new so it's a real ground-floor moment, and it's also actual work. wanna hop on a quick call this week and i'll be straight with you about both?" }
+        ],
+        trap: "The comp plan plus \"you'd be SO good at this!!\" in one breath. Curiosity isn't commitment, and over-eagerness reads as recruiting."
+      },
+      {
+        id: "fade-quiet",
+        cat: "Fade",
+        q: "The conversation was going well… then they went quiet",
+        mechanism: "Silence usually means soft-no or just life. \"Just checking in!!\" fails because it's a withdrawal, not a deposit — it asks for attention and gives nothing back. A follow-up that delivers something is a deposit.",
+        note: "One low-pressure, genuinely useful follow-up — then stop. Pre-launch you have the best release valve: \"I'll just tell you when it's actually here.\"",
+        playLabel: "The play — deposit, then release",
+        lines: [
+          { who: "You", text: "no pressure at all — you'd mentioned the sensitive-skin thing so here's that ingredient list i promised 💚 i'll just ping you when it actually launches in the US so it's off your plate till then. and totally fine if the timing's just not it" }
+        ],
+        trap: "The third and fourth \"checking in.\" One useful follow-up, then their silence gets to mean no. Chasing costs you the referral you might've gotten later."
+      }
+    ],
+    arc: [
+      {
+        n: "1",
+        title: "Recognition",
+        goal: "Become a familiar name",
+        body: "Before anything else, they should know who you are — real comments, honest content over weeks, your actual product notes. Move on when: they engage back unprompted."
+      },
+      {
+        n: "2",
+        title: "Real conversation",
+        goal: "Diagnose, don't pitch",
+        body: "An actual exchange, driven by their curiosity, where you ask more than you tell. Move on when: they've named what they actually care about."
+      },
+      {
+        n: "3",
+        title: "Honest fit",
+        goal: "Match — or honestly don't",
+        body: "Only now connect what they told you to a specific product you've used, or the partner side — including \"honestly, this part isn't for you.\" Move on when: they ask a how-do-I-start question themselves."
+      },
+      {
+        n: "4",
+        title: "Their decision",
+        goal: "Remove friction, apply zero pressure",
+        body: "Answer the real question, point them to first access, and let them choose. A yes here is durable because they arrived at it themselves."
+      }
+    ],
+    redlines: [
+      {
+        title: "No health claims",
+        body: "Never say a Ringana product treats, cures, heals, or prevents anything — skincare or supplements. Share your own experience and published ingredient facts, never a medical promise."
+      },
+      {
+        title: "No income promises",
+        body: "Don't imply guaranteed or easy money, and don't dangle founding-partner timing as a payday. Talk about the work honestly."
+      },
+      {
+        title: "Facts from Ringana only",
+        body: "Every product detail, stat, or ingredient claim comes from Ringana's own materials. Unsure? \"Let me check.\" And it's \"no artificial preservatives,\" never a flat \"no preservatives.\""
+      },
+      {
+        title: "No pressure, ever",
+        body: "No fake urgency, no guilt, no chasing. Pre-launch there is genuinely nothing to rush. A no you respect today is a door open at launch."
+      }
+    ],
+    closing: "Talk to people like you're telling a friend a secret — because if it's true, that's exactly what you're doing."
+  },
 
   /* ── FAQs (Know Ringana) ── */
   faqs: [
