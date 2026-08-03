@@ -1228,25 +1228,27 @@ window.FS = window.FS || {};
       if (r.phone) contact.push(esc(r.phone));
       html += '<article class="leads-card' + (r.status === "new" ? " is-new" : "") + '">';
       html += '<div class="leads-card-top">';
-      html += '<div><div class="leads-card-name">' + esc(r.name) + "</div>";
-      html += '<div class="leads-card-meta">' + contact.join(" · ") + "</div></div>";
+      html += '<div class="leads-card-identity">';
+      html += '<div class="leads-card-name">' + esc(r.name) + "</div>";
+      if (contact.length) html += '<div class="leads-card-meta">' + contact.join(" · ") + "</div>";
+      html += "</div>";
       html += '<div class="leads-card-tags"><span class="leads-pill">' + esc(interestLabel(r.interest)) + "</span>";
       html += '<span class="leads-pill soft">' + esc(statusLabel(r.status)) + "</span></div></div>";
-      html += '<div class="leads-card-foot"><span class="leads-card-when">' + esc(when) + "</span>";
+      if (when) html += '<div class="leads-card-when">' + esc(when) + "</div>";
       html += '<div class="leads-card-actions">';
       if (r.status === "new") {
-        html += '<button type="button" class="btn-ghost" data-lead-status="' + esc(r.id) + '" data-status="reached">Mark reached out</button>';
+        html += '<button type="button" class="leads-action is-primary" data-lead-status="' + esc(r.id) + '" data-status="reached">Reached out</button>';
       }
       if (r.status === "reached" || r.status === "new") {
-        html += '<button type="button" class="btn-ghost" data-lead-status="' + esc(r.id) + '" data-status="done">Done</button>';
+        html += '<button type="button" class="leads-action" data-lead-status="' + esc(r.id) + '" data-status="done">Done</button>';
       }
       if (r.status !== "archived") {
-        html += '<button type="button" class="btn-ghost" data-lead-status="' + esc(r.id) + '" data-status="archived">Archive</button>';
+        html += '<button type="button" class="leads-action is-quiet" data-lead-status="' + esc(r.id) + '" data-status="archived">Archive</button>';
       }
       if (r.status === "archived") {
-        html += '<button type="button" class="btn-ghost" data-lead-status="' + esc(r.id) + '" data-status="new">Restore</button>';
+        html += '<button type="button" class="leads-action is-primary" data-lead-status="' + esc(r.id) + '" data-status="new">Restore</button>';
       }
-      html += "</div></div></article>";
+      html += "</div></article>";
     });
     list.innerHTML = html;
   }
