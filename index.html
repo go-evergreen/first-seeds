@@ -20,7 +20,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,400;1,9..144,500&family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/styles.css?v=95">
+<link rel="stylesheet" href="css/styles.css?v=96">
 </head>
 <body>
 
@@ -788,27 +788,31 @@
         <div class="eyebrow">GROWING WITH YOU</div>
         <div class="team-head">
           <h1>Your team</h1>
-          <button type="button" class="team-add-btn" id="teamInviteOpen" aria-expanded="false" aria-controls="teamInvitePop" aria-label="Invite someone to your team">＋</button>
+          <div class="team-invite-wrap">
+            <button type="button" class="team-invite-cue" id="teamInviteOpen" aria-expanded="false" aria-controls="teamInvitePop">
+              <span class="team-invite-cue-text">Share your unique team link</span>
+              <span class="team-invite-cue-arrow" aria-hidden="true">→</span>
+              <span class="team-add-btn" aria-hidden="true">＋</span>
+            </button>
+            <div class="team-invite-pop" id="teamInvitePop" hidden>
+              <div class="team-invite-card" role="dialog" aria-labelledby="teamInviteTitle">
+                <div class="team-invite-card-head">
+                  <div class="live-tag" id="teamInviteTitle">TEAM JOIN LINK</div>
+                  <button type="button" class="team-invite-x" id="teamInviteX" aria-label="Close">×</button>
+                </div>
+                <p class="team-invite-lead">When they sign in with this link, they’re linked to your team.</p>
+                <div class="invite-row">
+                  <input class="invite-input light" id="leaderInviteInput" readonly aria-label="Your team join link">
+                  <button type="button" class="copy-btn" id="leaderCopyInvite">Copy link</button>
+                </div>
+                <p class="invite-explain">Team link — not your lead page (that’s under Leads).</p>
+              </div>
+            </div>
+          </div>
         </div>
         <p class="sec-sub">The people building alongside you — check in, cheer them on, watch the family grow.</p>
 
-        <div class="team-invite-pop" id="teamInvitePop" hidden>
-          <button type="button" class="team-invite-backdrop" id="teamInviteClose" aria-label="Close invite"></button>
-          <div class="team-invite-card" role="dialog" aria-labelledby="teamInviteTitle">
-            <div class="team-invite-card-head">
-              <div>
-                <div class="live-tag" id="teamInviteTitle">TEAM JOIN LINK</div>
-                <p class="team-invite-lead">Share this with someone ready to partner with you in First Seeds. When they sign in, they’re linked to your team.</p>
-              </div>
-              <button type="button" class="team-invite-x" id="teamInviteX" aria-label="Close">×</button>
-            </div>
-            <div class="invite-row">
-              <input class="invite-input light" id="leaderInviteInput" readonly aria-label="Your team join link">
-              <button type="button" class="copy-btn" id="leaderCopyInvite">Copy link</button>
-            </div>
-            <p class="invite-explain">This is your team link — not your lead page (that’s under Leads, for curious people leaving their contact info).</p>
-          </div>
-        </div>
+        <button type="button" class="team-invite-backdrop" id="teamInviteClose" aria-label="Close invite" hidden></button>
 
         <div class="live-card" id="liveTeamGraph" hidden></div>
         <div class="leader-board" id="leaderLists"></div>
@@ -986,18 +990,18 @@
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="js/config.js?v=95"></script>
-<script src="js/supabase-config.js?v=95"></script>
-<script src="js/data.js?v=95"></script>
-<script src="js/content.js?v=95"></script>
-<script src="js/content-vault.js?v=95"></script>
-<script src="js/products.js?v=95"></script>
-<script src="js/plant.js?v=95"></script>
-<script src="js/tree.js?v=95"></script>
-<script src="js/calendar.js?v=95"></script>
-<script src="js/cloud.js?v=95"></script>
-<script src="js/bridge-ui.js?v=95"></script>
-<script src="js/app.js?v=95"></script>
-<script src="js/pwa.js?v=95"></script>
+<script src="js/config.js?v=96"></script>
+<script src="js/supabase-config.js?v=96"></script>
+<script src="js/data.js?v=96"></script>
+<script src="js/content.js?v=96"></script>
+<script src="js/content-vault.js?v=96"></script>
+<script src="js/products.js?v=96"></script>
+<script src="js/plant.js?v=96"></script>
+<script src="js/tree.js?v=96"></script>
+<script src="js/calendar.js?v=96"></script>
+<script src="js/cloud.js?v=96"></script>
+<script src="js/bridge-ui.js?v=96"></script>
+<script src="js/app.js?v=96"></script>
+<script src="js/pwa.js?v=96"></script>
 </body>
 </html>

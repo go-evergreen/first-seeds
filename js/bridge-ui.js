@@ -1426,18 +1426,25 @@ window.FS = window.FS || {};
       if (t.id === "teamInviteOpen") {
         var pop = $("teamInvitePop");
         var openBtn = $("teamInviteOpen");
+        var back = $("teamInviteClose");
         if (pop) {
-          pop.hidden = false;
-          if (openBtn) openBtn.setAttribute("aria-expanded", "true");
-          var copyFocus = $("leaderCopyInvite");
-          if (copyFocus) setTimeout(function () { try { copyFocus.focus(); } catch (e) {} }, 40);
+          var opening = pop.hidden;
+          pop.hidden = !opening;
+          if (back) back.hidden = !opening;
+          if (openBtn) openBtn.setAttribute("aria-expanded", opening ? "true" : "false");
+          if (opening) {
+            var copyFocus = $("leaderCopyInvite");
+            if (copyFocus) setTimeout(function () { try { copyFocus.focus(); } catch (e) {} }, 40);
+          }
         }
         return;
       }
       if (t.id === "teamInviteClose" || t.id === "teamInviteX") {
         var popClose = $("teamInvitePop");
         var openBtn2 = $("teamInviteOpen");
+        var back2 = $("teamInviteClose");
         if (popClose) popClose.hidden = true;
+        if (back2) back2.hidden = true;
         if (openBtn2) {
           openBtn2.setAttribute("aria-expanded", "false");
           openBtn2.focus();
