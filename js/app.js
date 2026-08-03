@@ -136,7 +136,7 @@
      Full path:    roots → ground → grove → tree → plant → tend → done */
   function nextAfter(id) {
     if (isStarter()) {
-      return { roots: "ground", ground: "grove", grove: "tend", tend: "done" }[id];
+      return { roots: "ground", ground: "grove", grove: "done" }[id];
     }
     return { roots: "ground", ground: "grove", grove: "tree", tree: "plant", plant: "tend", tend: "done" }[id];
   }
@@ -166,8 +166,14 @@
     return sectionChainComplete(priorSectionId(id));
   }
 
+  function isContentSurface(id) {
+    return id === "tend" || id === "calendar" || id === "curiosity-photos" ||
+      id === "content-vault" || id === "content-stories" || id === "content-week";
+  }
+
   function isModuleUnlocked(id) {
-    if (!id || id === "welcome" || id === "done" || id === "calendar" || id === "leader" || id === "know" || id === "tend" || id === "products" || id === "talk" || id === "curiosity-photos" || id === "leads") return true;
+    if (isContentSurface(id) && !isFull()) return false;
+    if (!id || id === "welcome" || id === "done" || id === "calendar" || id === "leader" || id === "know" || id === "tend" || id === "products" || id === "talk" || id === "curiosity-photos" || id === "content-vault" || id === "content-stories" || id === "content-week" || id === "leads") return true;
     if (!sectionVisible(id)) return false;
     if (softUnlocked(id)) return true;
     if (state.done[id]) return true;
@@ -654,8 +660,8 @@
     if (fullBtn) fullBtn.classList.toggle("on", isFull());
     var hint = document.getElementById("hubModeHint");
     if (hint) {
-      if (isStarter()) hint.textContent = "Calm 4-step path. Switch to Full runway anytime for the tree, Post Studio, and Team.";
-      else if (isFull()) hint.textContent = "All six sections unlocked, plus Team in the bottom nav. Switch to Getting started for a simpler view — your progress stays.";
+      if (isStarter()) hint.textContent = "Getting started keeps the path light: story, page, grove, finish. Content and Team unlock on Full runway.";
+      else if (isFull()) hint.textContent = "All six sections unlocked, plus Content and Team in the bottom nav. Switch to Getting started for a simpler view — your progress stays.";
       else hint.textContent = "";
     }
     updateLeadPageSettingUI();
@@ -700,6 +706,8 @@
     state.settings.hubMode = mode;
     /* if currently on a section hidden in new mode, bounce to welcome */
     if (state.active === "leader" && mode === "starter") {
+      state.active = "welcome";
+    } else if (mode === "starter" && isContentSurface(state.active)) {
       state.active = "welcome";
     } else if (state.active !== "welcome" && state.active !== "done" && !sectionVisible(state.active)) {
       state.active = "welcome";
@@ -1467,7 +1475,7 @@
       renderNav();
     }
     var tab = "";
-    if (state.active === "tend" || state.active === "calendar" || state.active === "curiosity-photos") tab = "content";
+    if (state.active === "tend" || state.active === "calendar" || state.active === "curiosity-photos" || state.active === "content-vault" || state.active === "content-stories" || state.active === "content-week") tab = "content";
     else if (state.active === "know" || state.active === "products" || state.active === "talk") tab = "know";
     else if (state.active === "leader") tab = "team";
     else if (state.active === "leads") tab = "leads";
@@ -1842,6 +1850,15 @@
     }
     if (state.active === "curiosity-photos" && window.FS.BridgeUI && window.FS.BridgeUI.renderCuriosityPhotos) {
       window.FS.BridgeUI.renderCuriosityPhotos();
+    }
+    if (state.active === "content-vault" && window.FS.BridgeUI && window.FS.BridgeUI.renderContentVault) {
+      window.FS.BridgeUI.renderContentVault();
+    }
+    if (state.active === "content-stories" && window.FS.BridgeUI && window.FS.BridgeUI.renderContentStories) {
+      window.FS.BridgeUI.renderContentStories();
+    }
+    if (state.active === "content-week" && window.FS.BridgeUI && window.FS.BridgeUI.renderContentWeek) {
+      window.FS.BridgeUI.renderContentWeek();
     }
     if (state.active !== "curiosity-photos" && window.FS.BridgeUI && window.FS.BridgeUI.closeCuriosityLightbox) {
       window.FS.BridgeUI.closeCuriosityLightbox();
@@ -3103,6 +3120,20 @@
       var goto = t.getAttribute("data-goto");
       if (goto === "calendar") goto = "tend";
       if (goto === "leader" && !isFull()) return;
+      if (isContentSurface(goto) && !isFull()) {
+        var lockEl = document.getElementById("lockToast");
+        if (lockEl) {
+          lockEl.hidden = false;
+          lockEl.innerHTML =
+            '<div class="lock-toast-inner">' +
+            "<p><strong>Content</strong> unlocks on Full runway — calendar, post vault, stories, and photos.</p>" +
+            '<div class="lock-toast-actions">' +
+            '<button type="button" class="btn" id="modeFull">Unlock Full runway →</button>' +
+            '<button type="button" class="lock-toast-x" id="lockToastClose" aria-label="Dismiss">×</button>' +
+            "</div></div>";
+        }
+        return;
+      }
       if (goto === "products") {
         ensureProductBrowse();
         state.productBrowse.category = null;
@@ -3121,6 +3152,13 @@
         save(); renderNav(); renderPanels();
         return;
       }
+      if (goto === "content-vault" || goto === "content-stories" || goto === "content-week") {
+        hideLockToast();
+        closeHubMenu();
+        state.active = goto;
+        save(); renderNav(); renderPanels();
+        return;
+      }
       if (goto === "talk") {
         hideLockToast();
         closeHubMenu();
@@ -3129,8 +3167,8 @@
         return;
       }
       if (goto === "leads" && usesCustomLanding()) return;
-      if (goto !== "welcome" && goto !== "done" && goto !== "calendar" && goto !== "leader" && goto !== "know" && goto !== "tend" && goto !== "products" && goto !== "talk" && goto !== "curiosity-photos" && goto !== "leads" && !sectionVisible(goto)) return;
-      if (goto !== "welcome" && goto !== "done" && goto !== "calendar" && goto !== "leader" && goto !== "know" && goto !== "tend" && goto !== "products" && goto !== "talk" && goto !== "curiosity-photos" && goto !== "leads" && !isModuleUnlocked(goto)) {
+      if (goto !== "welcome" && goto !== "done" && goto !== "calendar" && goto !== "leader" && goto !== "know" && goto !== "tend" && goto !== "products" && goto !== "talk" && goto !== "curiosity-photos" && goto !== "content-vault" && goto !== "content-stories" && goto !== "content-week" && goto !== "leads" && !sectionVisible(goto)) return;
+      if (goto !== "welcome" && goto !== "done" && goto !== "calendar" && goto !== "leader" && goto !== "know" && goto !== "tend" && goto !== "products" && goto !== "talk" && goto !== "curiosity-photos" && goto !== "content-vault" && goto !== "content-stories" && goto !== "content-week" && goto !== "leads" && !isModuleUnlocked(goto)) {
         showLockToast(goto);
         return;
       }
@@ -3416,7 +3454,7 @@
         if (id === "leads" && usesCustomLanding()) {
           id = "ground";
         }
-        if (id === "curiosity-photos" || id === "products" || id === "talk" || id === "tend" || id === "know") {
+        if (id === "curiosity-photos" || id === "products" || id === "talk" || id === "tend" || id === "know" || id === "content-vault" || id === "content-stories" || id === "content-week") {
           hideLockToast();
           state.active = id;
           save();

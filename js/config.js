@@ -25,13 +25,13 @@ window.FS.CONFIG = {
       label: "Getting started",
       badge: "Getting started",
       tag: "Soft start",
-      desc: "Four calm steps: your story, a simple page to share, who you'd tell first, and a content calendar with post ideas. Great if you're new — or you just want room to breathe."
+      desc: "Four calm steps: your story, a simple page to share, who you'd tell first, and a clear finish. Great if you're new — or you just want room to breathe. Content tools unlock on Full runway."
     },
     full: {
       label: "Full runway",
       badge: "Full runway",
       tag: "All in",
-      desc: "Everything in Getting started, plus a dream-team sketch, Post Studio (five post types with drafts), and Team tools — all the way to launch."
+      desc: "Everything in Getting started, plus Content (calendar, post vault, stories, photos), a dream-team sketch, Post Studio, and Team tools — all the way to launch."
     }
   },
 
@@ -68,6 +68,14 @@ window.FS.CONFIG = {
     {
       term: "Learn the products",
       def: "A searchable product library inside Learn — skincare, body, hair, baby, and supplements."
+    },
+    {
+      term: "Post vault",
+      def: "Suggested feed posts with hooks, slides, and captions. Each card has Type (Carousel/Reel/Story…) and Promoting (product, values, business…)."
+    },
+    {
+      term: "Content",
+      def: "Your calendar plus This week, Post vault, Story sequences, and Grab a photo. Plan here — nothing auto-sends."
     },
     {
       term: "Talking fresh",

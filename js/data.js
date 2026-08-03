@@ -13,7 +13,7 @@ window.FS.SECTIONS = [
   { id: "grove",  label: "Map Your Grove",       sub: "customers · partners optional", modes: ["starter", "full"] },
   { id: "tree",   label: "Grow Your Tree",       sub: "your future team", modes: ["full"] },
   { id: "plant",  label: "Start Planting",       sub: "your first seeds", modes: ["full"] },
-  { id: "tend",   label: "Content",              sub: "calendar, drafts & photos", modes: ["starter", "full"] }
+  { id: "tend",   label: "Content",              sub: "calendar, drafts & photos", modes: ["full"] }
 ];
 
 window.FS.DAY_NAMES = ["SUN","MON","TUE","WED","THU","FRI","SAT"];

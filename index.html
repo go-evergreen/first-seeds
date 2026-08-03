@@ -20,7 +20,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,400;1,9..144,500&family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/styles.css?v=87">
+<link rel="stylesheet" href="css/styles.css?v=89">
 </head>
 <body>
 
@@ -55,7 +55,7 @@
       <span class="bottom-nav-ico" aria-hidden="true">🌱</span>
       <span>Sprout</span>
     </button>
-    <button type="button" class="bottom-nav-btn" data-goto="tend" data-tab="content">
+    <button type="button" class="bottom-nav-btn full-only" data-goto="tend" data-tab="content">
       <span class="bottom-nav-ico" aria-hidden="true">📝</span>
       <span>Content</span>
     </button>
@@ -416,7 +416,7 @@
         </div>
 
         <div class="btn-row">
-          <button class="btn waiting" data-complete="grove" data-ready-starter="Grove mapped → Open Content" data-ready-full="Grove mapped → Grow your tree" data-ready="Grove mapped → Grow your tree" data-wait="Add 5+ customer names and tap your first chats">Add 5+ customer names and tap your first chats</button>
+          <button class="btn waiting" data-complete="grove" data-ready-starter="Grove mapped → Finish runway" data-ready-full="Grove mapped → Grow your tree" data-ready="Grove mapped → Grow your tree" data-wait="Add 5+ customer names and tap your first chats">Add 5+ customer names and tap your first chats</button>
           <span class="save-flash" data-flash="grove">Saved ✓</span>
         </div>
       </section>
@@ -456,7 +456,7 @@
 
         <p class="body-p plant-trio-note">To continue: one <strong>curiosity post</strong>, one <strong>helpful share</strong> (behind the scenes, honest note, or values), and one <strong>soft invite</strong>.</p>
 
-        <p class="plant-footnote">Ready-made drafts live under <button type="button" class="inline-link" data-goto="tend">Content → Post ideas</button>. Facts in <button type="button" class="inline-link" data-goto="know">Learn</button>.</p>
+        <p class="plant-footnote">Ready-made drafts live under <button type="button" class="inline-link" data-goto="content-vault">Content → Post vault</button>. Facts in <button type="button" class="inline-link" data-goto="know">Learn</button>.</p>
 
         <div class="btn-row">
           <button class="btn waiting" data-complete="plant" data-ready="Trio drafted → Open Content" data-wait="Draft a curiosity post, a helpful share, and a soft invite to continue">Draft a curiosity post, a helpful share, and a soft invite to continue</button>
@@ -465,10 +465,10 @@
       </section>
 
       <!-- 06 TEND = CONTENT CALENDAR -->
-      <section class="panel" id="panel-tend" data-modes="starter full">
+      <section class="panel" id="panel-tend" data-modes="full">
         <div class="sec-num" id="tendNum">06</div>
         <h1>Content</h1>
-        <p class="sec-sub">Your calendar, ready drafts, and photos — plan it here, post it yourself. Nothing auto-sends.</p>
+        <p class="sec-sub">Your calendar plus suggested posts, stories, and photos — plan it here, post it yourself. Nothing auto-sends.</p>
 
         <div class="cal-board">
           <div class="cal-setup" id="calendarSetup" hidden></div>
@@ -490,27 +490,53 @@
           <div class="cal-day-detail" id="calendarDayDetail"></div>
         </div>
 
+        <button type="button" class="curio-photos-cta" data-goto="content-week">
+          <span class="curio-photos-cta-eyebrow">Suggested</span>
+          <span class="curio-photos-cta-title">This week's plan</span>
+          <span class="curio-photos-cta-sub">A calm rotation from the 8-week calendar — a few posts, not a fire hose.</span>
+          <span class="curio-photos-cta-go">See this week →</span>
+        </button>
+
+        <button type="button" class="curio-photos-cta" data-goto="content-vault">
+          <span class="curio-photos-cta-eyebrow">Post vault</span>
+          <span class="curio-photos-cta-title">Feed posts &amp; captions</span>
+          <span class="curio-photos-cta-sub">Carousels, Reels, singles — browse by what you're promoting, then rewrite in your voice.</span>
+          <span class="curio-photos-cta-go">Open vault →</span>
+        </button>
+
+        <button type="button" class="curio-photos-cta" data-goto="content-stories">
+          <span class="curio-photos-cta-eyebrow">Stories</span>
+          <span class="curio-photos-cta-title">Story sequences</span>
+          <span class="curio-photos-cta-sub">38 curiosity-first sequences — frame 1 is the whole hook.</span>
+          <span class="curio-photos-cta-go">Open stories →</span>
+        </button>
+
         <button type="button" class="curio-photos-cta" data-goto="curiosity-photos">
           <span class="curio-photos-cta-eyebrow">Photos</span>
           <span class="curio-photos-cta-title">Grab a photo</span>
-          <span class="curio-photos-cta-sub">Circle previews for curiosity posts — tap to open, press and hold to save.</span>
+          <span class="curio-photos-cta-sub">Circle previews — tap to open, press and hold to save.</span>
           <span class="curio-photos-cta-go">Open photos →</span>
         </button>
-
-        <div class="cal-library" id="calendarLibrary">
-          <div class="cal-library-head">
-            <h2 class="cal-library-title">Post ideas</h2>
-            <p class="cal-library-intro">Ready-to-adapt drafts. Tap a day on the calendar above, open an idea, rewrite it in your voice, then add it to that day.</p>
-            <div class="cal-library-target" id="libraryTarget" hidden></div>
-          </div>
-          <div class="cal-library-tabs" id="libraryTabs"></div>
-          <div class="cal-library-list" id="libraryList"></div>
-        </div>
 
         <div class="btn-row">
           <button class="btn waiting" data-complete="tend" data-ready="Content humming → Finish runway" data-wait="Mark 3 cards done to continue">Mark 3 cards done to continue</button>
           <span class="save-flash" data-flash="tend">Saved ✓</span>
         </div>
+      </section>
+
+      <!-- CONTENT · THIS WEEK -->
+      <section class="panel" id="panel-content-week">
+        <div class="vault-panel" id="contentWeekRoot"></div>
+      </section>
+
+      <!-- CONTENT · POST VAULT -->
+      <section class="panel" id="panel-content-vault">
+        <div class="vault-panel" id="contentVaultRoot"></div>
+      </section>
+
+      <!-- CONTENT · STORY SEQUENCES -->
+      <section class="panel" id="panel-content-stories">
+        <div class="vault-panel" id="contentStoriesRoot"></div>
       </section>
 
       <!-- Calendar card editor (slide-over) -->
@@ -629,7 +655,7 @@
         <details class="know-acc" id="know-product" data-know-sec="product">
           <summary class="know-acc-sum">What makes the products different <span class="know-acc-chev" aria-hidden="true"></span></summary>
           <div class="know-acc-body">
-            <p class="body-p">It's not one slogan — it's a stack of intentional decisions. Ready-to-adapt posts live in Content → Post ideas (and Post Studio on Full runway).</p>
+            <p class="body-p">It's not one slogan — it's a stack of intentional decisions. Ready-to-adapt posts live in Content → Post vault (and Post Studio on Full runway).</p>
             <div id="productKnowList" class="fact-grid"></div>
           </div>
         </details>
@@ -966,17 +992,18 @@
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="js/config.js?v=87"></script>
-<script src="js/supabase-config.js?v=87"></script>
-<script src="js/data.js?v=87"></script>
-<script src="js/content.js?v=87"></script>
-<script src="js/products.js?v=87"></script>
-<script src="js/plant.js?v=87"></script>
-<script src="js/tree.js?v=87"></script>
-<script src="js/calendar.js?v=87"></script>
-<script src="js/cloud.js?v=87"></script>
-<script src="js/bridge-ui.js?v=87"></script>
-<script src="js/app.js?v=87"></script>
-<script src="js/pwa.js?v=87"></script>
+<script src="js/config.js?v=89"></script>
+<script src="js/supabase-config.js?v=89"></script>
+<script src="js/data.js?v=89"></script>
+<script src="js/content.js?v=89"></script>
+<script src="js/content-vault.js?v=89"></script>
+<script src="js/products.js?v=89"></script>
+<script src="js/plant.js?v=89"></script>
+<script src="js/tree.js?v=89"></script>
+<script src="js/calendar.js?v=89"></script>
+<script src="js/cloud.js?v=89"></script>
+<script src="js/bridge-ui.js?v=89"></script>
+<script src="js/app.js?v=89"></script>
+<script src="js/pwa.js?v=89"></script>
 </body>
 </html>

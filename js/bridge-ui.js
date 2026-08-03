@@ -369,6 +369,71 @@ window.FS = window.FS || {};
     }).join("");
   }
 
+  function vaultMeta() {
+    return window.FS.CONTENT_VAULT || { formats: [], promoting: [], contentTypes: [], posts: [], stories: [], hookBank: [], weekPlan: [] };
+  }
+
+  function renderFormatOptions(selected) {
+    var opts = vaultMeta().formats || [];
+    var html = '<option value="">—</option>';
+    opts.forEach(function (f) {
+      html += '<option value="' + esc(f.id) + '"' + (f.id === selected ? " selected" : "") + ">" + esc(f.label) + "</option>";
+    });
+    return html;
+  }
+
+  function renderPromotingOptions(selected) {
+    var opts = vaultMeta().promoting || [];
+    var html = '<option value="">—</option>';
+    opts.forEach(function (f) {
+      html += '<option value="' + esc(f.id) + '"' + (f.id === selected ? " selected" : "") + ">" + esc(f.label) + "</option>";
+    });
+    return html;
+  }
+
+  function promotingLabel(id) {
+    var opts = vaultMeta().promoting || [];
+    for (var i = 0; i < opts.length; i++) if (opts[i].id === id) return opts[i].label;
+    return id || "";
+  }
+
+  function formatLabel(id) {
+    var opts = vaultMeta().formats || [];
+    for (var i = 0; i < opts.length; i++) if (opts[i].id === id) return opts[i].label;
+    return id || "";
+  }
+
+  function contentTypeToCalType(ct) {
+    if (ct === "soft_invite") return "soft_door";
+    if (ct === "review") return "product_curious";
+    if (ct === "personal") return "values_flag";
+    if (ct === "myth_bust") return "curtain";
+    if (ct === "engagement") return "open_loop";
+    return "honest_note";
+  }
+
+  function buildVaultDraft(post) {
+    if (!post) return "";
+    var parts = [];
+    if (post.hook) parts.push("HOOK\n" + post.hook);
+    if (post.altHooks && post.altHooks.length) {
+      parts.push("ALT HOOKS\n" + post.altHooks.map(function (h) { return "• " + h; }).join("\n"));
+    }
+    if (post.slides && post.slides.length) {
+      parts.push("SLIDES\n" + post.slides.map(function (s, i) { return (i + 1) + ". " + s; }).join("\n"));
+    }
+    if (post.onScreen && post.onScreen.length) {
+      parts.push("ON-SCREEN\n" + post.onScreen.join("\n"));
+    }
+    if (post.frames && post.frames.length) {
+      parts.push("FRAMES\n" + post.frames.map(function (s, i) { return (i + 1) + ". " + s; }).join("\n"));
+    }
+    if (post.caption) parts.push("CAPTION\n" + post.caption);
+    if (post.keywords && post.keywords.length) parts.push("KEYWORDS · " + post.keywords.join(", "));
+    if (post.whyFrame1) parts.push("WHY FRAME 1 WORKS\n" + post.whyFrame1);
+    return parts.join("\n\n") || post.body || post.preview || "";
+  }
+
   function chipClass(it) {
     var cat = it.category || "content";
     var st = it.status || "todo";
@@ -446,7 +511,7 @@ window.FS = window.FS || {};
       "</div>" +
       (chips
         ? '<div class="cal-day-detail-chips">' + chips + "</div>"
-        : '<p class="cal-day-detail-empty">Nothing on this day yet — add a card or pull one from Post ideas.</p>');
+        : '<p class="cal-day-detail-empty">Nothing on this day yet — add a card or open the Post vault.</p>');
   }
 
   function renderCalendar() {
@@ -497,7 +562,7 @@ window.FS = window.FS || {};
                 "<li><strong>Week 3</strong> — Values + reach out to people you listed</li>" +
                 "<li><strong>Week 4</strong> — Soft invite + follow-ups (with rest days mixed in)</li>" +
                 "</ol>" +
-                "<p>Or start blank and pull ready drafts from <em>Post ideas</em> below.</p>" +
+                "<p>Or start blank and pull ready drafts from the <em>Post vault</em>.</p>" +
                 "</div>")
               : ('<div class="cal-setup-bar">' +
                 '<span class="cal-setup-mode">' + (cadenceEnabled(state) ? "Suggested month is on" : "Blank calendar") + "</span>" +
@@ -507,7 +572,7 @@ window.FS = window.FS || {};
                 '<p class="cal-setup-hint" style="margin-top:8px">' +
                 (cadenceEnabled(state)
                   ? "Soft bars on empty days are suggestions — tap the day, then the chip below to keep it."
-                  : "Tap a day, then ＋ Add — or pull a ready draft from Post ideas.") +
+                  : "Tap a day, then ＋ Add — or open This week / Post vault.") +
                 "</p>")) +
             "</div>")
           : "") +
@@ -617,8 +682,9 @@ window.FS = window.FS || {};
   function renderLibrary() {
     var tabs = $("libraryTabs");
     var list = $("libraryList");
+    if (!tabs || !list) return; /* Post ideas library replaced by Content vault CTAs */
     var target = $("libraryTarget");
-    if (!tabs || !list || !getState) return;
+    if (!getState) return;
     var st = getState();
     var buckets = Cal.libraryBuckets();
     var active = st.data.libraryTab || "hooks";
@@ -667,7 +733,7 @@ window.FS = window.FS || {};
       "</div>" +
       '<p class="eyebrow">FOR YOUR CURIOSITY POSTS</p>' +
       '<h1 class="curio-photos-title">Curiosity photos</h1>' +
-      '<p class="curio-photos-intro">Tap a circle to open the full photo. Press and hold the image to save it to your camera roll — then pair it with a curiosity post from Post ideas.</p>';
+      '<p class="curio-photos-intro">Tap a circle to open the full photo. Press and hold the image to save it to your camera roll — then pair it with a post from the vault.</p>';
 
     if (!list.length) {
       html += '<p class="cal-lib-hint">No photos yet — check back soon.</p>';
@@ -736,6 +802,10 @@ window.FS = window.FS || {};
   }
 
   function openLibraryIdea(bucketId, itemId) {
+    if (bucketId === "vault" || findVaultPost(itemId)) {
+      openVaultIdea(itemId);
+      return;
+    }
     var st = getState();
     var lib = libraryItem(bucketId, itemId);
     if (!st || !lib) return;
@@ -750,70 +820,17 @@ window.FS = window.FS || {};
       imageId: lib.imageId || "",
       image: lib.image || "",
       alt: lib.alt || "",
-      pairsWith: lib.pairsWith || ""
+      pairsWith: lib.pairsWith || "",
+      format: lib.format || "",
+      promoting: lib.promoting || ""
     };
     persist();
-    renderLibraryEditor();
+    renderVaultEditor();
     openCalSheet();
   }
 
   function renderLibraryEditor() {
-    var detail = $("calendarDetail");
-    var titleEl = $("calSheetTitle");
-    var st = getState();
-    if (!detail || !st || !st.data.libraryEditing) return;
-    var ed = st.data.libraryEditing;
-    var meta = Cal.typeMeta ? Cal.typeMeta(ed.type) : null;
-    var resolved = ed.imageId && Cal.resolveCuriosityImage
-      ? Cal.resolveCuriosityImage(ed.imageId)
-      : null;
-    var fullSrc = (resolved && resolved.src) || ed.image || "";
-    var alt = (resolved && resolved.alt) || ed.alt || ed.title || "";
-    setSheetKicker(ed.imageId ? "Photo" : ((meta && meta.label) || "Post idea"));
-    if (titleEl) titleEl.textContent = ed.title || "Post idea";
-
-    var html = "";
-    if (fullSrc) {
-      html += '<figure class="cal-lib-sheet-figure">';
-      html += '<img class="cal-lib-sheet-img" src="' + esc(fullSrc) + '" alt="' + esc(alt) + '" loading="eager" decoding="async">';
-      if (ed.pairsWith) html += '<figcaption class="cal-lib-sheet-cap">Pairs with: ' + esc(ed.pairsWith) + "</figcaption>";
-      html += "</figure>";
-    }
-    html +=
-      '<label class="field"><span class="field-label">Title</span>' +
-        '<input type="text" id="libTitle" class="cal-input" placeholder="Optional short label" value="' + esc(ed.title || "") + '"></label>' +
-      '<label class="field"><span class="field-label">Full draft</span>' +
-        '<textarea id="libDraft" rows="10" placeholder="Rewrite until it sounds like you…">' + esc(ed.body || "") + "</textarea>" +
-        '<span class="cal-lib-sheet-hint">Edits stay here until you add this to a day — then you can keep refining on the calendar card.</span></label>' +
-      '<p class="cal-lib-sheet-target">Will add to <strong>' + esc(selectedDayLabel(st)) + '</strong>. Tap another day on the calendar first if you want a different date.</p>' +
-      '<div class="cal-sheet-actions">' +
-        '<button type="button" class="btn" data-lib-commit>Add to day</button>' +
-        '<button type="button" class="btn-ghost" data-cal-save>Close</button>' +
-      "</div>";
-    detail.innerHTML = html;
-
-    var titleIn = $("libTitle");
-    var draftIn = $("libDraft");
-    if (titleIn) {
-      titleIn.addEventListener("input", function () {
-        var cur = getState();
-        if (!cur || !cur.data.libraryEditing) return;
-        cur.data.libraryEditing.title = titleIn.value;
-        if (titleEl) titleEl.textContent = titleIn.value || "Post idea";
-        persist();
-      });
-    }
-    if (draftIn) {
-      draftIn.addEventListener("input", function () {
-        var cur = getState();
-        if (!cur || !cur.data.libraryEditing) return;
-        cur.data.libraryEditing.body = draftIn.value;
-        persist();
-      });
-      setTimeout(function () {
-        try { draftIn.focus(); draftIn.setSelectionRange(0, 0); } catch (e) {}
-      }, 50);
-    }
+    renderVaultEditor();
   }
 
   function commitLibraryIdea() {
@@ -824,6 +841,10 @@ window.FS = window.FS || {};
     var draftIn = $("libDraft");
     if (titleIn) ed.title = titleIn.value;
     if (draftIn) ed.body = draftIn.value;
+    var fmtIn = $("libFormat");
+    var promIn = $("libPromoting");
+    if (fmtIn) ed.format = fmtIn.value;
+    if (promIn) ed.promoting = promIn.value;
     var dateAdd = st.data.calendarSelected || Cal.ymd(new Date());
     var image = ed.image || "";
     if (!image && ed.imageId && Cal.resolveCuriosityImage) {
@@ -836,7 +857,10 @@ window.FS = window.FS || {};
       title: ed.title || "",
       draft: ed.body || "",
       image: image,
-      imageId: ed.imageId || ""
+      imageId: ed.imageId || "",
+      format: ed.format || "",
+      promoting: ed.promoting || "",
+      vaultId: ed.vaultId || ""
     });
   }
 
@@ -911,8 +935,14 @@ window.FS = window.FS || {};
       html += "</figure>";
     }
     html +=
-      '<label class="field"><span class="field-label">Type</span>' +
-        '<select id="calType" class="cal-select">' + renderTypeOptions(item.type) + "</select></label>" +
+      '<div class="vault-field-row">' +
+        '<label class="field"><span class="field-label">Type</span>' +
+          '<select id="calType" class="cal-select">' + renderTypeOptions(item.type) + "</select></label>" +
+        '<label class="field"><span class="field-label">Promoting</span>' +
+          '<select id="calPromoting" class="cal-select">' + renderPromotingOptions(item.promoting || "") + "</select></label>" +
+      "</div>" +
+      '<label class="field"><span class="field-label">Format</span>' +
+        '<select id="calFormat" class="cal-select">' + renderFormatOptions(item.format || "") + "</select></label>" +
       (isOutreach || item.person || item.type === "personal"
         ? '<label class="field"><span class="field-label">Who</span>' +
           '<input type="text" id="calPerson" class="cal-input" placeholder="Name…" value="' + esc(item.person || "") + '"></label>'
@@ -962,6 +992,18 @@ window.FS = window.FS || {};
       it.category = meta.category;
       if (!(it.draft || "").trim()) it.draft = Cal.draftFor(it.type, st.data, date);
       touch(true);
+    });
+    var fmtEl = $("calFormat");
+    if (fmtEl) fmtEl.addEventListener("change", function () {
+      var it = itemRow(); if (!it) return;
+      it.format = fmtEl.value;
+      touch(false);
+    });
+    var promEl = $("calPromoting");
+    if (promEl) promEl.addEventListener("change", function () {
+      var it = itemRow(); if (!it) return;
+      it.promoting = promEl.value;
+      touch(false);
     });
     ["calPerson", "calTitle"].forEach(function (id) {
       var el = $(id);
@@ -1178,6 +1220,21 @@ window.FS = window.FS || {};
         if (sb) sb.click();
       }
     });
+    document.addEventListener("change", function (e) {
+      var t = e.target;
+      if (!t) return;
+      if (t.hasAttribute("data-vault-format") || t.hasAttribute("data-vault-promoting")) {
+        var id = t.getAttribute("data-vault-format") || t.getAttribute("data-vault-promoting");
+        var st = getState();
+        if (!st.data.vaultOverrides) st.data.vaultOverrides = {};
+        var cur = st.data.vaultOverrides[id] || {};
+        if (t.hasAttribute("data-vault-format")) cur.format = t.value;
+        if (t.hasAttribute("data-vault-promoting")) cur.promoting = t.value;
+        st.data.vaultOverrides[id] = cur;
+        persist();
+      }
+    });
+
     document.addEventListener("click", async function (e) {
       var t = e.target.closest(
         "#authOpenBtn,#authCloseBtn,#authSubmitBtn,#authCreateBtn,#authSignOutBtn,#railCopyInvite,#leaderCopyInvite,#authCopyInvite," +
@@ -1185,11 +1242,30 @@ window.FS = window.FS || {};
         "[data-cal-day],[data-cal-select],[data-cal-status],[data-cal-swap],[data-cal-week],[data-cal-nav],[data-cal-view],[data-cal-add],[data-cal-clear]," +
         "[data-cal-new],[data-cal-edit],[data-cal-item],[data-cal-accept],[data-cal-cadence],[data-cal-setup-toggle],[data-cal-save],[data-cal-delete]," +
         "[data-lib-tab],[data-lib-open],[data-lib-commit],[data-lib-add],[data-curio-open]," +
+        "[data-vault-open],[data-vault-lane],[data-vault-week]," +
         "#curiosityLightboxClose,#curiosityLightboxX,#calSheetClose,#calSheetX," +
         "#leadsSignInBtn,#leadsCopyLink,#leadsPageSettingsBtn,#leadsPageSettingsSave,[data-leads-filter],[data-lead-status]"
       );
       if (!t) return;
 
+      if (t.hasAttribute("data-vault-open")) {
+        openVaultIdea(t.getAttribute("data-vault-open"));
+        return;
+      }
+      if (t.hasAttribute("data-vault-lane")) {
+        var vb = ensureVaultBrowse("vault");
+        vb.lane = t.getAttribute("data-vault-lane") || "all";
+        persist();
+        renderContentVault();
+        return;
+      }
+      if (t.hasAttribute("data-vault-week")) {
+        var stW = getState();
+        stW.data.vaultWeekIndex = parseInt(t.getAttribute("data-vault-week"), 10) || 1;
+        persist();
+        renderContentWeek();
+        return;
+      }
       if (t.id === "authOpenBtn") { openAuth(true); return; }
       if (t.id === "leadsSignInBtn") { openAuth(true); return; }
       if (t.id === "leadsCopyLink") {
@@ -1639,6 +1715,301 @@ window.FS = window.FS || {};
     });
   }
 
+  function ensureVaultBrowse(kind) {
+    var st = getState();
+    if (!st.data.vaultBrowse) st.data.vaultBrowse = {};
+    if (!st.data.vaultBrowse[kind]) {
+      st.data.vaultBrowse[kind] = { q: "", format: "", promoting: "", lane: kind === "stories" ? "stories" : "all" };
+    }
+    return st.data.vaultBrowse[kind];
+  }
+
+  function findVaultPost(id) {
+    var V = vaultMeta();
+    var i;
+    for (i = 0; i < (V.posts || []).length; i++) if (V.posts[i].id === id) return V.posts[i];
+    for (i = 0; i < (V.stories || []).length; i++) if (V.stories[i].id === id) return V.stories[i];
+    return null;
+  }
+
+  function vaultCardHtml(post, source) {
+    var needs = (post.verify || []).some(function (v) { return v.status === "needs_check"; });
+    var html = '<article class="vault-card">';
+    html += '<button type="button" class="vault-card-main" data-vault-open="' + esc(post.id) + '" data-vault-source="' + esc(source) + '">';
+    html += '<div class="vault-card-top">';
+    html += '<span class="vault-card-id">' + esc(post.id) + "</span>";
+    if (needs) html += '<span class="vault-verify-chip">Check facts</span>';
+    html += "</div>";
+    html += '<h3 class="vault-card-title">' + esc(post.title) + "</h3>";
+    html += '<p class="vault-card-hook">' + esc(post.hook || post.preview || "") + "</p>";
+    html += '<span class="vault-card-open">Open →</span>';
+    html += "</button>";
+    html += '<div class="vault-card-meta">';
+    html += '<label class="vault-mini-field"><span>Type</span><select class="cal-select vault-inline-select" data-vault-format="' + esc(post.id) + '" data-vault-source="' + esc(source) + '">' +
+      renderFormatOptions(post.format || "") + "</select></label>";
+    html += '<label class="vault-mini-field"><span>Promoting</span><select class="cal-select vault-inline-select" data-vault-promoting="' + esc(post.id) + '" data-vault-source="' + esc(source) + '">' +
+      renderPromotingOptions(post.promoting || "") + "</select></label>";
+    html += "</div></article>";
+    return html;
+  }
+
+  function filterVaultList(list, browse) {
+    var q = (browse.q || "").trim().toLowerCase();
+    return (list || []).filter(function (p) {
+      if (browse.format && p.format !== browse.format) return false;
+      if (browse.promoting && p.promoting !== browse.promoting) return false;
+      if (browse.lane && browse.lane !== "all" && browse.lane !== "stories") {
+        if (p.lane !== browse.lane) return false;
+      }
+      if (!q) return true;
+      var blob = [p.id, p.title, p.hook, p.preview, p.caption, p.topic, (p.keywords || []).join(" ")].join(" ").toLowerCase();
+      return blob.indexOf(q) > -1;
+    });
+  }
+
+  function renderVaultFilters(browse, showLanes) {
+    var V = vaultMeta();
+    var html = '<div class="vault-filters">';
+    html += '<label class="vault-filter"><span class="sr-only">Search</span><input type="search" class="prod-search" id="vaultSearch" placeholder="Search hooks, products, topics…" value="' + esc(browse.q || "") + '" autocomplete="off"></label>';
+    html += '<label class="vault-filter"><span>Type</span><select id="vaultFormatFilter" class="cal-select">' + renderFormatOptions(browse.format || "") + "</select></label>";
+    html += '<label class="vault-filter"><span>Promoting</span><select id="vaultPromotingFilter" class="cal-select">' + renderPromotingOptions(browse.promoting || "") + "</select></label>";
+    if (showLanes) {
+      html += '<div class="vault-lane-row" role="tablist">';
+      [{ id: "all", label: "All" }, { id: "product", label: "Product" }, { id: "mission", label: "Mission" }, { id: "business", label: "Business" }, { id: "lifestyle", label: "Lifestyle" }, { id: "seasonal", label: "Seasonal" }].forEach(function (l) {
+        html += '<button type="button" class="vault-lane' + (browse.lane === l.id ? " on" : "") + '" data-vault-lane="' + l.id + '">' + esc(l.label) + "</button>";
+      });
+      html += "</div>";
+    }
+    html += "</div>";
+    return html;
+  }
+
+  function wireVaultFilters(kind, rerender) {
+    var browse = ensureVaultBrowse(kind);
+    var search = $("vaultSearch");
+    if (search && !search.dataset.bound) {
+      search.dataset.bound = "1";
+      search.addEventListener("input", function () {
+        browse.q = search.value;
+        persist();
+        rerender();
+      });
+    }
+    var ff = $("vaultFormatFilter");
+    if (ff && !ff.dataset.bound) {
+      ff.dataset.bound = "1";
+      ff.addEventListener("change", function () {
+        browse.format = ff.value;
+        persist();
+        rerender();
+      });
+    }
+    var pf = $("vaultPromotingFilter");
+    if (pf && !pf.dataset.bound) {
+      pf.dataset.bound = "1";
+      pf.addEventListener("change", function () {
+        browse.promoting = pf.value;
+        persist();
+        rerender();
+      });
+    }
+  }
+
+  function renderContentVault() {
+    var root = $("contentVaultRoot");
+    if (!root || !getState) return;
+    var browse = ensureVaultBrowse("vault");
+    var list = filterVaultList(vaultMeta().posts, browse);
+    var html =
+      '<div class="talk-guide-nav"><button type="button" class="prod-pill on" data-goto="tend">← Back to Content</button></div>' +
+      '<p class="eyebrow">POST VAULT</p>' +
+      '<h1 class="prod-head-title">Feed posts &amp; captions</h1>' +
+      '<p class="prod-head-sub">Full assets with hooks, slides, and captions. Set Type + what you\'re Promoting on each card — then open, rewrite in your voice, and add to a day.</p>' +
+      '<p class="vault-target-line">Adding to <strong>' + esc(selectedDayLabel(getState())) + "</strong> · tap a calendar day first to change</p>" +
+      renderVaultFilters(browse, true) +
+      '<p class="vault-count">' + list.length + " post" + (list.length === 1 ? "" : "s") + "</p>" +
+      '<div class="vault-card-list">';
+    list.forEach(function (p) { html += vaultCardHtml(p, "vault"); });
+    if (!list.length) html += '<p class="cal-lib-hint">Nothing matches those filters.</p>';
+    html += "</div>";
+    root.innerHTML = html;
+    wireVaultFilters("vault", renderContentVault);
+  }
+
+  function renderContentStories() {
+    var root = $("contentStoriesRoot");
+    if (!root || !getState) return;
+    var browse = ensureVaultBrowse("stories");
+    browse.lane = "stories";
+    var list = filterVaultList(vaultMeta().stories, browse);
+    var html =
+      '<div class="talk-guide-nav"><button type="button" class="prod-pill on" data-goto="tend">← Back to Content</button></div>' +
+      '<p class="eyebrow">STORY SEQUENCES</p>' +
+      '<h1 class="prod-head-title">Curiosity-first Stories</h1>' +
+      '<p class="prod-head-sub">Every sequence opens frame 1 with a question or curiosity gap — never a title card. Keep them to 3–5 frames.</p>' +
+      '<p class="vault-target-line">Adding to <strong>' + esc(selectedDayLabel(getState())) + "</strong></p>" +
+      renderVaultFilters(browse, false) +
+      '<p class="vault-count">' + list.length + " sequence" + (list.length === 1 ? "" : "s") + "</p>" +
+      '<div class="vault-card-list">';
+    list.forEach(function (p) { html += vaultCardHtml(p, "stories"); });
+    if (!list.length) html += '<p class="cal-lib-hint">Nothing matches those filters.</p>';
+    html += "</div>";
+    root.innerHTML = html;
+    wireVaultFilters("stories", renderContentStories);
+  }
+
+  function currentWeekIndex() {
+    var st = getState();
+    var saved = st.data.vaultWeekIndex;
+    if (saved >= 1 && saved <= 8) return saved;
+    return 1;
+  }
+
+  function renderContentWeek() {
+    var root = $("contentWeekRoot");
+    if (!root || !getState) return;
+    var V = vaultMeta();
+    var weekIdx = currentWeekIndex();
+    var plan = (V.weekPlan || []).filter(function (w) { return w.week === weekIdx; })[0];
+    var html =
+      '<div class="talk-guide-nav"><button type="button" class="prod-pill on" data-goto="tend">← Back to Content</button></div>' +
+      '<p class="eyebrow">8-WEEK ROTATION</p>' +
+      '<h1 class="prod-head-title">This week\'s plan</h1>' +
+      '<p class="prod-head-sub">A suggested rhythm — not a cage. Reorder freely based on what\'s performing.</p>' +
+      '<div class="vault-week-nav">';
+    for (var w = 1; w <= 8; w++) {
+      html += '<button type="button" class="vault-lane' + (w === weekIdx ? " on" : "") + '" data-vault-week="' + w + '">W' + w + "</button>";
+    }
+    html += "</div>";
+    if (!plan) {
+      html += '<p class="cal-lib-hint">Week plan missing.</p>';
+      root.innerHTML = html;
+      return;
+    }
+    html += '<div class="vault-week-theme"><div class="fact-label">Week ' + weekIdx + '</div><p>' + esc(plan.theme) + "</p></div>";
+    html += '<div class="vault-week-days">';
+    (plan.days || []).forEach(function (d) {
+      html += '<div class="vault-week-day"><div class="vault-week-dow">' + esc(d.dow) + '</div><p>' + esc(d.note) + "</p></div>";
+    });
+    html += "</div>";
+    /* Suggest a few matching vault posts for this week theme */
+    var themeQ = (plan.theme || "").toLowerCase();
+    var picks = (V.posts || []).filter(function (p) {
+      var blob = (p.title + " " + p.hook + " " + p.lane + " " + p.promoting).toLowerCase();
+      if (weekIdx <= 2) return p.promoting === "freshness" || p.lane === "product" || /label|fresh|mission|origin/.test(blob);
+      if (weekIdx === 3) return p.lane === "product";
+      if (weekIdx === 4) return p.lane === "mission";
+      if (weekIdx >= 5 && weekIdx <= 7) return p.lane === "business" || p.lane === "lifestyle";
+      return true;
+    }).slice(0, 6);
+    html += '<p class="talk-sec-label">Suggested from the vault</p><div class="vault-card-list">';
+    picks.forEach(function (p) { html += vaultCardHtml(p, "week"); });
+    html += "</div>";
+    root.innerHTML = html;
+  }
+
+  function openVaultIdea(postId) {
+    var st = getState();
+    var post = findVaultPost(postId);
+    if (!st || !post) return;
+    var overrides = (st.data.vaultOverrides && st.data.vaultOverrides[postId]) || {};
+    var format = overrides.format || post.format || "";
+    var promoting = overrides.promoting || post.promoting || "";
+    st.data.calendarEditing = null;
+    st.data.libraryEditing = {
+      bucketId: "vault",
+      itemId: post.id,
+      vaultId: post.id,
+      type: contentTypeToCalType(post.contentType),
+      title: post.title || "",
+      body: buildVaultDraft(post),
+      format: format,
+      promoting: promoting,
+      icon: "",
+      imageId: "",
+      image: "",
+      alt: "",
+      pairsWith: "",
+      verify: post.verify || []
+    };
+    persist();
+    renderVaultEditor();
+    openCalSheet();
+  }
+
+  function renderVaultEditor() {
+    var detail = $("calendarDetail");
+    var titleEl = $("calSheetTitle");
+    var st = getState();
+    if (!detail || !st || !st.data.libraryEditing) return;
+    var ed = st.data.libraryEditing;
+    setSheetKicker(ed.vaultId ? ("Vault · " + ed.vaultId) : "Post idea");
+    if (titleEl) titleEl.textContent = ed.title || "Post idea";
+
+    var html = "";
+    if (ed.verify && ed.verify.length) {
+      html += '<div class="vault-verify-box">';
+      ed.verify.forEach(function (v) {
+        html += '<div class="vault-verify-row' + (v.status === "verified" ? " is-ok" : "") + '">' +
+          '<strong>' + (v.status === "verified" ? "Verified" : "Check before posting") + "</strong> " +
+          esc(v.claim) + (v.sourceNote ? ' <em>(' + esc(v.sourceNote) + ")</em>" : "") +
+          "</div>";
+      });
+      html += "</div>";
+    }
+    html +=
+      '<div class="vault-field-row">' +
+        '<label class="field"><span class="field-label">Type</span>' +
+          '<select id="libFormat" class="cal-select">' + renderFormatOptions(ed.format || "") + "</select></label>" +
+        '<label class="field"><span class="field-label">Promoting</span>' +
+          '<select id="libPromoting" class="cal-select">' + renderPromotingOptions(ed.promoting || "") + "</select></label>" +
+      "</div>" +
+      '<label class="field"><span class="field-label">Title</span>' +
+        '<input type="text" id="libTitle" class="cal-input" placeholder="Optional short label" value="' + esc(ed.title || "") + '"></label>' +
+      '<label class="field"><span class="field-label">Full draft</span>' +
+        '<textarea id="libDraft" rows="12" placeholder="Rewrite until it sounds like you…">' + esc(ed.body || "") + "</textarea>" +
+        '<span class="cal-lib-sheet-hint">Steal the structure — rewrite in your voice. Edits stay here until you add this to a day.</span></label>' +
+      '<p class="cal-lib-sheet-target">Will add to <strong>' + esc(selectedDayLabel(st)) + "</strong>.</p>" +
+      '<div class="cal-sheet-actions">' +
+        '<button type="button" class="btn" data-lib-commit>Add to day</button>' +
+        '<button type="button" class="btn-ghost" data-cal-save>Close</button>' +
+      "</div>";
+    detail.innerHTML = html;
+
+    function syncEd() {
+      var cur = getState();
+      if (!cur || !cur.data.libraryEditing) return;
+      var titleIn = $("libTitle");
+      var draftIn = $("libDraft");
+      var fmt = $("libFormat");
+      var prom = $("libPromoting");
+      if (titleIn) cur.data.libraryEditing.title = titleIn.value;
+      if (draftIn) cur.data.libraryEditing.body = draftIn.value;
+      if (fmt) cur.data.libraryEditing.format = fmt.value;
+      if (prom) cur.data.libraryEditing.promoting = prom.value;
+      if (cur.data.libraryEditing.vaultId) {
+        if (!cur.data.vaultOverrides) cur.data.vaultOverrides = {};
+        cur.data.vaultOverrides[cur.data.libraryEditing.vaultId] = {
+          format: cur.data.libraryEditing.format,
+          promoting: cur.data.libraryEditing.promoting
+        };
+      }
+      if (titleEl && titleIn) titleEl.textContent = titleIn.value || "Post idea";
+      persist();
+    }
+    ["libTitle", "libDraft", "libFormat", "libPromoting"].forEach(function (id) {
+      var el = $(id);
+      if (!el) return;
+      el.addEventListener(id.indexOf("lib") === 0 && (id === "libFormat" || id === "libPromoting") ? "change" : "input", syncEd);
+    });
+    var draftIn = $("libDraft");
+    if (draftIn) {
+      setTimeout(function () {
+        try { draftIn.focus(); draftIn.setSelectionRange(0, 0); } catch (e) {}
+      }, 50);
+    }
+  }
+
   window.FS.BridgeUI = {
     init: async function (hooks) {
       getState = hooks.getState;
@@ -1668,6 +2039,9 @@ window.FS = window.FS || {};
     renderCalendar: renderCalendar,
     renderCuriosityPhotos: renderCuriosityPhotos,
     closeCuriosityLightbox: closeCuriosityLightbox,
+    renderContentVault: renderContentVault,
+    renderContentStories: renderContentStories,
+    renderContentWeek: renderContentWeek,
     renderPulse: renderPulse,
     renderCheers: renderCheers,
     renderLeaderNoteBanner: renderLeaderNoteBanner,

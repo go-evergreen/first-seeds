@@ -204,6 +204,9 @@ window.FS = window.FS || {};
       draft: draft,
       image: raw.image || "",
       imageId: raw.imageId || "",
+      format: raw.format || "",
+      promoting: raw.promoting || "",
+      vaultId: raw.vaultId || "",
       status: raw.status || "todo",
       altIndex: raw.altIndex || 0,
       suggested: !!raw.suggested,
@@ -324,6 +327,9 @@ window.FS = window.FS || {};
       draft: draft,
       image: (partial && partial.image) || "",
       imageId: (partial && partial.imageId) || "",
+      format: (partial && partial.format) || "",
+      promoting: (partial && partial.promoting) || "",
+      vaultId: (partial && partial.vaultId) || "",
       status: (partial && partial.status) || "todo"
     }, dateKey, rootsData);
   }
