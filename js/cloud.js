@@ -98,17 +98,23 @@ window.FS = window.FS || {};
       if (configured() && window.supabase) {
         var cfg = window.FS.SUPABASE;
         client = window.supabase.createClient(cfg.url, cfg.anonKey);
-        var res = await client.auth.getSession();
-        if (res.data && res.data.session) {
-          sessionUser = await Cloud._hydrateSupabaseUser(res.data.session.user);
-        }
-        client.auth.onAuthStateChange(async function (event, session) {
-          if (session && session.user) {
-            sessionUser = await Cloud._hydrateSupabaseUser(session.user);
-          } else {
-            sessionUser = null;
+        try {
+          var res = await client.auth.getSession();
+          if (res.data && res.data.session && res.data.session.user) {
+            sessionUser = await Cloud._hydrateSupabaseUser(res.data.session.user);
           }
-          emit("auth", sessionUser);
+        } catch (err) {
+          /* Keep going — session may still restore via auth events */
+          console.warn("[First Seeds] session restore:", err);
+        }
+        /* NEVER await Supabase queries directly inside onAuthStateChange —
+           it deadlocks the auth lock and can leave the app stuck signed-out. */
+        client.auth.onAuthStateChange(function (event, session) {
+          setTimeout(function () {
+            Cloud._handleAuthEvent(event, session).catch(function (err) {
+              console.warn("[First Seeds] auth event:", err);
+            });
+          }, 0);
         });
       } else {
         var store = localStore();
@@ -120,7 +126,54 @@ window.FS = window.FS || {};
       return sessionUser;
     },
 
+    _handleAuthEvent: async function (event, session) {
+      if (session && session.user) {
+        try {
+          sessionUser = await Cloud._hydrateSupabaseUser(session.user);
+        } catch (err) {
+          /* Profile hydrate failed — still treat as signed in with auth basics */
+          sessionUser = Cloud._publicUser({
+            id: session.user.id,
+            email: session.user.email,
+            display_name: (session.user.user_metadata && session.user.user_metadata.display_name) ||
+              (session.user.email || "friend").split("@")[0],
+            invite_code: (sessionUser && sessionUser.invite_code) || "",
+            sponsor_id: sessionUser && sessionUser.sponsor_id,
+            invited_by_id: sessionUser && sessionUser.invited_by_id,
+            is_org_admin: !!(sessionUser && sessionUser.is_org_admin),
+            is_super_admin: !!(sessionUser && sessionUser.is_super_admin),
+            hub_mode: sessionUser && sessionUser.hub_mode,
+            tour_done: !!(sessionUser && sessionUser.tour_done),
+            lead_slug: sessionUser && sessionUser.lead_slug,
+            lead_blurb: sessionUser && sessionUser.lead_blurb,
+            lead_thanks: sessionUser && sessionUser.lead_thanks
+          });
+        }
+      } else if (event === "SIGNED_OUT" || !session) {
+        sessionUser = null;
+      }
+      emit("auth", sessionUser);
+    },
+
     _publicUser: function (u) {
+      if (!u) {
+        return {
+          id: "",
+          email: "",
+          display_name: "",
+          hub_mode: "",
+          tour_done: false,
+          invite_code: "",
+          sponsor_id: null,
+          invited_by_id: null,
+          is_org_admin: false,
+          is_super_admin: false,
+          last_active_at: null,
+          lead_slug: "",
+          lead_blurb: "",
+          lead_thanks: ""
+        };
+      }
       return {
         id: u.id,
         email: u.email,
@@ -151,20 +204,24 @@ window.FS = window.FS || {};
       "Thanks for adding your info! I’ll be in touch with some exciting Ringana details soon!",
 
     _hydrateSupabaseUser: async function (authUser) {
-      var { data: profile } = await client.from("profiles").select("*").eq("id", authUser.id).maybeSingle();
+      if (!authUser || !authUser.id) throw new Error("Missing auth user.");
+      var { data: profile, error: profileErr } = await client.from("profiles").select("*").eq("id", authUser.id).maybeSingle();
+      if (profileErr) throw profileErr;
       if (!profile) {
         /* trigger may lag — upsert */
         var code = makeCode();
-        await client.from("profiles").upsert({
+        var up = await client.from("profiles").upsert({
           id: authUser.id,
           email: authUser.email,
           display_name: (authUser.user_metadata && authUser.user_metadata.display_name) || (authUser.email || "friend").split("@")[0],
           invite_code: code
         });
+        if (up.error) throw up.error;
         await client.from("runway_progress").upsert({ partner_id: authUser.id });
         var again = await client.from("profiles").select("*").eq("id", authUser.id).maybeSingle();
         profile = again.data;
       }
+      if (!profile) throw new Error("Could not load profile.");
       var pending = Cloud.pendingJoinCode();
       if (pending) {
         try {
@@ -174,7 +231,9 @@ window.FS = window.FS || {};
           if (refreshed.data) profile = refreshed.data;
         } catch (e) {}
       }
-      await client.from("profiles").update({ last_active_at: new Date().toISOString() }).eq("id", authUser.id);
+      try {
+        await client.from("profiles").update({ last_active_at: new Date().toISOString() }).eq("id", authUser.id);
+      } catch (e) {}
       return Cloud._publicUser(profile);
     },
 

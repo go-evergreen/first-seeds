@@ -3010,10 +3010,28 @@ window.FS = window.FS || {};
       persist = hooks.persist;
       gotoPanel = hooks.gotoPanel;
       wire();
-      await Cloud.init();
-      if (Cloud.isSignedIn()) await mergeCloudProgress();
-      await afterAuth();
-      Cloud.onChange(function () { afterAuth(); });
+      try {
+        await Cloud.init();
+      } catch (err) {
+        console.warn("[First Seeds] cloud init:", err);
+      }
+      try {
+        if (Cloud.isSignedIn()) await mergeCloudProgress();
+      } catch (err) {
+        console.warn("[First Seeds] progress merge:", err);
+      }
+      try {
+        await afterAuth();
+      } catch (err) {
+        console.warn("[First Seeds] after auth:", err);
+        renderAuthChrome();
+      }
+      Cloud.onChange(function () {
+        afterAuth().catch(function (err) {
+          console.warn("[First Seeds] auth refresh:", err);
+          renderAuthChrome();
+        });
+      });
       document.addEventListener("visibilitychange", function () {
         if (document.visibilityState === "visible") refreshIncomingMessages();
       });
