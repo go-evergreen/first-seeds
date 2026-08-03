@@ -219,12 +219,13 @@ as $$
         'email', p.email,
         'hub_mode', p.hub_mode,
         'last_active_at', p.last_active_at,
+        'created_at', p.created_at,
         'children', case
           when remaining > 1 then public.profile_subtree(p.id, remaining - 1)
           else '[]'::jsonb
         end
       )
-      order by p.last_active_at desc nulls last
+      order by p.created_at asc nulls last
     ),
     '[]'::jsonb
   )
@@ -232,7 +233,7 @@ as $$
   where p.sponsor_id = parent_id;
 $$;
 
-create or replace function public.team_graph(max_depth integer default 4)
+create or replace function public.team_graph(max_depth integer default 6)
 returns jsonb
 language plpgsql
 security definer set search_path = public
@@ -240,7 +241,7 @@ stable
 as $$
 declare
   me uuid := auth.uid();
-  depth integer := greatest(1, least(coalesce(max_depth, 4), 6));
+  depth integer := greatest(1, least(coalesce(max_depth, 6), 6));
 begin
   if me is null then
     return '[]'::jsonb;

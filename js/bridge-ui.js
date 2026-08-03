@@ -330,6 +330,8 @@ window.FS = window.FS || {};
     if (!rows.length) {
       root.innerHTML = '<p class="body-p">Nobody\'s linked yet. Share your join link — when they sign in, they show up here with live progress.</p>';
       await renderLiveTeamGraph(graph, rows);
+      markTeamJoinsSeen(rows);
+      paintTeamBadge(0);
       return;
     }
     var partnerIds = rows.map(function (r) { return r.profile.id; });
@@ -415,30 +417,180 @@ window.FS = window.FS || {};
     root.className = "leader-board cols-" + Math.max(1, colCount);
     root.innerHTML = '<div class="leader-board-kicker">MENTORING</div>' + (colsHtml || '<p class="leader-empty">Everyone\'s settled for now.</p>');
     await renderLiveTeamGraph(graph, rows);
+    markTeamJoinsSeen(rows);
+    paintTeamBadge(0);
     if (typeof window.FS.maybeStartTeamTour === "function") {
       window.FS.maybeStartTeamTour(rows.length);
     }
   }
 
-  function sortNodesByUnder(nodes) {
-    function countDesc(list) {
-      var n = 0;
-      (list || []).forEach(function (p) { n += 1 + countDesc(p.children); });
-      return n;
-    }
+  function countTreeDesc(nodes) {
+    var n = 0;
+    (nodes || []).forEach(function (p) { n += 1 + countTreeDesc(p.children); });
+    return n;
+  }
+
+  function teamSortMode() {
+    var st = getState ? getState() : null;
+    var mode = st && st.data && st.data.teamSort;
+    return mode === "newest" ? "newest" : "legs";
+  }
+
+  function setTeamSortMode(mode) {
+    if (!getState) return;
+    var st = getState();
+    st.data.teamSort = mode === "newest" ? "newest" : "legs";
+    persist();
+  }
+
+  function sortTeamNodes(nodes, mode) {
+    mode = mode || teamSortMode();
     function sortLevel(list) {
       (list || []).forEach(function (p) {
         if (p.children && p.children.length) sortLevel(p.children);
       });
       (list || []).sort(function (a, b) {
-        var ub = countDesc(b.children);
-        var ua = countDesc(a.children);
+        if (mode === "newest") {
+          return String(b.created_at || b.last_active_at || "").localeCompare(String(a.created_at || a.last_active_at || ""));
+        }
+        /* Most legs first; among equals, older joins stay above brand-new ones */
+        var ub = countTreeDesc(b.children);
+        var ua = countTreeDesc(a.children);
         if (ub !== ua) return ub - ua;
-        return String(b.last_active_at || "").localeCompare(String(a.last_active_at || ""));
+        return String(a.created_at || a.last_active_at || "").localeCompare(String(b.created_at || b.last_active_at || ""));
       });
     }
     sortLevel(nodes);
     return nodes;
+  }
+
+  /* Keep old name for any callers */
+  function sortNodesByUnder(nodes) {
+    return sortTeamNodes(nodes, "legs");
+  }
+
+  function hubModeChipHtml(hubMode) {
+    if (hubMode === "starter") {
+      return '<span class="team-mode-chip is-starter">Getting started</span>';
+    }
+    if (hubMode === "full") {
+      return '<span class="team-mode-chip is-full">Full runway</span>';
+    }
+    return '<span class="team-mode-chip is-unknown">Path unset</span>';
+  }
+
+  function formatJoinedOn(iso) {
+    if (!iso) return "—";
+    try {
+      var d = new Date(iso);
+      if (isNaN(d.getTime())) return "—";
+      return d.toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" });
+    } catch (e) {
+      return "—";
+    }
+  }
+
+  function ensureTeamSeenMap() {
+    if (!getState) return {};
+    var st = getState();
+    if (!st.data.teamSeenIds || typeof st.data.teamSeenIds !== "object") {
+      st.data.teamSeenIds = {};
+    }
+    return st.data.teamSeenIds;
+  }
+
+  function countUnseenTeamJoins(rows) {
+    var seen = ensureTeamSeenMap();
+    var st = getState ? getState() : null;
+    var seeded = !!(st && st.data.teamSeenSeeded);
+    if (!seeded) {
+      (rows || []).forEach(function (row) {
+        if (row && row.profile && row.profile.id) seen[row.profile.id] = true;
+      });
+      if (st) {
+        st.data.teamSeenSeeded = true;
+        persist();
+      }
+      return 0;
+    }
+    var n = 0;
+    (rows || []).forEach(function (row) {
+      if (row && row.profile && row.profile.id && !seen[row.profile.id]) n++;
+    });
+    return n;
+  }
+
+  function markTeamJoinsSeen(rows) {
+    var seen = ensureTeamSeenMap();
+    (rows || []).forEach(function (row) {
+      if (row && row.profile && row.profile.id) seen[row.profile.id] = true;
+    });
+    if (getState) {
+      getState().data.teamSeenSeeded = true;
+      persist();
+    }
+  }
+
+  function paintTeamBadge(count) {
+    var badge = document.querySelector('[data-tab="team"] .bottom-nav-badge');
+    if (!badge) return;
+    badge.hidden = count < 1;
+    badge.textContent = count > 9 ? "9+" : String(count);
+  }
+
+  async function refreshTeamBadge() {
+    if (!Cloud.isSignedIn()) {
+      paintTeamBadge(0);
+      return;
+    }
+    try {
+      var rows = await Cloud.listDownline();
+      paintTeamBadge(countUnseenTeamJoins(rows));
+    } catch (e) {
+      paintTeamBadge(0);
+    }
+  }
+
+  var teamPersonCache = {};
+
+  function closeTeamPersonSheet() {
+    var sheet = $("teamPersonSheet");
+    if (sheet) sheet.hidden = true;
+  }
+
+  function openTeamPersonSheet(partnerId) {
+    var person = teamPersonCache[partnerId];
+    if (!person) return;
+    var sheet = $("teamPersonSheet");
+    var nameEl = $("teamPersonName");
+    var chips = $("teamPersonChips");
+    var facts = $("teamPersonFacts");
+    var actions = $("teamPersonActions");
+    if (!sheet || !nameEl || !chips || !facts || !actions) return;
+    nameEl.textContent = person.display_name || person.email || "Partner";
+    chips.innerHTML = hubModeChipHtml(person.hub_mode) +
+      (person.under ? '<span class="live-l1-under on">' + person.under + " under</span>" : "");
+    var factRows = [
+      ["Joined", formatJoinedOn(person.created_at)],
+      ["Last active", person.daysSinceActive == null ? "—" :
+        (person.daysSinceActive === 0 ? "Today" : person.daysSinceActive + "d ago")]
+    ];
+    if (person.sectionsDone != null) {
+      factRows.push(["Progress", person.sectionsDone + "/" + person.sectionTotal + " sections"]);
+    }
+    if (person.email) factRows.push(["Email", person.email]);
+    facts.innerHTML = factRows.map(function (pair) {
+      return "<div><dt>" + esc(pair[0]) + "</dt><dd>" + esc(pair[1]) + "</dd></div>";
+    }).join("");
+    var html = "";
+    if (person.isDirect) {
+      html += '<button type="button" class="btn" data-cheer="' + esc(partnerId) + '">Send cheer</button>';
+      html += '<button type="button" class="btn-ghost" data-note="' + esc(partnerId) + '">Leave note</button>';
+    } else {
+      html += '<p class="team-person-hint">Cheer and notes are for your Level 1 — this person is deeper on the tree.</p>';
+    }
+    actions.innerHTML = html;
+    sheet.hidden = false;
   }
 
   async function renderLiveTeamGraph(graphPrefetch, downlineRows) {
@@ -449,34 +601,55 @@ window.FS = window.FS || {};
       return;
     }
     var graph = graphPrefetch || await Cloud.listTeamGraph();
-    var roots = sortNodesByUnder((graph.roots || []).slice());
+    var progressById = {};
+    var downlineById = {};
+    (downlineRows || []).forEach(function (row) {
+      progressById[row.profile.id] = progressCtx(row, window.FS.CONFIG);
+      downlineById[row.profile.id] = row;
+    });
+    var roots = (graph.roots || []).slice();
+    /* Fill join dates from downline if team_graph RPC hasn't been migrated yet */
+    roots.forEach(function (p) {
+      if (!p.created_at && downlineById[p.id] && downlineById[p.id].profile) {
+        p.created_at = downlineById[p.id].profile.created_at;
+      }
+    });
+    var sortMode = teamSortMode();
+    sortTeamNodes(roots, sortMode);
     if (!roots.length) {
       el.hidden = true;
       return;
     }
-    var progressById = {};
-    (downlineRows || []).forEach(function (row) {
-      progressById[row.profile.id] = progressCtx(row, window.FS.CONFIG);
-    });
 
-    function countAll(nodes) {
-      var n = 0;
-      (nodes || []).forEach(function (p) {
-        n += 1 + countAll(p.children);
-      });
-      return n;
+    function cachePerson(p, under, ctx, isDirect) {
+      teamPersonCache[p.id] = {
+        id: p.id,
+        display_name: p.display_name,
+        email: p.email,
+        hub_mode: p.hub_mode,
+        created_at: p.created_at || (downlineById[p.id] && downlineById[p.id].profile.created_at) || "",
+        last_active_at: p.last_active_at,
+        daysSinceActive: ctx ? ctx.daysSinceActive : (p.last_active_at ? daysBetween(new Date(p.last_active_at), new Date()) : null),
+        sectionsDone: ctx ? ctx.sectionsDone : null,
+        sectionTotal: ctx ? ctx.sectionTotal : null,
+        under: under,
+        isDirect: !!isDirect
+      };
     }
+
     function renderKids(nodes, depth) {
       if (!nodes || !nodes.length) return "";
       var html = '<ul class="live-team-kids depth-' + depth + '">';
       nodes.forEach(function (p) {
-        var under = countAll(p.children);
+        var under = countTreeDesc(p.children);
+        cachePerson(p, under, null, false);
         html += '<li class="live-team-node">';
-        html += '<div class="live-team-row">';
+        html += '<button type="button" class="live-team-row" data-team-person="' + esc(p.id) + '">';
         html += '<span class="live-team-dot" aria-hidden="true"></span>';
         html += '<span class="live-team-name">' + esc(p.display_name || p.email) + "</span>";
+        html += hubModeChipHtml(p.hub_mode);
         if (under) html += '<span class="live-team-count">' + under + " under</span>";
-        html += "</div>";
+        html += "</button>";
         html += renderKids(p.children, depth + 1);
         html += "</li>";
       });
@@ -484,34 +657,52 @@ window.FS = window.FS || {};
       return html;
     }
 
-    var total = countAll(roots);
+    var total = countTreeDesc(roots);
     var l1 = roots.length;
     el.hidden = false;
-    var html = '<div class="live-tag">YOUR GROWING TEAM</div>';
-    html += '<p class="live-team-lead">Your people, growing together. Tap a name to see who’s linked under them.</p>';
-    html += '<div class="live-team-stats">';
+    var html = '<div class="live-team-head">';
+    html += '<div class="live-tag">YOUR GROWING TEAM</div>';
+    html += '<div class="live-team-sort" role="group" aria-label="Sort team tree">';
+    html += '<button type="button" class="live-team-sort-btn' + (sortMode === "legs" ? " on" : "") + '" data-team-sort="legs">Most legs</button>';
+    html += '<button type="button" class="live-team-sort-btn' + (sortMode === "newest" ? " on" : "") + '" data-team-sort="newest">Newest</button>';
+    html += "</div></div>";
+    html += '<p class="live-team-lead">Your people, growing together. Tap a person for details — expand a row to see who they’ve brought in.</p>';
+    html += '<div class="live-team-stats is-compact">';
     html += '<div class="live-stat"><strong>' + l1 + '</strong><span>Level 1</span></div>';
-    html += '<div class="live-stat"><strong>' + total + '</strong><span>on your tree</span></div>';
-    html += '<div class="live-stat"><strong>' + Math.min(4, graph.depth || 4) + '</strong><span>levels deep</span></div>';
+    html += '<div class="live-stat"><strong>' + total + '</strong><span>on tree</span></div>';
+    html += '<div class="live-stat"><strong>' + Math.min(6, graph.depth || 6) + '</strong><span>deep</span></div>';
     html += "</div>";
     html += '<div class="live-team">';
     html += '<div class="live-team-you"><span class="live-team-you-mark" aria-hidden="true">🌿</span> You</div>';
     html += '<div class="live-l1-list">';
-      roots.forEach(function (p, idx) {
-      var under = countAll(p.children);
+    roots.forEach(function (p, idx) {
+      var under = countTreeDesc(p.children);
       var ctx = progressById[p.id];
-      /* Keep top growers open so the layout reads immediately */
-      var shouldOpen = idx < 5;
-      html += '<details class="live-l1' + (under ? " has-kids" : "") + '"' + (shouldOpen ? " open" : "") + '>';
+      if (!p.created_at && downlineById[p.id]) {
+        p.created_at = downlineById[p.id].profile.created_at;
+      }
+      cachePerson(p, under, ctx, true);
+      var shouldOpen = sortMode === "legs" ? idx < 5 : idx < 3;
+      var stSeen = getState ? getState() : null;
+      var seededSeen = !!(stSeen && stSeen.data && stSeen.data.teamSeenSeeded);
+      var isNew = seededSeen && !ensureTeamSeenMap()[p.id];
+      html += '<details class="live-l1' + (under ? " has-kids" : "") + (isNew ? " is-new" : "") + '"' + (shouldOpen ? " open" : "") + '>';
       html += '<summary class="live-l1-sum">';
       html += '<span class="live-l1-rank">' + (idx + 1) + "</span>";
       html += '<span class="live-l1-main">';
-      html += '<span class="live-l1-name">' + esc(p.display_name || p.email) + "</span>";
+      html += '<span class="live-l1-name-row">';
+      html += '<button type="button" class="live-l1-name" data-team-person="' + esc(p.id) + '">' +
+        esc(p.display_name || p.email) + "</button>";
+      html += hubModeChipHtml(p.hub_mode);
+      if (isNew) html += '<span class="team-new-chip">New</span>';
+      html += "</span>";
       if (ctx) {
         html += '<span class="live-l1-meta">' + ctx.sectionsDone + "/" + ctx.sectionTotal + " sections · " +
-          (ctx.daysSinceActive === 0 ? "active today" : ctx.daysSinceActive + "d ago") + "</span>";
+          (ctx.daysSinceActive === 0 ? "active today" : ctx.daysSinceActive + "d ago") +
+          (p.created_at ? " · joined " + formatJoinedOn(p.created_at) : "") + "</span>";
       } else {
-        html += '<span class="live-l1-meta">Joined your link</span>';
+        html += '<span class="live-l1-meta">Joined your link' +
+          (p.created_at ? " · " + formatJoinedOn(p.created_at) : "") + "</span>";
       }
       html += "</span>";
       html += '<span class="live-l1-under' + (under ? " on" : "") + '">' +
@@ -701,6 +892,7 @@ window.FS = window.FS || {};
   var cheerPendingPartnerId = null;
 
   function openCheerSheet(partnerId) {
+    closeTeamPersonSheet();
     cheerPendingPartnerId = partnerId;
     var sheet = $("cheerSheet");
     if (sheet) sheet.hidden = false;
@@ -1460,6 +1652,9 @@ window.FS = window.FS || {};
         }
       } catch (e) {}
     }
+    if (Cloud.isSignedIn() && !(getState && getState().active === "leader")) {
+      refreshTeamBadge().catch(function () {});
+    }
     if (typeof window.FS.onAuthReady === "function") {
       try { window.FS.onAuthReady(Cloud.user()); } catch (e) {}
     }
@@ -1470,6 +1665,11 @@ window.FS = window.FS || {};
     wired = true;
     document.addEventListener("keydown", function (e) {
       if (e.key === "Escape") {
+        var personSheet = $("teamPersonSheet");
+        if (personSheet && !personSheet.hidden) {
+          closeTeamPersonSheet();
+          return;
+        }
         var box = $("curiosityLightbox");
         if (box && !box.hidden) {
           closeCuriosityLightbox();
@@ -1522,6 +1722,7 @@ window.FS = window.FS || {};
         "#authOpenBtn,#authCloseBtn,#authSubmitBtn,#authCreateBtn,#authSignOutBtn,#railCopyInvite,#leaderCopyInvite,#authCopyInvite," +
         "#teamInviteOpen,#teamInviteClose,#teamInviteX,#exportBridgeBtn,#importLiveTreeBtn,#cheerDismiss,#notifySponsorBtn,[data-goto-bridge],[data-copy-nudge],[data-cheer],[data-note],[data-leader-log]," +
         "#cheerSheetClose,#cheerSheetCancel,#cheerChooseAnother,#cheerConfirmSend," +
+        "#teamPersonClose,#teamPersonX,#teamPersonCancel,[data-team-sort],[data-team-person]," +
         "[data-cal-day],[data-cal-select],[data-cal-status],[data-cal-swap],[data-cal-week],[data-cal-nav],[data-cal-view],[data-cal-add],[data-cal-clear]," +
         "[data-cal-new],[data-cal-edit],[data-cal-item],[data-cal-accept],[data-cal-cadence],[data-cal-setup-toggle],[data-cal-save],[data-cal-delete]," +
         "[data-lib-tab],[data-lib-open],[data-lib-commit],[data-lib-add],[data-curio-open]," +
@@ -1781,6 +1982,23 @@ window.FS = window.FS || {};
         }
         return;
       }
+      if (t.id === "teamPersonClose" || t.id === "teamPersonX" || t.id === "teamPersonCancel") {
+        closeTeamPersonSheet();
+        return;
+      }
+      if (t.hasAttribute("data-team-sort")) {
+        setTeamSortMode(t.getAttribute("data-team-sort"));
+        var sortRows = await Cloud.listDownline();
+        var sortGraph = await Cloud.listTeamGraph();
+        await renderLiveTeamGraph(sortGraph, sortRows);
+        return;
+      }
+      if (t.hasAttribute("data-team-person")) {
+        e.preventDefault();
+        e.stopPropagation();
+        openTeamPersonSheet(t.getAttribute("data-team-person"));
+        return;
+      }
       if (t.hasAttribute("data-cheer")) {
         openCheerSheet(t.getAttribute("data-cheer"));
         return;
@@ -1814,6 +2032,7 @@ window.FS = window.FS || {};
         return;
       }
       if (t.hasAttribute("data-note")) {
+        closeTeamPersonSheet();
         var notePid = t.getAttribute("data-note");
         var noteBody = window.prompt("Short note for this partner (shown at the top of their runway):", "");
         if (noteBody == null) return;

@@ -20,7 +20,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,400;1,9..144,500&family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/styles.css?v=116">
+<link rel="stylesheet" href="css/styles.css?v=118">
 </head>
 <body>
 
@@ -71,6 +71,7 @@
     <button type="button" class="bottom-nav-btn full-only" data-goto="leader" data-tab="team">
       <span class="bottom-nav-ico" aria-hidden="true">🌳</span>
       <span>Team</span>
+      <span class="bottom-nav-badge" hidden>0</span>
     </button>
   </nav>
 
@@ -1015,6 +1016,22 @@
   </div>
 </div>
 
+<!-- ═══ TEAM PERSON DETAIL ═══ -->
+<div class="cheer-sheet" id="teamPersonSheet" hidden>
+  <button type="button" class="cheer-sheet-backdrop" id="teamPersonClose" aria-label="Close"></button>
+  <div class="cheer-sheet-card team-person-card" role="dialog" aria-modal="true" aria-labelledby="teamPersonName">
+    <div class="team-person-head">
+      <div class="live-tag">TEAM MEMBER</div>
+      <button type="button" class="team-person-x" id="teamPersonX" aria-label="Close">×</button>
+    </div>
+    <h3 id="teamPersonName"></h3>
+    <div class="team-person-chips" id="teamPersonChips"></div>
+    <dl class="team-person-facts" id="teamPersonFacts"></dl>
+    <div class="cheer-sheet-actions" id="teamPersonActions"></div>
+    <button type="button" class="cheer-sheet-cancel" id="teamPersonCancel">Close</button>
+  </div>
+</div>
+
 <!-- ═══ MINI TOUR ═══ -->
 <div class="overlay tour" id="tour" role="dialog" aria-modal="true" aria-labelledby="tourTitle">
   <div class="tour-spotlight" id="tourSpotlight" hidden aria-hidden="true"></div>
@@ -1027,18 +1044,18 @@
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="js/config.js?v=116"></script>
-<script src="js/supabase-config.js?v=116"></script>
-<script src="js/data.js?v=116"></script>
-<script src="js/content.js?v=116"></script>
-<script src="js/content-vault.js?v=116"></script>
-<script src="js/products.js?v=116"></script>
-<script src="js/plant.js?v=116"></script>
-<script src="js/tree.js?v=116"></script>
-<script src="js/calendar.js?v=116"></script>
-<script src="js/cloud.js?v=116"></script>
-<script src="js/bridge-ui.js?v=116"></script>
-<script src="js/app.js?v=116"></script>
-<script src="js/pwa.js?v=116"></script>
+<script src="js/config.js?v=118"></script>
+<script src="js/supabase-config.js?v=118"></script>
+<script src="js/data.js?v=118"></script>
+<script src="js/content.js?v=118"></script>
+<script src="js/content-vault.js?v=118"></script>
+<script src="js/products.js?v=118"></script>
+<script src="js/plant.js?v=118"></script>
+<script src="js/tree.js?v=118"></script>
+<script src="js/calendar.js?v=118"></script>
+<script src="js/cloud.js?v=118"></script>
+<script src="js/bridge-ui.js?v=118"></script>
+<script src="js/app.js?v=118"></script>
+<script src="js/pwa.js?v=118"></script>
 </body>
 </html>

@@ -402,9 +402,9 @@ window.FS = window.FS || {};
       return out;
     },
 
-    /* You → up to 4 levels under you (names / structure). Coaching stays front-line only. */
+    /* You → up to 6 levels under you (names / structure). Coaching stays front-line only. */
     listTeamGraph: async function () {
-      var MAX = 4;
+      var MAX = 6;
       if (!sessionUser) return { roots: [], depth: MAX };
       if (configured() && client) {
         var { data, error } = await client.rpc("team_graph", { max_depth: MAX });
@@ -424,22 +424,12 @@ window.FS = window.FS || {};
             email: u.email,
             hub_mode: u.hub_mode,
             last_active_at: u.last_active_at,
+            created_at: u.created_at || u.last_active_at,
             children: kidsOf(u.id, remaining - 1)
           });
         });
         out.sort(function (a, b) {
-          function under(n) {
-            var c = 0;
-            (n.children || []).forEach(function walk(x) {
-              c += 1;
-              (x.children || []).forEach(walk);
-            });
-            return c;
-          }
-          var ub = under(b);
-          var ua = under(a);
-          if (ub !== ua) return ub - ua;
-          return String(b.last_active_at || "").localeCompare(String(a.last_active_at || ""));
+          return String(a.created_at || "").localeCompare(String(b.created_at || ""));
         });
         return out;
       }
