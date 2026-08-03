@@ -206,40 +206,62 @@ window.FS.CONFIG = {
 
   nudges: [
     {
-      id: "no_roots",
-      when: "Hasn't finished Roots yet",
-      match: function (ctx) { return !ctx.done.roots; },
-      body: "Hey {name} — no rush. When you have 10 quiet minutes, answer the three Roots questions in First Seeds. Your words, not a script. That's the whole first step 🌱"
-    },
-    {
-      id: "stuck_grove",
-      when: "Finished Ground, stalled on Grove",
-      match: function (ctx) { return ctx.done.ground && !ctx.done.grove; },
-      body: "Hey {name} — your page draft's in. Next is Map Your Grove: list people who'd love the products, then tap a few first chats (they'll show up on your calendar). Partners are optional if you're building."
-    },
-    {
       id: "silent_week",
-      when: "Inactive 5+ days",
-      match: function (ctx) { return ctx.daysSinceActive >= 5 && ctx.sectionsDone < ctx.sectionTotal; },
+      when: "Quiet for a week+",
+      match: function (ctx) { return ctx.daysSinceActive >= 7 && ctx.sectionsDone < ctx.sectionTotal; },
       body: "Thinking of you, {name}. Life gets busy — First Seeds will be right where you left it. One tiny answer is enough. Here if you want company on a module."
     },
     {
-      id: "calendar_quiet",
-      when: "Suggested posts not marked this week",
-      match: function (ctx) { return ctx.weekPosted === 0 && ctx.sectionsDone >= 1; },
-      body: "Hey {name} — the calendar has gentle ideas (and rest days). Mark one Posted when you share something true, or Skipped if today isn't the day. No perfection required."
+      id: "no_roots_stalled",
+      when: "Joined, still on Roots after several days",
+      match: function (ctx) {
+        return !ctx.done.roots && (ctx.daysSinceJoined >= 5 || ctx.daysSinceActive >= 5);
+      },
+      body: "Hey {name} — no rush at all. When you have 10 quiet minutes, the three Roots questions are just your story in your words. That's the whole first step 🌱 I'm here if you want company."
     },
     {
-      id: "pre_reg",
-      when: "Pre-reg week energy",
-      match: function (ctx) { return ctx.daysToPreReg <= 14 && ctx.daysToPreReg >= 0; },
-      body: "Pre-reg is close, {name}. If you've got a few names you'd want in the loop, you're ahead. Soft language only — \"want me to keep you updated?\" is enough."
+      id: "stuck_grove",
+      when: "Finished Ground, quiet on Grove",
+      match: function (ctx) {
+        return ctx.done.ground && !ctx.done.grove && ctx.daysSinceActive >= 5;
+      },
+      body: "Hey {name} — your page draft's in. Next is Map Your Grove whenever you're ready: list people who'd love the products, then tap a few first chats. Partners are optional if you're building. No pressure."
+    }
+  ],
+
+  /* Supportive check-ins for people who are new or still moving — not "nudge" tone */
+  supports: [
+    {
+      id: "welcome",
+      when: "Just getting started",
+      match: function (ctx) {
+        return ctx.daysSinceJoined <= 2 || (ctx.sectionsDone === 0 && ctx.daysSinceActive <= 1);
+      },
+      body: "Hey {name} — so glad you're here. No rush at all. Explore First Seeds at your pace — I'm around if you want a hand 🌱"
+    },
+    {
+      id: "active_today",
+      when: "Active today",
+      match: function (ctx) { return ctx.daysSinceActive === 0; },
+      body: "Hey {name} — saw you in First Seeds today. That quiet showing-up counts. Here if you want company on anything 🌳"
+    },
+    {
+      id: "roots_soft",
+      when: "Settling into Roots",
+      match: function (ctx) { return !ctx.done.roots; },
+      body: "Hey {name} — loving that you're in. The Roots questions are just getting your story down in your words — whenever you're ready 💚"
+    },
+    {
+      id: "making_progress",
+      when: "Making progress",
+      match: function (ctx) { return ctx.sectionsDone >= 1 && ctx.sectionsDone < ctx.sectionTotal; },
+      body: "Hey {name} — you're moving through this beautifully. Keep going at your pace — proud of you for showing up."
     },
     {
       id: "blooming",
-      when: "Runway mostly done — cheer",
+      when: "Almost there — cheer",
       match: function (ctx) { return ctx.sectionsDone >= Math.max(3, ctx.sectionTotal - 1); },
-      body: "Look at you, {name}. You've done the quiet prep most people skip. Proud of you — keep learning the products and flipping hopefuls to yes when it's real 🌳"
+      body: "Look at you, {name}. You've done the quiet prep most people skip. Proud of you — keep learning at your pace 🌳"
     }
   ],
 
@@ -272,14 +294,14 @@ window.FS.CONFIG = {
     },
     {
       title: "Mentor by how they're moving",
-      body: "Needs a nudge · In motion · Ready — based on real First Seeds progress, not just that they downloaded the app.",
+      body: "Needs a nudge only when someone's been quiet a while · In motion · Ready — based on real First Seeds progress, not just that they downloaded the app.",
       panel: "leader",
       target: '[data-team-tour="board"]',
       placement: "above"
     },
     {
-      title: "Copy a nudge to text them",
-      body: "Each card suggests a check-in you can paste into iMessage or Instagram. Copy nudge lives inside the tip box — it doesn't send anything inside First Seeds.",
+      title: "Copy a check-in to text them",
+      body: "Each card suggests a supportive line you can paste into iMessage or Instagram. Copy message lives inside the tip box — it doesn't send anything inside First Seeds.",
       panel: "leader",
       target: '[data-team-tour="nudge"]',
       placement: "above"

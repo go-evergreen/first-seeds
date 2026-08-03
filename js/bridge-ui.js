@@ -37,6 +37,7 @@ window.FS = window.FS || {};
     var sectionsDone = 0;
     sections.forEach(function (s) { if (done[s.id]) sectionsDone++; });
     var last = row.profile.last_active_at ? new Date(row.profile.last_active_at) : new Date(0);
+    var joined = row.profile.created_at ? new Date(row.profile.created_at) : last;
     var now = new Date();
     var plan = Cal.plan(cfg, cal, data);
     var slice = Cal.weekSlice(plan, now, 0, weekStartPref(getState && getState()));
@@ -49,6 +50,7 @@ window.FS = window.FS || {};
       sectionsDone: sectionsDone,
       sectionTotal: sections.length || 4,
       daysSinceActive: daysBetween(last, now),
+      daysSinceJoined: Math.max(0, daysBetween(joined, now)),
       weekPosted: stats.posted,
       daysToPreReg: Math.max(0, Math.ceil((pre - now) / 864e5)),
       active: (row.progress && row.progress.active) || "welcome",
@@ -56,29 +58,54 @@ window.FS = window.FS || {};
     };
   }
 
-  function pickNudge(ctx) {
-    var nudges = (window.FS.CONFIG.nudges || []).slice();
-    for (var i = 0; i < nudges.length; i++) {
+  function pickFromList(list, ctx, fallback) {
+    for (var i = 0; i < (list || []).length; i++) {
       try {
-        if (nudges[i].match(ctx)) {
+        if (list[i].match(ctx)) {
           return {
-            id: nudges[i].id,
-            when: nudges[i].when,
-            body: nudges[i].body.replace(/\{name\}/g, ctx.name)
+            id: list[i].id,
+            when: list[i].when,
+            body: list[i].body.replace(/\{name\}/g, ctx.name),
+            tone: list[i].tone || "support"
           };
         }
       } catch (e) {}
     }
-    return {
-      id: "default",
-      when: "Gentle check-in",
-      body: "Hey " + ctx.name + " — just checking in. First Seeds is waiting whenever you have a few quiet minutes. Here if you need me."
-    };
+    return fallback;
+  }
+
+  /* Supportive by default. Real "nudge" copy only when they're in the nudge bucket. */
+  function pickMentorMessage(ctx, bucket) {
+    var cfg = window.FS.CONFIG || {};
+    if (bucket === "nudge") {
+      return pickFromList(cfg.nudges, ctx, {
+        id: "default_nudge",
+        when: "Gentle check-in",
+        body: "Thinking of you, " + ctx.name + ". First Seeds will be right where you left it — one tiny step is enough. Here if you want company.",
+        tone: "nudge"
+      });
+    }
+    if (bucket === "ready") {
+      return pickFromList(cfg.supports, ctx, {
+        id: "ready_cheer",
+        when: "Ready / blooming",
+        body: "Look at you, " + ctx.name + ". You've done the quiet prep most people skip. Proud of you 🌳",
+        tone: "support"
+      });
+    }
+    return pickFromList(cfg.supports, ctx, {
+      id: "default_support",
+      when: "Supportive check-in",
+      body: "Hey " + ctx.name + " — glad you're here. No rush. I'm around if you want a hand with anything in First Seeds 🌱",
+      tone: "support"
+    });
   }
 
   function bucketFor(ctx) {
     if (ctx.sectionsDone >= ctx.sectionTotal) return "ready";
-    if (ctx.daysSinceActive >= 5 || (ctx.sectionsDone === 0 && ctx.daysSinceActive >= 2)) return "nudge";
+    /* Only "needs a nudge" when truly quiet — not day-one or a few hours offline */
+    if (ctx.daysSinceActive >= 7) return "nudge";
+    if (ctx.sectionsDone === 0 && ctx.daysSinceJoined >= 5 && ctx.daysSinceActive >= 3) return "nudge";
     return "motion";
   }
 
@@ -226,7 +253,7 @@ window.FS = window.FS || {};
       var ctx = progressCtx(row, cfg);
       var under = underById[row.profile.id] || 0;
       var b = bucketFor(ctx);
-      buckets[b].push({ row: row, ctx: ctx, nudge: pickNudge(ctx), under: under });
+      buckets[b].push({ row: row, ctx: ctx, nudge: pickMentorMessage(ctx, b), under: under, bucket: b });
     });
     function sortByUnder(a, b) {
       if (b.under !== a.under) return b.under - a.under;
@@ -258,10 +285,12 @@ window.FS = window.FS || {};
           (ctx.daysSinceActive === 0 ? "today" : ctx.daysSinceActive + "d ago") + '</div>';
         html += '<div class="leader-progress-row"><div class="leader-progress" aria-hidden="true"><span style="width:' +
           pct + '%"></span></div><span class="leader-progress-label">' + ctx.sectionsDone + '/' + ctx.sectionTotal + '</span></div>';
-        html += '<div class="leader-card-nudge"' + (isMentorDemo ? ' data-team-tour="nudge"' : "") + '>';
-        html += '<em>' + esc(item.nudge.when) + '</em>';
-        html += '<div id="nudge_' + esc(p.id) + '">' + esc(item.nudge.body) + '</div>';
-        html += '<button type="button" class="leader-nudge-copy" data-copy-nudge="' + esc(p.id) + '">Copy nudge</button>';
+        var msg = item.nudge || {};
+        var copyLabel = item.bucket === "nudge" ? "Copy nudge" : "Copy message";
+        html += '<div class="leader-card-nudge' + (item.bucket === "nudge" ? " is-nudge-tone" : " is-support-tone") + '"' + (isMentorDemo ? ' data-team-tour="nudge"' : "") + '>';
+        html += '<em>' + esc(msg.when || "Check-in") + '</em>';
+        html += '<div id="nudge_' + esc(p.id) + '">' + esc(msg.body || "") + '</div>';
+        html += '<button type="button" class="leader-nudge-copy" data-copy-nudge="' + esc(p.id) + '" data-copy-label="' + esc(copyLabel) + '">' + esc(copyLabel) + "</button>";
         html += '</div>';
         if (item.row.progress && item.row.progress.notified_at) {
           var pingAge = daysBetween(new Date(item.row.progress.notified_at), now);
@@ -1638,8 +1667,9 @@ window.FS = window.FS || {};
         var src = $("nudge_" + id);
         if (src && navigator.clipboard) {
           navigator.clipboard.writeText(src.textContent).then(function () {
+            var label = t.getAttribute("data-copy-label") || "Copy message";
             t.textContent = "Copied ✓";
-            setTimeout(function () { t.textContent = "Copy nudge"; }, 1400);
+            setTimeout(function () { t.textContent = label; }, 1400);
           });
         }
         return;
