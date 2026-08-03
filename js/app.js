@@ -1616,12 +1616,21 @@
     var wrap = document.getElementById("growthMoment");
     var slot = document.getElementById("growthMomentPlant");
     var lab = document.getElementById("growthMomentMsg");
+    var tip = document.getElementById("growthMomentTip");
     if (!wrap || !slot || !lab) return;
     var prevStage = plantVisualStage(prev.sprout, prev.sproutTotal);
     var nextStage = plantVisualStage(next.sprout, next.sproutTotal);
     slot.classList.remove("roots-pulse", "sprout-pulse");
     slot.innerHTML = window.FS.plantSVG(prevStage, prev.roots, ROOT_MAX, "m0_");
     lab.textContent = msg;
+    var firstTip = !state.data.growthMomentTipSeen;
+    if (tip) {
+      tip.hidden = !firstTip;
+      if (firstTip) {
+        state.data.growthMomentTipSeen = true;
+        save();
+      }
+    }
     wrap.hidden = false;
     wrap.classList.add("open");
     requestAnimationFrame(function () {
@@ -1633,7 +1642,7 @@
       });
     });
     clearTimeout(growthMomentTimer);
-    growthMomentTimer = setTimeout(closeGrowthMoment, 2400);
+    growthMomentTimer = setTimeout(closeGrowthMoment, firstTip ? 3200 : 2400);
   }
 
   function celebrateGrowth(kind, msg, prev, next) {
