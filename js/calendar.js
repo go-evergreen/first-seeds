@@ -11,46 +11,46 @@ window.FS = window.FS || {};
   /* 28-day monthly flow — weeks feel different, not the same loop forever */
   var MONTHLY_CADENCE = [
     /* Week 1 — curiosity opens */
-    { type: "open_loop", label: "Open Loop", icon: "🔓", category: "content" },
+    { type: "open_loop", label: "Curiosity post", icon: "✨", category: "content" },
     { type: "product_curious", label: "Product spark", icon: "🫧", category: "content" },
-    { type: "curtain", label: "Behind the Curtain", icon: "🎬", category: "content" },
+    { type: "curtain", label: "Behind the scenes", icon: "🎬", category: "content" },
     { type: "reactive", label: "Rest / reply", icon: "🌿", category: "rest", reactive: true },
-    { type: "values_flag", label: "Values Flag", icon: "🚩", category: "content" },
-    { type: "soft_door", label: "Soft Door", icon: "🚪", category: "outreach" },
+    { type: "values_flag", label: "Values post", icon: "🚩", category: "content" },
+    { type: "soft_door", label: "Soft invite", icon: "🚪", category: "outreach" },
     { type: "reactive", label: "Rest / reply", icon: "💬", category: "rest", reactive: true },
     /* Week 2 — product noticing */
     { type: "product_curious", label: "Product spark", icon: "🫧", category: "content" },
-    { type: "honest_note", label: "Honest Note", icon: "📝", category: "content" },
-    { type: "open_loop", label: "Open Loop", icon: "🔓", category: "content" },
+    { type: "honest_note", label: "Honest note", icon: "📝", category: "content" },
+    { type: "open_loop", label: "Curiosity post", icon: "✨", category: "content" },
     { type: "reactive", label: "Rest / reply", icon: "🌿", category: "rest", reactive: true },
-    { type: "curtain", label: "Behind the Curtain", icon: "🎬", category: "content" },
-    { type: "soft_door", label: "Soft Door", icon: "🚪", category: "outreach" },
+    { type: "curtain", label: "Behind the scenes", icon: "🎬", category: "content" },
+    { type: "soft_door", label: "Soft invite", icon: "🚪", category: "outreach" },
     { type: "reactive", label: "Rest / reply", icon: "💬", category: "rest", reactive: true },
     /* Week 3 — story + conversation */
-    { type: "values_flag", label: "Values Flag", icon: "🚩", category: "content" },
+    { type: "values_flag", label: "Values post", icon: "🚩", category: "content" },
     { type: "product_curious", label: "Product spark", icon: "🫧", category: "content" },
-    { type: "honest_note", label: "Honest Note", icon: "📝", category: "content" },
+    { type: "honest_note", label: "Honest note", icon: "📝", category: "content" },
     { type: "reactive", label: "Rest / reply", icon: "🌿", category: "rest", reactive: true },
-    { type: "open_loop", label: "Open Loop", icon: "🔓", category: "content" },
+    { type: "open_loop", label: "Curiosity post", icon: "✨", category: "content" },
     { type: "reach_out", label: "Reach out", icon: "💬", category: "outreach" },
     { type: "reactive", label: "Rest / reply", icon: "💬", category: "rest", reactive: true },
     /* Week 4 — invite + follow-through */
-    { type: "curtain", label: "Behind the Curtain", icon: "🎬", category: "content" },
+    { type: "curtain", label: "Behind the scenes", icon: "🎬", category: "content" },
     { type: "product_curious", label: "Product spark", icon: "🫧", category: "content" },
-    { type: "soft_door", label: "Soft Door", icon: "🚪", category: "outreach" },
+    { type: "soft_door", label: "Soft invite", icon: "🚪", category: "outreach" },
     { type: "reactive", label: "Rest / reply", icon: "🌿", category: "rest", reactive: true },
     { type: "follow_up", label: "Follow up", icon: "🔁", category: "followup" },
-    { type: "honest_note", label: "Honest Note", icon: "📝", category: "content" },
+    { type: "honest_note", label: "Honest note", icon: "📝", category: "content" },
     { type: "reactive", label: "Rest / reply", icon: "💬", category: "rest", reactive: true }
   ];
 
   var EVENT_TYPES = [
-    { id: "open_loop", label: "Open Loop", icon: "🔓", category: "content", kind: "content" },
+    { id: "open_loop", label: "Curiosity post", icon: "✨", category: "content", kind: "content" },
     { id: "product_curious", label: "Product spark", icon: "🫧", category: "content", kind: "content" },
-    { id: "curtain", label: "Behind the Curtain", icon: "🎬", category: "content", kind: "content" },
-    { id: "honest_note", label: "Honest Note", icon: "📝", category: "content", kind: "content" },
-    { id: "values_flag", label: "Values Flag", icon: "🚩", category: "content", kind: "content" },
-    { id: "soft_door", label: "Soft Door", icon: "🚪", category: "outreach", kind: "content" },
+    { id: "curtain", label: "Behind the scenes", icon: "🎬", category: "content", kind: "content" },
+    { id: "honest_note", label: "Honest note", icon: "📝", category: "content", kind: "content" },
+    { id: "values_flag", label: "Values post", icon: "🚩", category: "content", kind: "content" },
+    { id: "soft_door", label: "Soft invite", icon: "🚪", category: "outreach", kind: "content" },
     { id: "reach_out", label: "Reach out", icon: "💬", category: "outreach", kind: "outreach" },
     { id: "follow_up", label: "Follow up", icon: "🔁", category: "followup", kind: "outreach" },
     { id: "personal", label: "Reminder", icon: "📌", category: "personal", kind: "personal" },
@@ -365,16 +365,18 @@ window.FS = window.FS || {};
     var buckets = [];
     buckets.push({
       id: "hooks",
-      title: "Scroll-stoppers",
-      hint: "First-line openers — drop one on a day, then rewrite it in your voice.",
-      items: (C.openLoops || []).map(function (body, i) {
-        return { id: "hook-" + i, type: "open_loop", title: "Open loop " + (i + 1), body: body };
+      title: "Curiosity posts",
+      hint: "Short unfinished stories that stop the scroll — drop one on a day, then rewrite it in your voice.",
+      items: (C.openLoops || []).map(function (it, i) {
+        var body = typeof it === "string" ? it : (it.body || "");
+        var title = (typeof it === "object" && it.title) ? it.title : ("Curiosity " + (i + 1));
+        return { id: "hook-" + i, type: "open_loop", title: title, body: body, icon: "✨" };
       })
     });
     buckets.push({
       id: "sparks",
       title: "Product moments",
-      hint: "Everyday product noticing — good midweek gives with no hard ask.",
+      hint: "Everyday product noticing — good midweek posts with no hard ask.",
       items: (C.productSparks || []).map(function (it) {
         return { id: "spark-" + it.id, type: "product_curious", title: it.title, body: it.body, icon: it.icon || "🫧" };
       })
@@ -382,22 +384,22 @@ window.FS = window.FS || {};
     buckets.push({
       id: "doors",
       title: "Soft invites",
-      hint: "Low-pressure curiosity doors — ask once, no follow-up spam.",
+      hint: "One low-pressure ask after you've shared value — comment or DM, no spam.",
       items: (C.curiosity || []).map(function (it) {
         return { id: "door-" + it.id, type: "soft_door", title: it.title, body: it.body };
       })
     });
     buckets.push({
       id: "product",
-      title: "Product story arc",
-      hint: "A short sequence about the products — share in order if you like.",
+      title: "Product story posts",
+      hint: "Longer posts about what makes the products different — share in any order.",
       items: ((C.productStory && C.productStory.posts) || []).map(function (it) {
         return { id: "prod-" + it.id, type: "honest_note", title: it.title, body: it.body, icon: it.icon };
       })
     });
     buckets.push({
       id: "business",
-      title: "How it works",
+      title: "How the business works",
       hint: "Plain-language business / company story posts — for when someone asks how it works.",
       items: (Array.isArray(C.businessStory) ? C.businessStory : ((C.businessStory && C.businessStory.posts) || [])).map(function (it) {
         return { id: "biz-" + (it.id || it.title), type: "curtain", title: it.title, body: it.body, icon: it.icon };
@@ -405,7 +407,7 @@ window.FS = window.FS || {};
     });
     buckets.push({
       id: "pillars",
-      title: "Values (no ask)",
+      title: "Values posts",
       hint: "Plant a flag — what you stand for — with zero pitch.",
       items: (C.pillars || []).map(function (it) {
         return { id: "pil-" + (it.id || it.title), type: "values_flag", title: it.title || it.name, body: it.body || it.blurb || "", icon: it.icon };

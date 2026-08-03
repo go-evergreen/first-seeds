@@ -205,7 +205,7 @@
   function anySeedDraft() {
     return filledText("seed_open") || giveDraftFilled() || filledText("seed_invite");
   }
-  /* Old saves used one shared seed_value — park it under Behind the Curtain */
+  /* Old saves used one shared seed_value — park it under Behind the Scenes */
   if (filledText("seed_value") && !filledText("seed_curtain") && !filledText("seed_honest") && !filledText("seed_values")) {
     state.data.seed_curtain = state.data.seed_value;
   }
@@ -487,7 +487,7 @@
       ground: {
         title: "Claim a patch of ground.",
         body: usesBuiltInLeadPage() && !leadPageReady()
-          ? "You picked the First Seeds page — next, set up your personal lead link (sign in, save your URL, preview)."
+          ? "You picked the First Seeds page — next, set up the link you'll share with interested people (sign in, save your URL, preview)."
           : "Pick First Seeds lead page or your own page, draft one warm opening line, and finish the steps that follow.",
         cta: sectionStarted("ground") ? "Finish your page steps →" : "Claim your ground →",
         why: "Curious people need one place to land."
@@ -506,7 +506,7 @@
       },
       plant: {
         title: "Draft today's seeds.",
-        body: "Open a post type, learn it, and draft inside it — open loop, a give, and a soft door. No posting required yet.",
+        body: "Open a post type, learn it, and draft inside it — a curiosity post, a helpful share, and a soft invite. No posting required yet.",
         cta: sectionStarted("plant") ? "Keep drafting →" : "Open Post Studio →",
         why: "Launch feels calmer when the words are already yours."
       },
@@ -793,7 +793,10 @@
       : ((window.FS.CONTENT && window.FS.CONTENT.openLoops) || []);
     var html = "";
     for (var i = 0; i < hooks.length; i++) {
-      html += '<div class="hook-row"><span class="hook-text" id="hook_' + i + '">' + esc(hooks[i]) + '</span><button class="copy-btn small" data-copy="hook_' + i + '">Copy</button></div>';
+      var h = hooks[i];
+      var text = typeof h === "string" ? h : (h && h.body) || "";
+      if (!text) continue;
+      html += '<div class="hook-row"><span class="hook-text" id="hook_' + i + '">' + esc(text) + '</span><button class="copy-btn small" data-copy="hook_' + i + '">Copy</button></div>';
     }
     wrap.innerHTML = html;
   }
@@ -891,8 +894,32 @@
     return window.FS.PRODUCT_LIB || { categories: [], products: [], disclaimer: "", sourceNote: "" };
   }
 
+  function isSpfProduct(p) {
+    if (!p) return true;
+    var name = ((p.name || "") + " " + (p.id || "")).toLowerCase();
+    /* After-sun stays in the library — only hide true SPF / sunscreen products */
+    if (/after[\s-]*sun/.test(name)) return false;
+    var sub = ((p.subcategory || "") + "").toLowerCase();
+    if (sub === "sunscreen") return true;
+    if (/\bspf\b|sunscreen/.test(name)) return true;
+    if (sub === "sun" && !/after[\s-]*sun|tan booster/.test(name)) return true;
+    if (/tinted moisturiser/i.test(p.name || "") && (p.badges || []).some(function (b) {
+      return /\bspf\b/i.test(b || "");
+    })) return true;
+    return false;
+  }
+
+  function visibleProducts() {
+    return (productLib().products || []).filter(function (p) { return !isSpfProduct(p); });
+  }
+
+  function isHiddenSunSub(subId) {
+    var id = ((subId || "") + "").toLowerCase();
+    return id === "sunscreen";
+  }
+
   function productById(id) {
-    var list = productLib().products || [];
+    var list = visibleProducts();
     for (var i = 0; i < list.length; i++) if (list[i].id === id) return list[i];
     return null;
   }
@@ -903,17 +930,84 @@
     return null;
   }
 
+  function categorySubs(cat) {
+    if (!cat || !cat.subs) return [];
+    return cat.subs.filter(function (s) { return !isHiddenSunSub(s.id); });
+  }
+
+  function cleanProdSquares(text) {
+    return String(text || "")
+      .replace(/[\u25A0\u25A1\u25AA\u25AB\u25FC\u25FB\u25FE\u25FD\u25A0]/g, "")
+      .replace(/■/g, "")
+      .replace(/[ \t]+\n/g, "\n")
+      .replace(/ {2,}/g, " ")
+      .trim();
+  }
+
+  function cleanForWhoList(list) {
+    return (list || []).map(function (s) {
+      return cleanProdSquares(s).replace(/\s*\(site category\)\s*/gi, "").trim();
+    }).filter(Boolean);
+  }
+
+  function realNotForList(list) {
+    return (list || []).map(function (s) { return cleanProdSquares(s); }).filter(function (t) {
+      if (!t) return false;
+      if (/no discrete|not listed on the public|check full INCI|who it.?s not for.? section/i.test(t)) return false;
+      return true;
+    });
+  }
+
+  function splitIngredientsDump(raw) {
+    var t = cleanProdSquares(raw);
+    var out = { ingredients: "", usageExtra: "", important: "" };
+    if (!t) return out;
+
+    var impParts = t.split(/\bIMPORTANT INFORMATION\b/i);
+    if (impParts.length > 1) {
+      out.important = impParts.slice(1).join(" ").replace(/^[:\s]+/, "").trim();
+      t = impParts[0].trim();
+    }
+
+    var recParts = t.split(/\bRECOMMENDED CONSUMPTION\b/i);
+    if (recParts.length > 1) {
+      out.usageExtra = recParts.slice(1).join(" ").replace(/^[:\s]+/, "").trim();
+      t = recParts[0].trim();
+    }
+
+    var ingIdx = t.search(/\bINGREDIENTS\b\s*:?/i);
+    if (ingIdx >= 0) {
+      t = t.slice(ingIdx).replace(/^INGREDIENTS\b\s*:?\s*/i, "").trim();
+    } else {
+      t = t.replace(/^INGREDIENTS\b\s*:?\s*/i, "").trim();
+    }
+
+    /* Drop packaging disclaimer that often trails the INCI list */
+    t = t.replace(/\n?\s*A product[\u2019']s ingredients may change[\s\S]*$/i, "").trim();
+
+    out.ingredients = t;
+    return out;
+  }
+
+  function prodAcc(title, bodyHtml, open) {
+    if (!bodyHtml) return "";
+    return '<details class="prod-acc"' + (open ? " open" : "") + ">" +
+      "<summary>" + esc(title) + "</summary>" +
+      '<div class="prod-acc-body">' + bodyHtml + "</div></details>";
+  }
+
   function productsInScope(browse) {
-    var list = productLib().products || [];
+    var list = visibleProducts();
     var q = ((browse && browse.q) || "").trim().toLowerCase();
     return list.filter(function (p) {
       if (browse.category && p.category !== browse.category) return false;
       if (browse.subcategory && p.subcategory !== browse.subcategory) return false;
+      if (browse.subcategory && isHiddenSunSub(browse.subcategory)) return false;
       if (!q) return true;
       var hay = [
         p.name, p.tagline, p.summary, p.heroIngredients, p.ingredientsNote,
         p.application, (p.claims || []).join(" "), (p.forWho || []).join(" "),
-        (p.badges || []).join(" "), p.step, p.subcategory, p.category
+        p.step, p.subcategory, p.category
       ].join(" ").toLowerCase();
       return hay.indexOf(q) > -1;
     });
@@ -932,48 +1026,75 @@
 
   function renderProductDetail(p) {
     var cat = categoryById(p.category);
+    var forWho = cleanForWhoList(p.forWho);
+    var notFor = realNotForList(p.notFor);
+    var ing = splitIngredientsDump(p.ingredientsNote);
+    var howTo = cleanProdSquares(p.application || "");
+    if (ing.usageExtra) {
+      howTo = howTo ? (howTo + "\n\n" + ing.usageExtra) : ing.usageExtra;
+    }
+
     var html = "";
-    html += '<div class="prod-crumb">' +
-      '<button type="button" data-prod-nav="hub">All products</button><span>/</span>' +
-      '<button type="button" data-prod-nav="cat" data-prod-cat="' + esc(p.category) + '">' + esc(cat ? cat.label : p.category) + "</button><span>/</span>" +
-      "<span>" + esc(p.name) + "</span></div>";
+    html += '<div class="prod-detail-bar">' +
+      '<button type="button" class="prod-back-main" data-prod-nav="hub">← All products</button>' +
+      (cat
+        ? '<button type="button" class="prod-back-cat" data-prod-nav="cat" data-prod-cat="' + esc(p.category) + '">' + esc(cat.label) + "</button>"
+        : "") +
+      "</div>";
     html += '<div class="prod-detail-kicker">' + esc((cat ? cat.label : "") + (p.step ? " · " + p.step : "")) + "</div>";
     html += '<h1 class="prod-detail-title">' + esc(p.name) + "</h1>";
     if (p.tagline) html += '<p class="prod-detail-tagline">' + esc(p.tagline) + "</p>";
     if (p.summary) html += '<p class="prod-detail-summary">' + esc(p.summary) + "</p>";
-    if (p.badges && p.badges.length) {
-      html += '<div class="prod-badges">' + p.badges.map(function (b) {
-        return '<span class="prod-badge">' + esc(b) + "</span>";
-      }).join("") + "</div>";
-    }
+
+    html += '<div class="prod-acc-stack">';
     if (p.heroIngredients) {
-      html += '<div class="prod-block"><h3>Hero ingredients</h3><p>' + esc(p.heroIngredients) + "</p></div>";
+      html += prodAcc("Hero ingredients", "<p>" + esc(cleanProdSquares(p.heroIngredients)) + "</p>", true);
     }
     if (p.claims && p.claims.length) {
-      html += '<div class="prod-block claims"><h3>Study / performance notes</h3><ul>' +
-        p.claims.map(function (c) { return "<li>" + esc(c) + "</li>"; }).join("") +
-        "</ul><p style=\"margin-top:8px;font-size:12px\">As published on the ringana.com product page. Not a guarantee of individual results.</p></div>";
+      html += prodAcc(
+        "Study / performance notes",
+        "<ul>" + p.claims.map(function (c) { return "<li>" + esc(cleanProdSquares(c)) + "</li>"; }).join("") +
+          '</ul><p class="prod-acc-note">As published on the ringana.com product page. Not a guarantee of individual results.</p>'
+      );
     }
-    if (p.forWho && p.forWho.length) {
-      html += '<div class="prod-block"><h3>Who it’s for</h3><ul>' +
-        p.forWho.map(function (c) { return "<li>" + esc(c) + "</li>"; }).join("") + "</ul></div>";
+    if (forWho.length) {
+      html += prodAcc("Who it’s for", "<ul>" + forWho.map(function (c) { return "<li>" + esc(c) + "</li>"; }).join("") + "</ul>");
     }
-    if (p.notFor && p.notFor.length) {
-      html += '<div class="prod-block notfor"><h3>Who it’s not for / cautions</h3><ul>' +
-        p.notFor.map(function (c) { return "<li>" + esc(c) + "</li>"; }).join("") + "</ul></div>";
+    if (notFor.length) {
+      html += prodAcc(
+        "Who it’s not for / cautions",
+        "<ul>" + notFor.map(function (c) { return "<li>" + esc(c) + "</li>"; }).join("") + "</ul>"
+      );
     }
-    if (p.application) {
-      html += '<div class="prod-block"><h3>How to use</h3><p>' + esc(p.application) + "</p></div>";
+    if (howTo) {
+      html += prodAcc("How to use", "<p>" + esc(howTo) + "</p>");
     }
-    if (p.ingredientsNote) {
-      html += '<div class="prod-block"><h3>Ingredients</h3><p>' + esc(p.ingredientsNote) + "</p></div>";
+    if (ing.ingredients) {
+      html += prodAcc("Ingredients", "<p>" + esc(ing.ingredients) + "</p>");
     }
+    if (ing.important) {
+      html += prodAcc("Important information", "<p>" + esc(ing.important) + "</p>");
+    }
+    html += "</div>";
+
     html += '<p class="prod-source">Source: <a href="' + esc(p.sourceUrl) + '" target="_blank" rel="noopener noreferrer">View on ringana.com</a></p>';
     html += '<div class="prod-back-row">' +
-      '<button type="button" class="btn-ghost" data-prod-nav="cat" data-prod-cat="' + esc(p.category) + '">← Back to ' + esc(cat ? cat.label : "category") + "</button>" +
-      '<button type="button" class="btn-ghost" data-goto="know">Know Ringana</button>' +
+      '<button type="button" class="btn" data-prod-nav="hub">← Back to all products</button>' +
+      (cat
+        ? '<button type="button" class="btn-ghost" data-prod-nav="cat" data-prod-cat="' + esc(p.category) + '">← ' + esc(cat.label) + "</button>"
+        : "") +
       "</div>";
     return html;
+  }
+
+  function scrollProductLibIntoView() {
+    var root = document.getElementById("productLibRoot");
+    if (!root) return;
+    try {
+      root.scrollIntoView({ behavior: "smooth", block: "start" });
+    } catch (e) {
+      root.scrollIntoView(true);
+    }
   }
 
   function renderProductLibrary() {
@@ -981,6 +1102,7 @@
     if (!root) return;
     var lib = productLib();
     var browse = ensureProductBrowse();
+    if (browse.subcategory && isHiddenSunSub(browse.subcategory)) browse.subcategory = null;
     var html = "";
 
     if (browse.productId) {
@@ -1021,7 +1143,8 @@
     if (!browse.category && !browse.q) {
       html += '<div class="prod-cat-grid">';
       (lib.categories || []).forEach(function (c) {
-        var n = (lib.products || []).filter(function (p) { return p.category === c.id; }).length;
+        var n = visibleProducts().filter(function (p) { return p.category === c.id; }).length;
+        if (!n) return;
         html += '<button type="button" class="prod-cat-card" data-prod-nav="cat" data-prod-cat="' + esc(c.id) + '">' +
           '<span class="prod-cat-card-count">' + n + "</span>" +
           '<span class="prod-cat-card-label">' + esc(c.label) + "</span>" +
@@ -1032,10 +1155,11 @@
       html += renderProductListRows(scoped);
     } else {
       var catObj = categoryById(browse.category);
-      if (catObj && catObj.subs && catObj.subs.length && !browse.q) {
+      var subs = categorySubs(catObj);
+      if (subs.length && !browse.q) {
         html += '<div class="prod-sub-row">';
         html += '<button type="button" class="prod-sub-chip' + (!browse.subcategory ? " on" : "") + '" data-prod-nav="cat" data-prod-cat="' + esc(browse.category) + '" data-prod-sub="">All</button>';
-        catObj.subs.forEach(function (s) {
+        subs.forEach(function (s) {
           html += '<button type="button" class="prod-sub-chip' + (browse.subcategory === s.id ? " on" : "") +
             '" data-prod-nav="cat" data-prod-cat="' + esc(browse.category) + '" data-prod-sub="' + esc(s.id) + '">' +
             esc(s.label) + "</button>";
@@ -1144,16 +1268,16 @@
       ];
       if (usesBuiltInLeadPage()) {
         items.push({ done: leadSignedIn(), label: "Sign in for your lead page" });
-        items.push({ done: leadPageReady(), label: "Save your personal lead link" });
+        items.push({ done: leadPageReady(), label: "Save the link you'll share" });
         items.push({ done: leadPreviewSeen(), label: "Preview your lead page", optional: true });
       }
       return items;
     }
     if (id === "plant") {
       return [
-        { done: filledText("seed_open"), label: "Open loop draft" },
-        { done: giveDraftFilled(), label: "Give draft (curtain, honest note, or values)" },
-        { done: filledText("seed_invite"), label: "Soft door draft" }
+        { done: filledText("seed_open"), label: "Curiosity post draft" },
+        { done: giveDraftFilled(), label: "Helpful share (behind the scenes, honest note, or values)" },
+        { done: filledText("seed_invite"), label: "Soft invite draft" }
       ];
     }
     if (id === "tend") {
@@ -1279,8 +1403,8 @@
     });
     var cta = document.getElementById("groundLeadCta");
     if (cta) {
-      if (!signed) cta.textContent = "Sign in & set up my lead page →";
-      else if (!ready) cta.textContent = "Claim my lead link →";
+      if (!signed) cta.textContent = "Sign in & set up the link I'll share →";
+      else if (!ready) cta.textContent = "Claim my share link →";
       else cta.textContent = "Open Leads · preview again →";
     }
   }
@@ -1784,7 +1908,7 @@
         if (!state.data.page_choice) b.textContent = "Pick a page option first";
         else if (!filledText("page_story")) b.textContent = "Draft your opening line";
         else if (usesBuiltInLeadPage() && !leadSignedIn()) b.textContent = "Sign in to set up your lead page";
-        else if (usesBuiltInLeadPage() && !leadPageReady()) b.textContent = "Save your personal lead link";
+        else if (usesBuiltInLeadPage() && !leadPageReady()) b.textContent = "Save the link you'll share";
         else b.textContent = b.getAttribute("data-wait");
       } else {
         b.textContent = b.getAttribute("data-wait");
@@ -1963,11 +2087,54 @@
     renderPickList("warm");
   }
 
+  var syncLeadBlurbTimer = null;
+
+  function syncPageStoryToLeadBlurb() {
+    if (!usesBuiltInLeadPage()) return;
+    var story = ((state.data.page_story || "") + "").trim().slice(0, 280);
+    var hint = document.getElementById("pageStoryHint");
+    if (hint) {
+      hint.textContent = "Pull straight from your Roots. This line also fills the intro on your in-app lead page — watch the preview below.";
+    }
+    var input = document.getElementById("leadsBlurbInput");
+    if (input && document.activeElement !== input) input.value = story;
+
+    var Cloud = window.FS.Cloud;
+    if (!Cloud || !Cloud.isSignedIn || !Cloud.isSignedIn()) {
+      state.data._synced_page_story = story;
+      return;
+    }
+    var user = Cloud.user() || {};
+    var current = ((user.lead_blurb || "") + "").trim();
+    var prevSynced = ((state.data._synced_page_story || "") + "").trim();
+    /* Keep auto-fill going until they customize the intro to something else in Leads settings */
+    if (current && current !== prevSynced && current !== story) return;
+    state.data._synced_page_story = story;
+    clearTimeout(syncLeadBlurbTimer);
+    syncLeadBlurbTimer = setTimeout(function () {
+      if (!usesBuiltInLeadPage()) return;
+      Cloud.setLeadBlurb(story).then(function () {
+        var input = document.getElementById("leadsBlurbInput");
+        if (input && document.activeElement !== input) input.value = story;
+      }).catch(function () {});
+    }, 700);
+  }
+
   function renderMiniPage() {
     var el = document.getElementById("miniHeadline");
     if (!el) return;
     var t = (state.data.page_story || "").trim();
-    el.innerHTML = t ? esc(t) : '<span class="dim">Your opening line appears here — the first thing a visitor reads.</span>';
+    el.innerHTML = t
+      ? esc(t)
+      : '<span class="dim">Your opening line appears here — the first personal thing a visitor reads.</span>';
+    var brand = document.getElementById("miniBrandName");
+    if (brand) brand.textContent = firstName() || "you";
+    var hint = document.getElementById("pageStoryHint");
+    if (hint) {
+      hint.textContent = usesBuiltInLeadPage()
+        ? "Pull straight from your Roots. This line also fills the intro on your in-app lead page — watch the preview below."
+        : "Pull straight from your Roots. Your why, in one warm sentence. Watch it appear on the preview below.";
+    }
   }
 
   function runClaimCheck(key) {
@@ -2089,6 +2256,7 @@
           pruneGrovePicks(k === "warm" ? "warm" : "customers");
         }
         liveRefresh({ groveFlash: groveFlash, customerFlash: customerFlash, silent: true });
+        if (k === "page_story") syncPageStoryToLeadBlurb();
         /* Pulse when roots or sprout checklist progress actually advances */
         if (rootCount() > beforeRoots || checklistProgress().sproutDone > beforeSprout) {
           lastRoots = beforeRoots;
@@ -2566,6 +2734,7 @@
       }
       state.active = "products";
       save(); renderNav(); renderPanels();
+      scrollProductLibIntoView();
       return;
     }
     if (t.hasAttribute("data-complete")) {
@@ -2603,6 +2772,9 @@
       state.data[choiceKey] = choiceVal;
       if (choiceKey === "page_choice" && choiceVal === "custom" && state.active === "leads") {
         state.active = "ground";
+      }
+      if (choiceKey === "page_choice" && choiceVal === "generic") {
+        syncPageStoryToLeadBlurb();
       }
       save(); renderChoices(); liveRefresh({ silent: true });
       if (checklistProgress().sproutDone > beforeSprout) {
@@ -2713,12 +2885,12 @@
     if (isFull() || anySeedDraft()) {
       lines = lines.concat([
         "═══ MY STARTER TRIO (Post Studio) ═══",
-        "My open loop 🔓:", d.seed_open || "—", "",
-        "Behind the curtain 🎬:", d.seed_curtain || "—", "",
+        "My curiosity post ✨:", d.seed_open || "—", "",
+        "Behind the scenes 🎬:", d.seed_curtain || "—", "",
         "Honest note 📝:", d.seed_honest || "—", "",
-        "Values flag 🚩:", d.seed_values || d.seed_value || "—", "",
-        "My soft door 🚪:", d.seed_invite || "—", "",
-        "(Cadence: four gives, one ask — the door posts last)", ""
+        "Values post 🚩:", d.seed_values || d.seed_value || "—", "",
+        "My soft invite 🚪:", d.seed_invite || "—", "",
+        "(Cadence: share value a few times, then one soft invite)", ""
       ]);
     }
 
@@ -2772,6 +2944,7 @@
 
   window.FS.onAuthReady = function () {
     liveRefresh({ silent: true });
+    syncPageStoryToLeadBlurb();
     var wrap = document.getElementById("onboarding");
     if (!wrap || !wrap.classList.contains("open") || modeChosen()) return;
     if (partnerName() && cloudSignedIn()) {

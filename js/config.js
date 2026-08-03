@@ -25,13 +25,13 @@ window.FS.CONFIG = {
       label: "Getting started",
       badge: "Getting started",
       tag: "Soft start",
-      desc: "Four calm modules: your story, a simple page, who you'd tell first, and a content calendar. Perfect if you're new to sharing — or just want room to breathe."
+      desc: "Four calm steps: your story, a simple page to share, who you'd tell first, and a content calendar with post ideas. Great if you're new — or you just want room to breathe."
     },
     full: {
       label: "Full runway",
       badge: "Full runway",
       tag: "All in",
-      desc: "The whole path — story, page, grove, dream team sketch, Post Studio, and your calendar all the way to launch."
+      desc: "Everything in Getting started, plus a dream-team sketch, Post Studio (five post types with drafts), and Team tools — all the way to launch."
     }
   },
 
@@ -63,7 +63,7 @@ window.FS.CONFIG = {
     },
     {
       term: "Leads",
-      def: "Your personal interest page. Share your link — people leave name + email or phone, and whether they care about products, business, or both. Entries land only in your inbox."
+      def: "The link you share with interested people. They leave name + email or phone, and whether they care about products, business, or both. Entries land only in your inbox — different from your team join link."
     },
     {
       term: "Learn the products",
@@ -97,35 +97,35 @@ window.FS.CONFIG = {
 
     nameEyebrow: "Make it yours",
     nameTitle: "What should we call you?",
-    nameHint: "First name is perfect. We'll put it on Home so this feels like your greenhouse, not a generic checklist.",
+    nameHint: "First name is perfect — we'll use it on Home so this feels like yours.",
     namePlaceholder: "Your first name",
     nameCta: "That's me →",
     hypeLine: "Pre-registration opens October 1. Prep season is right now — and you're already in it.",
 
     authEyebrow: "Save your spot",
-    authTitle: "Sign in so nothing gets lost",
-    authBody: "Use email + password so your runway, lead page, and progress stay with you — works in the home-screen app with no email links.",
+    authTitle: "Keep your progress with you",
+    authBody: "Create a quick email + password so your story, calendar, and share link don't vanish if you switch phones or clear your browser. You can skip for now and sign in anytime from the top bar.",
     authCta: "Sign in →",
     authSkip: "Continue without signing in",
-    authHint: "New here? Create an account with the same form. You can also sign in later from the top bar.",
+    authHint: "New here? Tap Create account. Already have one? Sign in with the same email.",
 
     modeEyebrow: "Your path",
-    modeTitle: "How deep do you want to go?",
-    modeLead: "No wrong answer. Start soft or go all in — you can switch anytime in Settings."
+    modeTitle: "How much do you want on your plate?",
+    modeLead: "No wrong answer. Start light or go all in — you can switch anytime in Settings."
   },
 
   tour: [
     {
-      title: "Home is where we grow together",
-      body: "Your plant, your Growth %, and what's next all live here. Answer the three Roots questions and growth starts underground — then every checklist item sprouts you a little higher. This is your greenhouse in The Fresh Grove."
+      title: "This is your home base",
+      body: "You'll see a little plant and a Growth % here. Answer the three Roots questions and it starts growing — every real step you finish helps it along. No pressure to finish everything today."
     },
     {
-      title: "Checklists grow the plant",
-      body: "Each box you clear is a real step done — not just a section visited. Watch the sprout catch up with you."
+      title: "Checklists are your map",
+      body: "Each section has a short list of real prep steps. Clear a box, watch the plant catch up. Visiting a page doesn't count — finishing a step does."
     },
     {
-      title: "Facts live in Know",
-      body: "Launch dates, what makes Ringana different, and the U.S. snapshot sit under Know in the bottom bar. Clarity first. Always."
+      title: "When someone asks, open Know",
+      body: "Launch dates, what makes Ringana different, and the U.S. snapshot live under Know in the bottom bar. Clear facts first — so you never have to bluff."
     }
   ],
 
@@ -160,7 +160,7 @@ window.FS.CONFIG = {
   pageOptions: {
     generic: {
       title: "First Seeds lead page (in-app)",
-      desc: "Built into this app — claim your short link, share it, and leads land in your inbox. No extra tools needed."
+      desc: "Built into this app — claim a short link to share with interested people. Their info lands in your inbox. No extra tools needed."
     },
     custom: {
       title: "A custom-built landing page",

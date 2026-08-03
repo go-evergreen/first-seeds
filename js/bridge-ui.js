@@ -399,7 +399,7 @@ window.FS = window.FS || {};
       var setupOpen = !!state.data.calendarSetupOpen;
       var modeLabel = !cadenceChosen
         ? "Not chosen yet"
-        : (cadenceEnabled(state) ? "Suggested monthly rhythm" : "Building it yourself");
+        : (cadenceEnabled(state) ? "Suggested month of post ideas" : "Building it yourself");
       setupEl.hidden = false;
       setupEl.innerHTML =
         '<div class="cal-setup-bubble' + (setupOpen ? " is-open" : "") + '">' +
@@ -412,19 +412,28 @@ window.FS = window.FS || {};
           ? ('<div class="cal-setup-body">' +
             (!cadenceChosen
               ? ('<div class="cal-setup-actions">' +
-                '<button type="button" class="btn" data-cal-cadence="fill">Fill with a suggested monthly rhythm</button>' +
+                '<button type="button" class="btn" data-cal-cadence="fill">Fill my month with post ideas</button>' +
                 '<button type="button" class="btn-ghost" data-cal-cadence="blank">Start blank — I\'ll build it</button>' +
                 "</div>" +
-                '<p class="cal-setup-hint">Suggested = a 4-week mix (curiosity → product sparks → story → invites) with rest days. Not the same week on repeat. You can always edit days or add reach-outs.</p>')
+                '<div class="cal-setup-hint">' +
+                "<p><strong>Suggested month</strong> lays out ~4 weeks of ideas on the calendar. Nothing posts itself — you edit, skip, or swap anytime.</p>" +
+                "<ol class=\"cal-setup-weeks\">" +
+                "<li><strong>Week 1</strong> — Curiosity posts + a soft invite</li>" +
+                "<li><strong>Week 2</strong> — Product moments + honest notes</li>" +
+                "<li><strong>Week 3</strong> — Values + reach out to people you listed</li>" +
+                "<li><strong>Week 4</strong> — Soft invite + follow-ups (with rest days mixed in)</li>" +
+                "</ol>" +
+                "<p>Or start blank and pull ready drafts from <em>Post ideas</em> below.</p>" +
+                "</div>")
               : ('<div class="cal-setup-bar">' +
-                '<span class="cal-setup-mode">' + (cadenceEnabled(state) ? "Suggested rhythm is on" : "Blank calendar") + "</span>" +
+                '<span class="cal-setup-mode">' + (cadenceEnabled(state) ? "Suggested month is on" : "Blank calendar") + "</span>" +
                 '<button type="button" class="cal-setup-switch" data-cal-cadence="' + (cadenceEnabled(state) ? "blank" : "fill") + '">' +
-                (cadenceEnabled(state) ? "Switch to blank" : "Fill suggested rhythm") + "</button>" +
+                (cadenceEnabled(state) ? "Switch to blank" : "Fill with post ideas") + "</button>" +
                 "</div>" +
                 '<p class="cal-setup-hint" style="margin-top:8px">' +
                 (cadenceEnabled(state)
-                  ? "Ghost chips on empty days are suggestions — tap one to keep it, or add your own."
-                  : "Add cards with ＋ on a day, or grab a ready draft from below.") +
+                  ? "Light chips on empty days are suggestions — tap one to keep it, edit the draft, or grab a different idea below."
+                  : "Add a card with ＋ on a day, or tap a ready draft under Post ideas.") +
                 "</p>")) +
             "</div>")
           : "") +
@@ -829,7 +838,11 @@ window.FS = window.FS || {};
       var slug = await Cloud.ensureLeadSlug(preferred);
       syncLeadsShareUI(slug);
       var blurb = $("leadsBlurbInput");
-      if (blurb && document.activeElement !== blurb) blurb.value = user.lead_blurb || "";
+      if (blurb && document.activeElement !== blurb) {
+        var st = getState ? getState() : null;
+        var story = st && st.data ? (st.data.page_story || "").trim() : "";
+        blurb.value = user.lead_blurb || story || "";
+      }
       var thanks = $("leadsThanksInput");
       if (thanks && document.activeElement !== thanks) {
         thanks.value = user.lead_thanks || Cloud.DEFAULT_LEAD_THANKS || "";

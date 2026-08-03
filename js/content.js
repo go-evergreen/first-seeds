@@ -1,7 +1,8 @@
 /* ═══════════════════════════════════════════════════════════
    FIRST SEEDS — SHAREABLE CONTENT + KNOW Ringana REFERENCE
-   Curiosity copy → calendar soft doors / Post Studio
-   Product & business story posts → calendar gives / Post Studio
+   Soft invites → calendar / Post Studio
+   Curiosity posts + product sparks → calendar / Post Studio
+   Product & business story posts → calendar / Post Studio
    Pillars · fun facts · FAQs → Know Ringana
    ═══════════════════════════════════════════════════════════ */
 
@@ -9,7 +10,7 @@ window.FS = window.FS || {};
 
 window.FS.CONTENT = {
 
-  /* ── Calendar / Post Studio: soft doors (curiosity) ── */
+  /* ── Soft invites (low-pressure asks) ── */
   curiosity: [
     {
       id: "hinting",
@@ -53,16 +54,56 @@ window.FS.CONTENT = {
     }
   ],
 
-  /* ── Short open loops / scroll-stoppers ── */
+  /* ── Curiosity posts — short unfinished stories / scroll-stoppers ── */
   openLoops: [
-    "The average person has no idea how long a product sat before they bought it… Neither did I. Now I can't stop thinking about it.",
-    "I wonder how many products we've all used that were already a year old before we ever opened them… oof. Now THAT'S a weird thing to think about.",
-    "I've been reading ingredient labels more carefully. One brand from Austria made me pause on the word fresh…",
-    "Okay so I'm learning about cosmetics made without synthetic preservatives as the shortcut — and the expiry date is kind of the point.",
-    "Tiny thing I noticed: a lot of \"clean\" labels still don't tell me who made it or why each ingredient is there.",
-    "Not selling anything today — just sharing what I'm learning about freshness, glass packaging, and in-house production.",
-    "If you've ever stood in a store aisle wondering what's actually in the bottle… same.",
-    "Honest question I've been asking: would I put this on my own skin if I knew how it was made?"
+    {
+      title: "How long did it sit?",
+      body: "The average person has no idea how long a product sat before they bought it… Neither did I. Now I can't stop thinking about it."
+    },
+    {
+      title: "Already a year old?",
+      body: "I wonder how many products we've all used that were already a year old before we ever opened them… oof. Now THAT'S a weird thing to think about."
+    },
+    {
+      title: "Paused on the word fresh",
+      body: "I've been reading ingredient labels more carefully. One brand from Austria made me pause on the word fresh…"
+    },
+    {
+      title: "Expiry is the point",
+      body: "Okay so I'm learning about cosmetics made without synthetic preservatives as the shortcut — and the expiry date is kind of the point."
+    },
+    {
+      title: "Clean… but who made it?",
+      body: "Tiny thing I noticed: a lot of \"clean\" labels still don't tell me who made it or why each ingredient is there."
+    },
+    {
+      title: "Not selling — just learning",
+      body: "Not selling anything today — just sharing what I'm learning about freshness, glass packaging, and in-house production."
+    },
+    {
+      title: "Store aisle question",
+      body: "If you've ever stood in a store aisle wondering what's actually in the bottle… same."
+    },
+    {
+      title: "Would I put this on my kid?",
+      body: "Honest question I've been asking: would I put this on my own skin if I knew how it was made?"
+    },
+    {
+      title: "Family-owned for 30 years",
+      body: "I've been quietly researching a wellness company that's still family-owned after 30 years… and one detail about how they make things stopped me mid-scroll."
+    },
+    {
+      title: "No investors. Still.",
+      body: "Random thing that made me look twice: a 30-year company with no outside investors, still making products the \"hard\" way. Still sitting with that."
+    },
+    {
+      title: "Glass you can send back",
+      body: "Heard about a brand that pays you to ship empty glass bottles back so they can sanitize them into new ones… and now I can't stop noticing every plastic pump in my bathroom."
+    },
+    {
+      title: "Made like food",
+      body: "What if skincare had an expiration date more like food than like a warehouse product? One brand I've been learning about treats it that way — and I keep turning it over in my head."
+    }
   ],
 
   /* ── Product sparks — curious, conversational noticing ── */
@@ -102,6 +143,24 @@ window.FS.CONTENT = {
       icon: "🏕️",
       title: "Camping / travel hack",
       body: "Camping people — what's your wipe situation?\n\nI just learned about a foam wash that turns regular toilet paper into a wet wipe. Feminine hygiene, babies, trail bathrooms… I'm curious if anyone's already doing something like this or if I'm late to the party."
+    },
+    {
+      id: "serum_fresh",
+      icon: "💧",
+      title: "When was this made?",
+      body: "Honest question for anyone into serums or supplements: do you ever check when something was made — not just when it expires?\n\nI've started asking that, and it's changing how I look at everything on my shelf."
+    },
+    {
+      id: "kids_bath",
+      icon: "🛁",
+      title: "Kid bath products",
+      body: "Parents — how picky are you about what goes in the bath?\n\nI've been looking at a baby/kids line made fresh without the usual preservative shortcuts… curious what your non-negotiables are."
+    },
+    {
+      id: "supplement_smell",
+      icon: "🍋",
+      title: "If it smells like nothing…",
+      body: "Weird thought: if a \"plant-based\" supplement smells like absolutely nothing… what does that tell you?\n\nI've been learning about fresh-made formulas where you can actually tell the botanicals are in there. Still figuring out how to explain it without sounding dramatic."
     }
   ],
 
@@ -318,7 +377,9 @@ window.FS.ContentPick = {
         var base = moment || why;
         return (base.length > 180 ? base.slice(0, 180) + "…" : base) + " — more on this soon.";
       }
-      return this.from(C.openLoops, dateKey + "-loop") || "";
+      var loop = this.from(C.openLoops, dateKey + "-loop");
+      if (!loop) return "";
+      return typeof loop === "string" ? loop : (loop.body || "");
     }
     if (type === "curtain") {
       var fact = this.from(C.funFacts, dateKey + "-fact");
@@ -350,7 +411,12 @@ window.FS.ContentPick = {
       });
     }
     if (type === "soft_door") return C.curiosity.map(function (x) { return { id: x.id, title: x.title, body: x.body }; });
-    if (type === "open_loop") return C.openLoops.map(function (b, i) { return { id: "loop_" + i, title: "Open loop " + (i + 1), body: b }; });
+    if (type === "open_loop") {
+      return (C.openLoops || []).map(function (b, i) {
+        if (typeof b === "string") return { id: "loop_" + i, title: "Curiosity " + (i + 1), body: b };
+        return { id: "loop_" + i, title: b.title || ("Curiosity " + (i + 1)), body: b.body || "" };
+      });
+    }
     if (type === "curtain" || type === "honest_note") {
       var list = C.productStory.posts.map(function (p) { return { id: p.id, title: p.title, body: p.body }; });
       C.funFacts.forEach(function (f) {

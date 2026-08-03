@@ -18,20 +18,22 @@ window.FS.SECTIONS = [
 
 window.FS.DAY_NAMES = ["SUN","MON","TUE","WED","THU","FRI","SAT"];
 
-/* ═══ THE FIVE SEED TYPES ═══
+/* ═══ THE FIVE POST TYPES ═══
    Built for how social actually works now: saves, comments,
-   native conversation — not polished brochure posts. */
+   native conversation — not polished brochure posts.
+   Internal ids stay stable (open_loop, soft_door, …) so saved
+   calendars keep working; display names are plain English. */
 window.FS.SEED_TYPES = [
   {
     id: "open_loop",
-    icon: "🔓",
-    name: "The Open Loop",
+    icon: "✨",
+    name: "Curiosity Post",
     tagline: "Start a true story. Don't finish it yet.",
     works_today: "Algorithms reward watch-time and returns. An unfinished true story makes people stop scrolling — and come back. Use it as a Reel hook, carousel first slide, or the first line of a caption.",
     psychology: "Curiosity is an information gap. Once someone knows a specific unanswered detail exists, not knowing it feels uncomfortable. Vague mystery reads as bait. A concrete unfinished moment reads as a story mid-telling.",
     template: "One specific true moment + how it landed on you + a soft hold-back (\"more soon\" / \"still sitting with this\"). Don't resolve the whole thing in one post.",
     example: "I stayed up way too late reading about a skincare company I'd never heard of. One detail stopped me cold — and I'm still sitting with it.",
-    classy_rule: "The payoff has to be real later. One open loop at a time. If you tease everything and deliver nothing, people mute you.",
+    classy_rule: "The payoff has to be real later. One curiosity post at a time. If you tease everything and deliver nothing, people mute you.",
     draftKey: "seed_open",
     draftKind: "open",
     draftHint: "A true moment. Leave the ending for later.",
@@ -40,7 +42,7 @@ window.FS.SEED_TYPES = [
   {
     id: "curtain",
     icon: "🎬",
-    name: "Behind the Curtain",
+    name: "Behind the Scenes",
     tagline: "Document the messy middle — not the highlight reel.",
     works_today: "Process content outperforms polish right now. \"Currently…\" posts feel human on Stories, Reels, and carousels. People follow people who are figuring something out in public.",
     psychology: "People don't argue with stories the way they argue with claims. A documented journey (learning, doubting, deciding) builds trust that a product shot can't.",
@@ -55,7 +57,7 @@ window.FS.SEED_TYPES = [
   {
     id: "honest_note",
     icon: "📝",
-    name: "The Honest Note",
+    name: "Honest Note",
     tagline: "One specific observation + one honest caveat.",
     works_today: "Saves beat likes. Specific + two-sided notes get bookmarked. \"Here's what I noticed / here's who it's not for\" is the format people trust right now.",
     psychology: "Praise that includes a limitation is rated more credible than pure praise. Specificity does the same work — \"soft after 12 hours\" beats \"life-changing.\"",
@@ -70,7 +72,7 @@ window.FS.SEED_TYPES = [
   {
     id: "values_flag",
     icon: "🚩",
-    name: "The Values Flag",
+    name: "Values Post",
     tagline: "Say what you stand for. No product. No ask.",
     works_today: "Identity posts drive follows and shares. When someone agrees with your standard, your later posts feel like consistency — not a pitch. Great as a carousel opinion or a short talking-head Reel.",
     psychology: "People commit to identities more than purchases. Agreeing with your bar (\"ingredients should need no apology\") makes saying yes later feel like staying true to themselves.",
@@ -85,13 +87,13 @@ window.FS.SEED_TYPES = [
   {
     id: "soft_door",
     icon: "🚪",
-    name: "The Soft Door",
+    name: "Soft Invite",
     tagline: "One tiny invite. Zero pressure. After you've given.",
-    works_today: "Comments and DMs beat link-in-bio clicks for warm outreach. One clear ask (\"drop a 🌱\" / \"comment curious\") outperforms a wall of CTAs. Earn this post with four gives first.",
+    works_today: "Comments and DMs beat link-in-bio clicks for warm outreach. One clear ask (\"drop a 🌱\" / \"comment curious\") outperforms a wall of CTAs. Earn this post with helpful shares first.",
     psychology: "A single small ask starts a real conversation. Moving from the feed into messages is where trust builds. Two CTAs compete and both lose.",
     template: "Quick true context + exactly one action + what they get + explicit no-pressure language.",
     example: "I've been researching a wellness company that keeps answering my questions the deeper I look. If you'd like to follow along while I share what I'm learning, drop a 🌱 below — happy to bring you along. No pressure either way.",
-    classy_rule: "Four gives, then one door. Never stack soft doors. The ratio is your reputation.",
+    classy_rule: "Share value a few times, then one invite. Never stack soft invites. The ratio is your reputation.",
     draftKey: "seed_invite",
     draftKind: "invite",
     draftHint: "One tiny invite. Zero pressure.",

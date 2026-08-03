@@ -20,7 +20,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,400;1,9..144,500&family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/styles.css?v=68">
+<link rel="stylesheet" href="css/styles.css?v=72">
 </head>
 <body>
 
@@ -294,13 +294,13 @@
           <div class="callout">
             <div class="callout-tag">GROWTH STEP · YOUR LEAD PAGE</div>
             <div class="callout-body">
-              <p style="margin:0 0 12px">Next, claim your personal link, add a short intro in your voice, and preview the page visitors will see. Leads from that form land only in your inbox.</p>
+              <p style="margin:0 0 12px">Next, claim the link you’ll share with interested people, add a short intro in your voice, and preview the page. When they leave their info, it lands only in your inbox.</p>
               <ol class="ground-lead-steps" id="groundLeadSteps">
                 <li data-lead-step="signin">Sign in (so the page is yours)</li>
                 <li data-lead-step="link">Save your short link</li>
                 <li data-lead-step="preview">Preview the page</li>
               </ol>
-              <button type="button" class="btn" data-goto="leads" id="groundLeadCta" style="margin-top:12px">Set up my lead page →</button>
+              <button type="button" class="btn" data-goto="leads" id="groundLeadCta" style="margin-top:12px">Set up the link I’ll share →</button>
             </div>
           </div>
         </div>
@@ -313,25 +313,36 @@
         </div>
 
         <label class="field" data-field="page_story" style="margin-top:24px">
-          <span class="field-label">Draft your page's opening line — the first thing a visitor reads.</span>
-          <span class="field-hint">Pull straight from your Roots. Your why, in one warm sentence. Watch it appear on your page below.</span>
+          <span class="field-label">Draft your page’s opening line — the first personal thing a visitor reads.</span>
+          <span class="field-hint" id="pageStoryHint">Pull straight from your Roots. Your why, in one warm sentence. Watch it appear on the preview below.</span>
           <textarea data-key="page_story" rows="3" placeholder="e.g. I've spent years helping people swap the questionable stuff — here's the one I've been waiting to share…"></textarea>
           <span class="claim-check" data-check="page_story"></span>
         </label>
 
-        <div class="mini-page">
-          <div class="mini-chrome"><span class="mini-dot"></span><span class="mini-dot"></span><span class="mini-dot"></span><span class="mini-url">yourname.com</span></div>
-          <div class="mini-body">
-            <div class="mini-eyebrow">COMING TO AMERICA · 2026</div>
-            <div class="mini-headline" id="miniHeadline"></div>
-            <div class="mini-btnrow"><span class="mini-btn">Get First Access</span></div>
+        <div class="mini-page mini-lead" aria-hidden="true">
+          <div class="mini-lead-arcs"></div>
+          <div class="mini-lead-inner">
+            <div class="mini-lead-brand">Ringana · with <span id="miniBrandName">you</span></div>
+            <div class="mini-lead-kicker"><i></i> Coming to America · 2026</div>
+            <div class="mini-lead-headline">Wellness that was never meant to <em>compromise.</em></div>
+            <p class="mini-lead-lede">Fresh-made, toxin-free wellness from Austria — coming to America.</p>
+            <div class="mini-lead-blurb" id="miniHeadline"></div>
+            <div class="mini-lead-proof">
+              <span>Made fresh</span>
+              <span>Toxin free</span>
+              <span>Founding moment</span>
+            </div>
+            <div class="mini-lead-card">
+              <div class="mini-lead-card-title">Be first when it arrives</div>
+              <div class="mini-lead-cta">Get first access →</div>
+            </div>
           </div>
         </div>
 
-        <div class="callout compliance full-only">
+        <div class="callout compliance">
           <div class="callout-tag">KEEP IT CLEAN · READ BEFORE YOU PUBLISH</div>
-          <div class="callout-body"><strong>1. Don't clone the official Ringana page.</strong> Yours should look and sound like <em>you</em> — your story, your voice, your photos where you can. The personal part is the part no corporate page can replicate.<br><br>
-          <strong>2. Tie every product claim to real data or your own honest experience.</strong> "Here's what I noticed using it" is fine. Specific health or medical claims are not — they trip platform filters and attract regulator attention.</div>
+          <div class="callout-body"><strong>Don’t copy the official Ringana page — or anyone else’s landing page.</strong> Yours should look and sound like <em>you</em>: your story, your voice, your photos where you can. The personal part is what no corporate (or borrowed) page can replicate.<br><br>
+          <strong>Tie product talk to real data or your own honest experience.</strong> “Here’s what I noticed using it” is fine. Specific health or medical claims are not — they trip platform filters and attract regulator attention.</div>
         </div>
 
         <div class="btn-row">
@@ -441,19 +452,19 @@
 
         <div class="plant-cadence">
           <span>🌿</span><span>🌿</span><span>🌿</span><span>🌿</span><span class="ask">🚪</span>
-          <span class="plant-cadence-note">Four gives → one soft door</span>
+          <span class="plant-cadence-note">Share value a few times → then one soft invite</span>
         </div>
 
         <p class="body-p">These aren't brochure posts. They're built for how social works now: saves, comments, unfinished stories, and honest caveats — not hype. Open a type, learn it, then write your version in the draft box.</p>
 
         <div id="seedTypes" class="seed-types-stack"></div>
 
-        <p class="body-p plant-trio-note">To continue: one <strong>open loop</strong>, one <strong>give</strong> (curtain, honest note, or values), and one <strong>soft door</strong>.</p>
+        <p class="body-p plant-trio-note">To continue: one <strong>curiosity post</strong>, one <strong>helpful share</strong> (behind the scenes, honest note, or values), and one <strong>soft invite</strong>.</p>
 
-        <p class="plant-footnote">Ready-made drafts live under <button type="button" class="inline-link" data-goto="tend">Calendar → Grab a post idea</button>. Facts in <button type="button" class="inline-link" data-goto="know">Know Ringana</button>.</p>
+        <p class="plant-footnote">Ready-made drafts live under <button type="button" class="inline-link" data-goto="tend">Calendar → Post ideas</button>. Facts in <button type="button" class="inline-link" data-goto="know">Know Ringana</button>.</p>
 
         <div class="btn-row">
-          <button class="btn waiting" data-complete="plant" data-ready="Trio drafted → Open your calendar" data-wait="Draft an open loop, a give, and a soft door to continue">Draft an open loop, a give, and a soft door to continue</button>
+          <button class="btn waiting" data-complete="plant" data-ready="Trio drafted → Open your calendar" data-wait="Draft a curiosity post, a helpful share, and a soft invite to continue">Draft a curiosity post, a helpful share, and a soft invite to continue</button>
           <span class="save-flash" data-flash="plant">Saved ✓</span>
         </div>
       </section>
@@ -483,8 +494,8 @@
 
         <div class="cal-library" id="calendarLibrary">
           <div class="cal-library-head">
-            <h2 class="cal-library-title">Grab a post idea</h2>
-            <p class="cal-library-intro">Ready-made drafts you can drop onto a day. Tap a day on the calendar above, then tap <strong>Add to day</strong> — it opens as an editable card. Nothing posts itself.</p>
+            <h2 class="cal-library-title">Post ideas</h2>
+            <p class="cal-library-intro">Ready-to-adapt drafts. Tap a day on the calendar above, then tap <strong>Add to day</strong> — it opens as an editable card. Nothing posts itself. Rewrite until it sounds like you.</p>
             <div class="cal-library-target" id="libraryTarget" hidden></div>
           </div>
           <div class="cal-library-tabs" id="libraryTabs"></div>
@@ -606,7 +617,7 @@
         <details class="know-acc" id="know-product" data-know-sec="product">
           <summary class="know-acc-sum">What makes the products different <span class="know-acc-chev" aria-hidden="true"></span></summary>
           <div class="know-acc-body">
-            <p class="body-p">It's not one slogan — it's a stack of intentional decisions. Full shareable posts live in Post Studio → Product Story Sequence.</p>
+            <p class="body-p">It's not one slogan — it's a stack of intentional decisions. Ready-to-adapt posts live in Calendar → Post ideas (and Post Studio on Full runway).</p>
             <div id="productKnowList" class="fact-grid"></div>
           </div>
         </details>
@@ -660,9 +671,9 @@
 
       <!-- LEADER -->
       <section class="panel" id="panel-leads">
-        <div class="eyebrow">YOUR PAGE</div>
-        <h1>Your personal link</h1>
-        <p class="sec-sub">Share one link. Friends leave their name and how to reach them — products, the business, or both. Everything lands only in <em>your</em> inbox.</p>
+        <div class="eyebrow">FOR PEOPLE WHO ARE CURIOUS</div>
+        <h1>The link to share</h1>
+        <p class="sec-sub">Send this to anyone who’s interested — products, the business, or both. They leave their name and how to reach them. Everything lands only in <em>your</em> inbox.</p>
 
         <div class="leads-gate" id="leadsGate">
           <p class="body-p">Sign in so this page is tied to you — that’s what keeps everyone’s leads from getting mixed up.</p>
@@ -672,9 +683,10 @@
         <div id="leadsStudio" hidden>
           <p class="leads-mode-note" id="leadsModeNote" hidden></p>
           <div class="invite-card leads-share-card">
-            <div class="live-tag">YOUR LINK</div>
+            <div class="live-tag">SHARE WITH INTERESTED PEOPLE</div>
+            <p class="leads-share-explain">This is your interest page — not your team join link. Copy it into a text, Story, or bio when someone wants the scoop.</p>
             <div class="leads-share-main">
-              <input class="invite-input light" id="leadsShareInput" readonly aria-label="Your shareable lead link">
+              <input class="invite-input light" id="leadsShareInput" readonly aria-label="Link to share with interested people">
               <button type="button" class="copy-btn" id="leadsCopyLink">Copy</button>
               <button type="button" class="leads-settings-btn" id="leadsPageSettingsBtn" aria-label="Lead page settings" aria-expanded="false" aria-controls="leadsPageSettings" title="Lead page settings">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
@@ -732,8 +744,8 @@
         <h1>Your team</h1>
         <p class="sec-sub">Who needs a check-in, who's moving, who's blooming — plus your join link and messages you can copy so you're not retyping the same thing forty times.</p>
         <div class="invite-card">
-          <div class="live-tag">YOUR PERSONAL JOIN LINK</div>
-          <p class="body-p" style="margin-bottom:10px">Send this to someone new. When they sign in, they're linked to you — forever (unless you move them later).</p>
+          <div class="live-tag">TEAM JOIN LINK</div>
+          <p class="body-p" style="margin-bottom:10px">Different from your interest page. Send <em>this</em> only to someone ready to partner with you in First Seeds. When they sign in, they’re linked to you.</p>
           <div class="invite-row">
             <input class="invite-input light" id="leaderInviteInput" readonly>
             <button type="button" class="copy-btn" id="leaderCopyInvite">Copy link</button>
@@ -854,9 +866,9 @@
   <div class="overlay-card">
     <button type="button" class="overlay-close" id="authCloseBtn" aria-label="Close">×</button>
     <div id="authSignPane">
-      <p class="onboarding-eyebrow">First Seeds Bridge</p>
+      <p class="onboarding-eyebrow">First Seeds</p>
       <h3 id="authTitle">Save your progress</h3>
-      <p class="lead">Sign in with email + password so your runway syncs — and so your leader can see how you're doing (no chat, just progress).</p>
+      <p class="lead">Sign in with email + password so your story and calendar stay with you — and so your leader can see how you're doing (progress only, no chat).</p>
       <label class="onboard-name-field">
         <span class="field-label">First name</span>
         <input type="text" id="authName" maxlength="40" placeholder="Your first name" autocomplete="given-name">
@@ -900,17 +912,17 @@
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="js/config.js?v=68"></script>
-<script src="js/supabase-config.js?v=68"></script>
-<script src="js/data.js?v=68"></script>
-<script src="js/content.js?v=68"></script>
-<script src="js/products.js?v=68"></script>
-<script src="js/plant.js?v=68"></script>
-<script src="js/tree.js?v=68"></script>
-<script src="js/calendar.js?v=68"></script>
-<script src="js/cloud.js?v=68"></script>
-<script src="js/bridge-ui.js?v=68"></script>
-<script src="js/app.js?v=68"></script>
-<script src="js/pwa.js?v=68"></script>
+<script src="js/config.js?v=72"></script>
+<script src="js/supabase-config.js?v=72"></script>
+<script src="js/data.js?v=72"></script>
+<script src="js/content.js?v=72"></script>
+<script src="js/products.js?v=72"></script>
+<script src="js/plant.js?v=72"></script>
+<script src="js/tree.js?v=72"></script>
+<script src="js/calendar.js?v=72"></script>
+<script src="js/cloud.js?v=72"></script>
+<script src="js/bridge-ui.js?v=72"></script>
+<script src="js/app.js?v=72"></script>
+<script src="js/pwa.js?v=72"></script>
 </body>
 </html>
