@@ -1498,10 +1498,16 @@
     else if (state.active === "leader") tab = "team";
     else if (state.active === "leads") tab = "leads";
     else if (state.active === "welcome" || state.active === "done") tab = "home";
+    var tourWrap = document.getElementById("tour");
+    var tourOpen = !!(tourWrap && tourWrap.classList.contains("open"));
     var btns = bar.querySelectorAll(".bottom-nav-btn");
     for (var i = 0; i < btns.length; i++) {
       var t = btns[i].getAttribute("data-tab");
-      btns[i].classList.toggle("on", !!tab && t === tab);
+      var isOn = !!tab && t === tab;
+      btns[i].classList.toggle("on", isOn);
+      /* Drop leftover coachmark / sticky focus so only one tab looks selected */
+      if (!tourOpen) btns[i].classList.remove("tour-target-on");
+      if (!isOn && document.activeElement === btns[i]) btns[i].blur();
     }
     var settingsBtn = document.getElementById("settingsNavBtn");
     if (settingsBtn) settingsBtn.classList.toggle("on", document.body.classList.contains("hub-menu-open"));
@@ -2956,6 +2962,9 @@
       tourTargetEl.classList.remove("tour-target-on");
       tourTargetEl = null;
     }
+    /* Sweep any leftovers (e.g. Learn in bottom nav after the home tour) */
+    var leftovers = document.querySelectorAll(".tour-target-on");
+    for (var i = 0; i < leftovers.length; i++) leftovers[i].classList.remove("tour-target-on");
     var spot = document.getElementById("tourSpotlight");
     if (spot) {
       spot.hidden = true;
