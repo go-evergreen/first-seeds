@@ -254,6 +254,7 @@ window.FS.CONFIG = {
   ],
 
   /* Coachmarks the first time someone appears on Team */
+  teamTourVersion: 2,
   teamTour: [
     {
       title: "Someone joined your team",
@@ -271,16 +272,30 @@ window.FS.CONFIG = {
     },
     {
       title: "Coach by how they're moving",
-      body: "Needs a nudge · In motion · Ready — based on real First Seeds progress, not just that they downloaded the app. Open a card when you want to check in.",
+      body: "Needs a nudge · In motion · Ready — based on real First Seeds progress, not just that they downloaded the app.",
       panel: "leader",
       target: '[data-team-tour="board"]',
       placement: "above"
     },
     {
-      title: "Cheer them on from here",
-      body: "Send cheer drops a short encouragement into their app. Leave note is your custom message. Copy nudge is for texting outside the app. Try a cheer when it feels right.",
+      title: "Copy a nudge to text them",
+      body: "Each card suggests a check-in you can paste into iMessage or Instagram. Copy nudge lives inside the tip box — it doesn't send anything inside First Seeds.",
       panel: "leader",
-      target: '[data-team-tour="coach"]',
+      target: '[data-team-tour="nudge"]',
+      placement: "above"
+    },
+    {
+      title: "Send a cheer in the app",
+      body: "Send cheer opens a preview first. You'll see the exact line, can choose another, then send — it shows up in their First Seeds as a banner from you.",
+      panel: "leader",
+      target: '[data-team-tour="cheer"]',
+      placement: "above"
+    },
+    {
+      title: "Leave a personal note",
+      body: "Leave note is your custom message. Type a short line and they'll see it at the top of their runway — great for something more specific than a cheer.",
+      panel: "leader",
+      target: '[data-team-tour="note"]',
       placement: "above"
     }
   ],

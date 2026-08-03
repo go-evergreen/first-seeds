@@ -245,8 +245,9 @@ window.FS = window.FS || {};
         var ctx = item.ctx;
         var modeLabel = p.hub_mode === "starter" ? "Getting started" : (p.hub_mode === "full" ? "Full runway" : "—");
         var pct = Math.round((ctx.sectionsDone / Math.max(1, ctx.sectionTotal)) * 100);
-        html += '<div class="leader-card"' + (!coachMarked ? ' data-team-tour="coach"' : "") + ' data-partner="' + esc(p.id) + '">';
+        var isCoachDemo = !coachMarked;
         coachMarked = true;
+        html += '<div class="leader-card" data-partner="' + esc(p.id) + '">';
         html += '<div class="leader-card-head">';
         html += '<div class="leader-card-name">' + esc(p.display_name || p.email) + '</div>';
         if (item.under > 0) {
@@ -257,18 +258,22 @@ window.FS = window.FS || {};
           (ctx.daysSinceActive === 0 ? "today" : ctx.daysSinceActive + "d ago") + '</div>';
         html += '<div class="leader-progress-row"><div class="leader-progress" aria-hidden="true"><span style="width:' +
           pct + '%"></span></div><span class="leader-progress-label">' + ctx.sectionsDone + '/' + ctx.sectionTotal + '</span></div>';
-        html += '<div class="leader-card-nudge"><em>' + esc(item.nudge.when) + '</em><div id="nudge_' +
-          esc(p.id) + '">' + esc(item.nudge.body) + '</div></div>';
+        html += '<div class="leader-card-nudge"' + (isCoachDemo ? ' data-team-tour="nudge"' : "") + '>';
+        html += '<em>' + esc(item.nudge.when) + '</em>';
+        html += '<div id="nudge_' + esc(p.id) + '">' + esc(item.nudge.body) + '</div>';
+        html += '<button type="button" class="leader-nudge-copy" data-copy-nudge="' + esc(p.id) + '">Copy nudge</button>';
+        html += '</div>';
         if (item.row.progress && item.row.progress.notified_at) {
           var pingAge = daysBetween(new Date(item.row.progress.notified_at), now);
           if (pingAge <= 3) {
             html += '<div class="leader-ping">Pinged you ' + (pingAge === 0 ? "today" : pingAge + "d ago") + '</div>';
           }
         }
-        html += '<div class="leader-card-actions">';
-        html += '<button type="button" class="copy-btn small" data-copy-nudge="' + esc(p.id) + '">Copy nudge</button>';
-        html += '<button type="button" class="btn-ghost small-btn" data-cheer="' + esc(p.id) + '">Send cheer</button>';
-        html += '<button type="button" class="btn-ghost small-btn" data-note="' + esc(p.id) + '">Leave note</button>';
+        html += '<div class="leader-card-actions"' + (isCoachDemo ? ' data-team-tour="coach"' : "") + '>';
+        html += '<button type="button" class="btn-ghost leader-action-btn" data-cheer="' + esc(p.id) + '"' +
+          (isCoachDemo ? ' data-team-tour="cheer"' : "") + '>Send cheer</button>';
+        html += '<button type="button" class="btn-ghost leader-action-btn" data-note="' + esc(p.id) + '"' +
+          (isCoachDemo ? ' data-team-tour="note"' : "") + '>Leave note</button>';
         html += '</div></div>';
       });
       html += '</div>';

@@ -2871,11 +2871,20 @@
     var vw = window.innerWidth;
     var vh = window.innerHeight;
 
+    /* Tall blocks (live team tree, boards) — spotlight the top band so the tip isn't buried */
+    var maxSpotH = Math.max(72, Math.floor(vh * 0.34));
+    var spotH = Math.min(rect.height + pad * 2, maxSpotH);
+    var spotTop = Math.max(6, rect.top - pad);
+    var spotLeft = Math.max(6, rect.left - pad);
+    var spotRight = Math.min(vw - 6, rect.right + pad);
+    var spotBottom = Math.min(vh - 6, spotTop + spotH);
+    /* Keep spotlight attached to the visible top of the target */
+    if (spotBottom > vh - 6) {
+      spotBottom = vh - 6;
+      spotTop = Math.max(6, spotBottom - spotH);
+    }
+
     if (spot) {
-      var spotTop = Math.max(6, rect.top - pad);
-      var spotLeft = Math.max(6, rect.left - pad);
-      var spotRight = Math.min(vw - 6, rect.right + pad);
-      var spotBottom = Math.min(vh - 6, rect.bottom + pad);
       spot.hidden = false;
       spot.style.top = spotTop + "px";
       spot.style.left = spotLeft + "px";
@@ -2888,22 +2897,33 @@
     var cardW = Math.min(360, vw - 24);
     card.style.width = cardW + "px";
     card.style.maxWidth = cardW + "px";
-    /* Measure after width is set */
     var cardH = card.offsetHeight || 200;
-    var spaceBelow = vh - rect.bottom - gap;
-    var spaceAbove = rect.top - gap;
+
+    var spaceBelow = vh - spotBottom - gap;
+    var spaceAbove = spotTop - gap;
     var place = placement || "auto";
-    if (place === "auto") {
-      place = (spaceBelow >= cardH + 8 || spaceBelow >= spaceAbove) ? "below" : "above";
+    var tall = rect.height > vh * 0.42;
+    if (tall) {
+      /* Prefer anchoring the tip in free space, not under a huge card */
+      place = spaceBelow >= cardH + 8 ? "below" : (spaceAbove >= cardH + 8 ? "above" : "center");
+    } else {
+      if (place === "auto") {
+        place = (spaceBelow >= cardH + 8 || spaceBelow >= spaceAbove) ? "below" : "above";
+      }
+      if (place === "below" && spaceBelow < Math.min(cardH, 120) && spaceAbove > spaceBelow) place = "above";
+      if (place === "above" && spaceAbove < Math.min(cardH, 120) && spaceBelow > spaceAbove) place = "below";
     }
-    if (place === "below" && spaceBelow < Math.min(cardH, 120) && spaceAbove > spaceBelow) place = "above";
-    if (place === "above" && spaceAbove < Math.min(cardH, 120) && spaceBelow > spaceAbove) place = "below";
+
+    if (place === "center") {
+      centerTourCard();
+      return;
+    }
 
     var top;
-    if (place === "above") top = rect.top - gap - cardH;
-    else top = rect.bottom + gap;
+    if (place === "above") top = spotTop - gap - cardH;
+    else top = spotBottom + gap;
 
-    var left = rect.left + (rect.width / 2) - (cardW / 2);
+    var left = spotLeft + ((spotRight - spotLeft) / 2) - (cardW / 2);
     left = Math.min(Math.max(12, left), vw - cardW - 12);
     top = Math.min(Math.max(12, top), vh - cardH - 12);
 
@@ -2983,6 +3003,10 @@
 
   function maybeStartTeamTour(count) {
     if (!count || count < 1) return;
+    var ver = (CFG.teamTourVersion || 1);
+    if (state.data.teamTourVer !== ver) {
+      state.data.teamTourDone = false;
+    }
     if (state.data.teamTourDone) return;
     if (!state.tourDone) return; /* finish home tour first */
     var wrap = document.getElementById("tour");
@@ -3037,6 +3061,7 @@
     }
     if (tourKind === "team") {
       state.data.teamTourDone = true;
+      state.data.teamTourVer = CFG.teamTourVersion || 1;
     } else {
       state.tourDone = true;
     }
