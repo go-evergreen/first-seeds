@@ -382,12 +382,12 @@
     if (nameInput && OB.namePlaceholder) nameInput.placeholder = OB.namePlaceholder;
 
     if (MODES.starter) {
-      setText("modePickStarterTag", MODES.starter.tag || "Soft start");
+      setText("modePickStarterTag", MODES.starter.tag || "Essentials");
       setText("modePickStarterLabel", MODES.starter.label);
       setText("modePickStarterDesc", MODES.starter.desc);
     }
     if (MODES.full) {
-      setText("modePickFullTag", MODES.full.tag || "All in");
+      setText("modePickFullTag", MODES.full.tag || "Everything");
       setText("modePickFullLabel", MODES.full.label);
       setText("modePickFullDesc", MODES.full.desc);
     }
@@ -428,11 +428,11 @@
     var pathNote = document.getElementById("welcomePathNote");
     if (pathNote) {
       if (isStarter()) {
-        pathNote.innerHTML = "Your plant lives here. Leads, Learn, and your path stay one tap away at the bottom. Content and Team unlock on Full runway.";
+        pathNote.innerHTML = "Your plant lives here. Leads, Learn, and your path stay one tap away at the bottom. Content and Team unlock on All in.";
       } else if (isFull()) {
         pathNote.innerHTML = "Your plant lives here. Content, Leads, Learn, Team, and your path stay one tap away at the bottom.";
       } else {
-        pathNote.innerHTML = "Your plant lives here. Pick Getting started or Full runway in Settings — then your path stays one tap away at the bottom.";
+        pathNote.innerHTML = "Your plant lives here. Pick Soft start or All in in Settings — then your path stays one tap away at the bottom.";
       }
     }
 
@@ -572,14 +572,14 @@
       }
     }
 
-    /* Getting started ends here — no Content calendar promises */
+    /* Soft start ends here — no Content calendar promises */
     if (isStarter()) {
       return {
         title: "Nice foundation.",
-        body: "You've got your story, page, and grove. Open Learn for clear facts — or unlock Full runway anytime for Content, Post Studio, and Team.",
+        body: "You've got your story, page, and grove. Open Learn for clear facts — or unlock All in anytime for Content, Post Studio, and Team.",
         why: "Calm prep beats a scramble, " + hey + ".",
         primary: { label: "Open Learn →", goto: "know" },
-        secondary: { label: "Unlock Full runway →", action: "fullMode" }
+        secondary: { label: "Unlock All in →", action: "fullMode" }
       };
     }
 
@@ -671,7 +671,7 @@
     if (isStarter()) {
       if (eyebrow) eyebrow.textContent = "ROOTS DOWN";
       if (headline) headline.textContent = name ? ("Nice work, " + name + ".") : "Nice work.";
-      if (body) body.innerHTML = "You've got your story, your page, and a grove of people to talk to. That's a real foundation — before the doors open. When you're ready for Content, the dream-team sketch, Post Studio, and Team, unlock the Full runway anytime.";
+      if (body) body.innerHTML = "You've got your story, your page, and a grove of people to talk to. That's a real foundation — before the doors open. When you're ready for Content, the dream-team sketch, Post Studio, and Team, unlock All in anytime.";
       if (levelUp) levelUp.hidden = false;
     } else {
       if (eyebrow) eyebrow.textContent = "IN FULL BLOOM";
@@ -691,12 +691,18 @@
     applyModeClass();
     var starterBtn = document.getElementById("modeStarter");
     var fullBtn = document.getElementById("modeFull");
-    if (starterBtn) starterBtn.classList.toggle("on", isStarter());
-    if (fullBtn) fullBtn.classList.toggle("on", isFull());
+    if (starterBtn) {
+      starterBtn.textContent = (MODES.starter && MODES.starter.label) || "Soft start";
+      starterBtn.classList.toggle("on", isStarter());
+    }
+    if (fullBtn) {
+      fullBtn.textContent = (MODES.full && MODES.full.label) || "All in";
+      fullBtn.classList.toggle("on", isFull());
+    }
     var hint = document.getElementById("hubModeHint");
     if (hint) {
-      if (isStarter()) hint.textContent = "Getting started keeps the path light: story, page, grove, finish. Content and Team unlock on Full runway.";
-      else if (isFull()) hint.textContent = "All six sections unlocked, plus Content and Team in the bottom nav. Switch to Getting started for a simpler view — your progress stays.";
+      if (isStarter()) hint.textContent = "Soft start keeps the path light: story, page, grove, finish. Content and Team unlock on All in.";
+      else if (isFull()) hint.textContent = "All six sections unlocked, plus Content and Team in the bottom nav. Switch to Soft start for a simpler view — your progress stays.";
       else hint.textContent = "";
     }
     updateLeadPageSettingUI();
@@ -3475,9 +3481,9 @@
           lockEl.hidden = false;
           lockEl.innerHTML =
             '<div class="lock-toast-inner">' +
-            "<p><strong>Content</strong> unlocks on Full runway — calendar, post vault, stories, and photos.</p>" +
+            "<p><strong>Content</strong> unlocks on All in — calendar, post vault, stories, and photos.</p>" +
             '<div class="lock-toast-actions">' +
-            '<button type="button" class="btn" id="lockToastUnlockFull">Unlock Full runway →</button>' +
+            '<button type="button" class="btn" id="lockToastUnlockFull">Unlock All in →</button>' +
             '<button type="button" class="lock-toast-x" id="lockToastClose" aria-label="Dismiss">×</button>' +
             "</div></div>";
         }
@@ -3677,7 +3683,9 @@
     var d = state.data;
     var treeC = Tree.counts(Tree.ensure(state));
     var name = partnerName();
-    var modeLabel = isStarter() ? "Getting started" : isFull() ? "Full runway" : "—";
+    var modeLabel = isStarter() ? "Soft start" : isFull() ? "All in" : "—";
+    if (MODES.starter && isStarter()) modeLabel = MODES.starter.label || modeLabel;
+    if (MODES.full && isFull()) modeLabel = MODES.full.label || modeLabel;
     var lines = ["FIRST SEEDS — my launch runway"];
     if (name) lines.push("Partner: " + name);
     lines = lines.concat([

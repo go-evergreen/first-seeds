@@ -434,7 +434,7 @@ window.FS = window.FS || {};
       items.forEach(function (item) {
         var p = item.row.profile;
         var ctx = item.ctx;
-        var modeLabel = p.hub_mode === "starter" ? "Getting started" : (p.hub_mode === "full" ? "Full runway" : "—");
+        var modeLabel = hubModeLabel(p.hub_mode);
         var pct = Math.round((ctx.sectionsDone / Math.max(1, ctx.sectionTotal)) * 100);
         var isMentorDemo = !mentorMarked;
         mentorMarked = true;
@@ -451,8 +451,10 @@ window.FS = window.FS || {};
         }
         html += '<span class="leader-card-chev" aria-hidden="true"></span>';
         html += "</div>";
-        html += '<div class="leader-card-meta">' + esc(modeLabel) + ' · last active ' +
-          (ctx.daysSinceActive === 0 ? "today" : ctx.daysSinceActive + "d ago") + '</div>';
+        html += '<div class="leader-card-meta">' +
+          (p.hub_mode === "starter" ? esc(modeLabel) + " · " : "") +
+          "last active " +
+          (ctx.daysSinceActive === 0 ? "today" : ctx.daysSinceActive + "d ago") + "</div>";
         html += '<div class="leader-progress-row"><div class="leader-progress" aria-hidden="true"><span style="width:' +
           pct + '%"></span></div><span class="leader-progress-label">' + ctx.sectionsDone + '/' + ctx.sectionTotal + '</span></div>';
         html += "</summary>";
@@ -566,14 +568,19 @@ window.FS = window.FS || {};
     return sortTeamNodes(nodes, "legs");
   }
 
+  function hubModeLabel(hubMode) {
+    var modes = (window.FS.CONFIG && window.FS.CONFIG.modes) || {};
+    if (hubMode === "starter") return (modes.starter && modes.starter.label) || "Soft start";
+    if (hubMode === "full") return (modes.full && modes.full.label) || "All in";
+    return "—";
+  }
+
   function hubModeChipHtml(hubMode) {
+    /* Only flag Soft start — All in is the assumed default */
     if (hubMode === "starter") {
-      return '<span class="team-mode-chip is-starter">Getting started</span>';
+      return '<span class="team-mode-chip is-starter">' + esc(hubModeLabel("starter")) + "</span>";
     }
-    if (hubMode === "full") {
-      return '<span class="team-mode-chip is-full">Full runway</span>';
-    }
-    return '<span class="team-mode-chip is-unknown">Path unset</span>';
+    return "";
   }
 
   function formatJoinedOn(iso) {
@@ -974,7 +981,7 @@ window.FS = window.FS || {};
     if (Cloud.isOrgAdmin() && rearrangeOn) {
       html += '<p class="team-admin-hint">Tap a person → Move under… Mentoring follows the new Level 1. Invited-by stays the same.</p>';
     }
-    html += '<p class="live-team-lead">Tap a name for their details. Expand a row to see who they’ve brought in.</p>';
+    html += '<p class="live-team-lead">Tap a name for their details. A <strong>+</strong> means they have people under them — tap to expand.</p>';
     html += '<div class="live-team-stats is-compact">';
     html += '<div class="live-stat"><strong>' + l1 + '</strong><span>Level 1</span></div>';
     html += '<div class="live-stat"><strong>' + total + '</strong><span>on tree</span></div>';
@@ -997,12 +1004,13 @@ window.FS = window.FS || {};
         p.created_at = downlineById[p.id].profile.created_at;
       }
       cachePerson(p, under, ctx, true);
-      var shouldOpen = sortMode === "legs" ? idx < 5 : idx < 3;
       var stSeen = getState ? getState() : null;
       var seededSeen = !!(stSeen && stSeen.data && stSeen.data.teamSeenSeeded);
       var isNew = seededSeen && !ensureTeamSeenMap()[p.id];
-      html += '<details class="live-l1' + (under ? " has-kids" : "") + (isNew ? " is-new" : "") + '"' + (shouldOpen ? " open" : "") + '>';
-      html += '<summary class="live-l1-sum">';
+      var hasKids = !!(under && p.children && p.children.length);
+      var tag = hasKids ? "details" : "div";
+      html += '<' + tag + ' class="live-l1' + (hasKids ? " has-kids" : "") + (isNew ? " is-new" : "") + '">';
+      html += '<' + (hasKids ? 'summary' : 'div') + ' class="live-l1-sum' + (hasKids ? "" : " is-static") + '">';
       html += '<span class="live-l1-rank">' + (idx + 1) + "</span>";
       html += '<span class="live-l1-main">';
       html += '<span class="live-l1-name-row">';
@@ -1020,15 +1028,12 @@ window.FS = window.FS || {};
           (p.created_at ? " · " + formatJoinedOn(p.created_at) : "") + "</span>";
       }
       html += "</span>";
-      html += '<span class="live-l1-under' + (under ? " on" : "") + '">' +
-        (under ? (under + " under") : "building") + "</span>";
-      html += "</summary>";
-      if (p.children && p.children.length) {
-        html += renderKids(p.children, 2);
-      } else {
-        html += '<p class="live-l1-empty">No one linked under them yet.</p>';
+      if (hasKids) {
+        html += '<span class="live-l1-expand" aria-hidden="true" title="' + under + ' under"></span>';
       }
-      html += "</details>";
+      html += hasKids ? "</summary>" : "</div>";
+      if (hasKids) html += renderKids(p.children, 2);
+      html += "</" + tag + ">";
     });
     html += "</div></div>";
     el.innerHTML = html;

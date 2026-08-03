@@ -115,7 +115,9 @@ button{font-family:inherit;cursor:pointer}
 .live-l1{border:1.5px solid var(--sand);border-radius:14px;background:var(--paper);overflow:hidden}
 .live-l1.has-kids{border-left:3.5px solid var(--moss)}
 .live-l1.is-new{border-color:rgba(196,122,74,.45);box-shadow:inset 3px 0 0 #c47a4a}
-.live-l1-sum{display:flex;align-items:center;gap:12px;padding:12px 14px;cursor:pointer;list-style:none;font-family:inherit}
+.live-l1-sum{display:flex;align-items:center;gap:12px;padding:12px 14px;list-style:none;font-family:inherit}
+.live-l1-sum:not(.is-static){cursor:pointer}
+.live-l1-sum.is-static{cursor:default}
 .live-l1-sum::-webkit-details-marker{display:none}
 .live-l1-sum::marker{content:""}
 .live-l1-rank{flex-shrink:0;width:28px;height:28px;border-radius:50%;background:#eef2ec;color:var(--green);display:grid;place-items:center;font-size:12px;font-weight:700}
@@ -124,6 +126,10 @@ button{font-family:inherit;cursor:pointer}
 .live-l1-name{font-family:'Fraunces',serif;font-weight:600;font-size:16px;color:var(--green);line-height:1.2;border:none;background:transparent;padding:0;margin:0;cursor:pointer;text-align:left}
 .live-l1-name:hover,.live-l1-name:focus-visible{text-decoration:underline;outline:none}
 .live-l1-meta{font-size:12px;color:var(--bark);line-height:1.35}
+.live-l1-expand{flex-shrink:0;width:28px;height:28px;border-radius:8px;border:1.5px solid var(--sand);background:rgba(255,255,255,.85);color:var(--green);display:grid;place-items:center;font-size:18px;font-weight:600;line-height:1;user-select:none}
+.live-l1-expand::before{content:"+"}
+.live-l1[open] .live-l1-expand{background:#eef2ec;border-color:var(--moss)}
+.live-l1[open] .live-l1-expand::before{content:"−"}
 .live-l1-under{flex-shrink:0;font-size:11px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--green-soft);background:rgba(255,255,255,.7);border:1px solid var(--sand);border-radius:999px;padding:5px 10px}
 .live-l1-under.on{background:#eef2ec;border-color:var(--moss);color:var(--green)}
 .live-l1-empty{margin:0;padding:0 14px 14px 54px;font-size:12.5px;color:var(--bark-soft);font-style:italic}

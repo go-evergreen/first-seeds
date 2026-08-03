@@ -22,16 +22,16 @@ window.FS.CONFIG = {
 
   modes: {
     starter: {
-      label: "Getting started",
-      badge: "Getting started",
-      tag: "Soft start",
-      desc: "Four calm steps: your story, a simple page to share, who you'd tell first, and a clear finish. Great if you're new — or you just want room to breathe. Content tools unlock on Full runway."
+      label: "Soft start",
+      badge: "Soft start",
+      tag: "Essentials",
+      desc: "Four calm steps: your story, a simple page to share, who you'd tell first, and a clear finish. Great if you're new — or you just want room to breathe. Content and Team unlock on All in."
     },
     full: {
-      label: "Full runway",
-      badge: "Full runway",
-      tag: "All in",
-      desc: "Everything in Getting started, plus Content (calendar, post vault, stories, photos), a dream-team sketch, Post Studio, and Team tools — all the way to launch."
+      label: "All in",
+      badge: "All in",
+      tag: "Everything",
+      desc: "Everything in Soft start, plus Content (calendar, post vault, stories, photos), a dream-team sketch, Post Studio, and Team tools — all the way to launch."
     }
   },
 
@@ -43,7 +43,7 @@ window.FS.CONFIG = {
     },
     {
       term: "Runway",
-      def: "Your step-by-step prep path on Sprout. Getting started is the shorter path; Full runway unlocks Content, the dream-team sketch, Post Studio, and Team."
+      def: "Your step-by-step prep path on Sprout. Soft start is the shorter path; All in unlocks Content, the dream-team sketch, Post Studio, and Team."
     },
     {
       term: "Roots",
@@ -51,7 +51,7 @@ window.FS.CONFIG = {
     },
     {
       term: "Team",
-      def: "Your partners growing with you in First Seeds — who's moving, who needs a check-in, and your join link. Shows in the bottom nav on Full runway."
+      def: "Your partners growing with you in First Seeds — who's moving, who needs a check-in, and your join link. Shows in the bottom nav on All in."
     },
     {
       term: "Grove",
@@ -59,7 +59,7 @@ window.FS.CONFIG = {
     },
     {
       term: "Customers",
-      def: "People who'd care about the products even if business talk isn't their thing. Tap your first chats in the list — that's your outreach list (and they show on the Content calendar on Full runway)."
+      def: "People who'd care about the products even if business talk isn't their thing. Tap your first chats in the list — that's your outreach list (and they show on the Content calendar on All in)."
     },
     {
       term: "Leads",
@@ -287,7 +287,7 @@ window.FS.CONFIG = {
     },
     {
       title: "Your growing team",
-      body: "This is your live tree. Tap a name for their card. Expand a row to see who they’ve brought in. Sort by Most legs (who’s gathering people) or Newest.",
+      body: "This is your live tree. Tap a name for their card. A + means they have people under them — tap to expand. Sort by Most legs (who’s gathering people) or Newest.",
       panel: "leader",
       target: '[data-team-tour="tree"]',
       placement: "above",
