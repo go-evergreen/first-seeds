@@ -311,11 +311,22 @@ window.FS = window.FS || {};
     if (!root) return;
     if (!Cloud.isSignedIn()) {
       root.innerHTML = '<p class="body-p">Sign in to see people who joined with your link — and their real First Seeds progress.</p>';
+      paintTeamBadge(0);
       return;
     }
     var cfg = window.FS.CONFIG;
-    var rows = await Cloud.listDownline();
-    var graph = await Cloud.listTeamGraph();
+    var rows = [];
+    var graph = { roots: [], depth: 6 };
+    try {
+      rows = await Cloud.listDownline();
+    } catch (e) {
+      rows = [];
+    }
+    try {
+      graph = await Cloud.listTeamGraph();
+    } catch (e) {
+      graph = { roots: [], depth: 6 };
+    }
     var underById = {};
     function countDesc(nodes) {
       var n = 0;
@@ -430,6 +441,29 @@ window.FS = window.FS || {};
     return n;
   }
 
+  /* Annotate each node with._under (descendant count) in one pass — used for sort + chips. */
+  function annotateTeamUnder(nodes) {
+    var total = 0;
+    (nodes || []).forEach(function (p) {
+      var childTotal = annotateTeamUnder(p.children);
+      p._under = childTotal;
+      total += 1 + childTotal;
+    });
+    return total;
+  }
+
+  function maxTeamDepth(nodes) {
+    var max = 0;
+    function walk(list, depth) {
+      (list || []).forEach(function (p) {
+        if (depth > max) max = depth;
+        walk(p.children, depth + 1);
+      });
+    }
+    walk(nodes, 1);
+    return max;
+  }
+
   function teamSortMode() {
     var st = getState ? getState() : null;
     var mode = st && st.data && st.data.teamSort;
@@ -439,25 +473,27 @@ window.FS = window.FS || {};
   function setTeamSortMode(mode) {
     if (!getState) return;
     var st = getState();
+    if (!st.data) st.data = {};
     st.data.teamSort = mode === "newest" ? "newest" : "legs";
     persist();
   }
 
   function sortTeamNodes(nodes, mode) {
     mode = mode || teamSortMode();
+    annotateTeamUnder(nodes);
     function sortLevel(list) {
       (list || []).forEach(function (p) {
         if (p.children && p.children.length) sortLevel(p.children);
       });
       (list || []).sort(function (a, b) {
         if (mode === "newest") {
-          return String(b.created_at || b.last_active_at || "").localeCompare(String(a.created_at || a.last_active_at || ""));
+          return String(b.created_at || "").localeCompare(String(a.created_at || ""));
         }
         /* Most legs first; among equals, older joins stay above brand-new ones */
-        var ub = countTreeDesc(b.children);
-        var ua = countTreeDesc(a.children);
+        var ub = b._under || 0;
+        var ua = a._under || 0;
         if (ub !== ua) return ub - ua;
-        return String(a.created_at || a.last_active_at || "").localeCompare(String(b.created_at || b.last_active_at || ""));
+        return String(a.created_at || "").localeCompare(String(b.created_at || ""));
       });
     }
     sortLevel(nodes);
@@ -493,6 +529,7 @@ window.FS = window.FS || {};
   function ensureTeamSeenMap() {
     if (!getState) return {};
     var st = getState();
+    if (!st.data) st.data = {};
     if (!st.data.teamSeenIds || typeof st.data.teamSeenIds !== "object") {
       st.data.teamSeenIds = {};
     }
@@ -600,7 +637,14 @@ window.FS = window.FS || {};
       el.hidden = true;
       return;
     }
-    var graph = graphPrefetch || await Cloud.listTeamGraph();
+    var graph = graphPrefetch;
+    if (!graph) {
+      try {
+        graph = await Cloud.listTeamGraph();
+      } catch (e) {
+        graph = { roots: [], depth: 6 };
+      }
+    }
     var progressById = {};
     var downlineById = {};
     (downlineRows || []).forEach(function (row) {
@@ -608,7 +652,7 @@ window.FS = window.FS || {};
       downlineById[row.profile.id] = row;
     });
     var roots = (graph.roots || []).slice();
-    /* Fill join dates from downline if team_graph RPC hasn't been migrated yet */
+    /* Fill join dates from downline if a node is missing created_at */
     roots.forEach(function (p) {
       if (!p.created_at && downlineById[p.id] && downlineById[p.id].profile) {
         p.created_at = downlineById[p.id].profile.created_at;
@@ -618,8 +662,11 @@ window.FS = window.FS || {};
     sortTeamNodes(roots, sortMode);
     if (!roots.length) {
       el.hidden = true;
+      el.innerHTML = "";
       return;
     }
+
+    teamPersonCache = {};
 
     function cachePerson(p, under, ctx, isDirect) {
       teamPersonCache[p.id] = {
@@ -641,7 +688,7 @@ window.FS = window.FS || {};
       if (!nodes || !nodes.length) return "";
       var html = '<ul class="live-team-kids depth-' + depth + '">';
       nodes.forEach(function (p) {
-        var under = countTreeDesc(p.children);
+        var under = typeof p._under === "number" ? p._under : countTreeDesc(p.children);
         cachePerson(p, under, null, false);
         html += '<li class="live-team-node">';
         html += '<button type="button" class="live-team-row" data-team-person="' + esc(p.id) + '">';
@@ -659,6 +706,7 @@ window.FS = window.FS || {};
 
     var total = countTreeDesc(roots);
     var l1 = roots.length;
+    var deep = maxTeamDepth(roots);
     el.hidden = false;
     var html = '<div class="live-team-head">';
     html += '<div class="live-tag">YOUR GROWING TEAM</div>';
@@ -670,13 +718,13 @@ window.FS = window.FS || {};
     html += '<div class="live-team-stats is-compact">';
     html += '<div class="live-stat"><strong>' + l1 + '</strong><span>Level 1</span></div>';
     html += '<div class="live-stat"><strong>' + total + '</strong><span>on tree</span></div>';
-    html += '<div class="live-stat"><strong>' + Math.min(6, graph.depth || 6) + '</strong><span>deep</span></div>';
+    html += '<div class="live-stat"><strong>' + deep + '</strong><span>deep</span></div>';
     html += "</div>";
     html += '<div class="live-team">';
     html += '<div class="live-team-you"><span class="live-team-you-mark" aria-hidden="true">🌿</span> You</div>';
     html += '<div class="live-l1-list">';
     roots.forEach(function (p, idx) {
-      var under = countTreeDesc(p.children);
+      var under = typeof p._under === "number" ? p._under : countTreeDesc(p.children);
       var ctx = progressById[p.id];
       if (!p.created_at && downlineById[p.id]) {
         p.created_at = downlineById[p.id].profile.created_at;
@@ -1988,9 +2036,11 @@ window.FS = window.FS || {};
       }
       if (t.hasAttribute("data-team-sort")) {
         setTeamSortMode(t.getAttribute("data-team-sort"));
-        var sortRows = await Cloud.listDownline();
-        var sortGraph = await Cloud.listTeamGraph();
-        await renderLiveTeamGraph(sortGraph, sortRows);
+        try {
+          var sortRows = await Cloud.listDownline();
+          var sortGraph = await Cloud.listTeamGraph();
+          await renderLiveTeamGraph(sortGraph, sortRows);
+        } catch (err) {}
         return;
       }
       if (t.hasAttribute("data-team-person")) {
