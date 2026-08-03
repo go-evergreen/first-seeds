@@ -246,7 +246,43 @@ window.FS.CONFIG = {
   cheerTemplates: [
     "I see you showing up — that matters more than perfect posts.",
     "Root by root. You're doing the real work.",
-    "Proud of you. Clarity over hype — keep going at your pace."
+    "Proud of you. Clarity over hype — keep going at your pace.",
+    "Your prep is showing. Soft and steady still counts as progress.",
+    "Someone out there is going to feel safer because you learned this carefully.",
+    "No rush to be loud — keep planting what feels true.",
+    "I'm cheering for the quiet work you're doing behind the scenes."
+  ],
+
+  /* Coachmarks the first time someone appears on Team */
+  teamTour: [
+    {
+      title: "Someone joined your team",
+      body: "Share your unique team link anytime from here. When they sign in with it, they're linked to you — that's how First Seeds builds your live tree.",
+      panel: "leader",
+      target: '[data-team-tour="invite"]',
+      placement: "below"
+    },
+    {
+      title: "Watch the family form",
+      body: "Your Growing Team shows Level 1 (and who they bring in). Bigger branches rise to the top so you can see who's gathering people with them.",
+      panel: "leader",
+      target: '[data-team-tour="tree"]',
+      placement: "below"
+    },
+    {
+      title: "Coach by how they're moving",
+      body: "Needs a nudge · In motion · Ready — based on real First Seeds progress, not just that they downloaded the app. Open a card when you want to check in.",
+      panel: "leader",
+      target: '[data-team-tour="board"]',
+      placement: "above"
+    },
+    {
+      title: "Cheer them on from here",
+      body: "Send cheer drops a short encouragement into their app. Leave note is your custom message. Copy nudge is for texting outside the app. Try a cheer when it feels right.",
+      panel: "leader",
+      target: '[data-team-tour="coach"]',
+      placement: "above"
+    }
   ],
 
   storeKey: "firstSeeds_v6",

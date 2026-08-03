@@ -221,6 +221,7 @@ window.FS = window.FS || {};
     }
     var now = new Date();
     var buckets = { nudge: [], motion: [], ready: [] };
+    var coachMarked = false;
     rows.forEach(function (row) {
       var ctx = progressCtx(row, cfg);
       var under = underById[row.profile.id] || 0;
@@ -235,29 +236,27 @@ window.FS = window.FS || {};
     buckets.motion.sort(sortByUnder);
     buckets.ready.sort(sortByUnder);
 
-    function col(title, items, empty) {
-      var html = '<div class="leader-col"><div class="leader-col-title">' + esc(title) +
+    function col(kind, title, items) {
+      if (!items.length) return "";
+      var html = '<div class="leader-col is-' + kind + '"><div class="leader-col-title">' + esc(title) +
         ' <span>' + items.length + '</span></div>';
-      if (!items.length) {
-        html += '<p class="leader-empty">' + esc(empty) + '</p></div>';
-        return html;
-      }
       items.forEach(function (item) {
         var p = item.row.profile;
         var ctx = item.ctx;
         var modeLabel = p.hub_mode === "starter" ? "Getting started" : (p.hub_mode === "full" ? "Full runway" : "—");
-        html += '<div class="leader-card" data-partner="' + esc(p.id) + '">';
+        var pct = Math.round((ctx.sectionsDone / Math.max(1, ctx.sectionTotal)) * 100);
+        html += '<div class="leader-card"' + (!coachMarked ? ' data-team-tour="coach"' : "") + ' data-partner="' + esc(p.id) + '">';
+        coachMarked = true;
         html += '<div class="leader-card-head">';
         html += '<div class="leader-card-name">' + esc(p.display_name || p.email) + '</div>';
         if (item.under > 0) {
           html += '<span class="leader-under-chip">' + item.under + " under</span>";
         }
         html += "</div>";
-        html += '<div class="leader-card-meta">' + esc(modeLabel) + ' · ' +
-          ctx.sectionsDone + '/' + ctx.sectionTotal + ' sections done · last active ' +
+        html += '<div class="leader-card-meta">' + esc(modeLabel) + ' · last active ' +
           (ctx.daysSinceActive === 0 ? "today" : ctx.daysSinceActive + "d ago") + '</div>';
-        html += '<div class="leader-progress" aria-hidden="true"><span style="width:' +
-          Math.round((ctx.sectionsDone / Math.max(1, ctx.sectionTotal)) * 100) + '%"></span></div>';
+        html += '<div class="leader-progress-row"><div class="leader-progress" aria-hidden="true"><span style="width:' +
+          pct + '%"></span></div><span class="leader-progress-label">' + ctx.sectionsDone + '/' + ctx.sectionTotal + '</span></div>';
         html += '<div class="leader-card-nudge"><em>' + esc(item.nudge.when) + '</em><div id="nudge_' +
           esc(p.id) + '">' + esc(item.nudge.body) + '</div></div>';
         if (item.row.progress && item.row.progress.notified_at) {
@@ -275,11 +274,17 @@ window.FS = window.FS || {};
       html += '</div>';
       return html;
     }
-    root.innerHTML =
-      col("Needs a nudge", buckets.nudge, "Nobody stuck — nice.") +
-      col("In motion", buckets.motion, "No active partners this week.") +
-      col("Ready / blooming", buckets.ready, "No one finished yet — they're coming.");
+    var colsHtml =
+      col("nudge", "Needs a nudge", buckets.nudge) +
+      col("motion", "In motion", buckets.motion) +
+      col("ready", "Ready / blooming", buckets.ready);
+    var colCount = (buckets.nudge.length ? 1 : 0) + (buckets.motion.length ? 1 : 0) + (buckets.ready.length ? 1 : 0);
+    root.className = "leader-board cols-" + Math.max(1, colCount);
+    root.innerHTML = '<div class="leader-board-kicker">COACHING</div>' + (colsHtml || '<p class="leader-empty">Everyone\'s settled for now.</p>');
     await renderLiveTeamGraph(graph, rows);
+    if (typeof window.FS.maybeStartTeamTour === "function") {
+      window.FS.maybeStartTeamTour(rows.length);
+    }
   }
 
   function sortNodesByUnder(nodes) {
@@ -524,6 +529,73 @@ window.FS = window.FS || {};
     if (post.keywords && post.keywords.length) parts.push("KEYWORDS · " + post.keywords.join(", "));
     if (post.whyFrame1) parts.push("WHY FRAME 1 WORKS\n" + post.whyFrame1);
     return parts.join("\n\n") || post.body || post.preview || "";
+  }
+
+  function cheerTemplates() {
+    return (window.FS.CONFIG && window.FS.CONFIG.cheerTemplates) || ["Proud of you — keep going."];
+  }
+
+  function cheerIndex() {
+    var st = getState();
+    if (!st || !st.data) return 0;
+    var n = typeof st.data.cheerIdx === "number" ? st.data.cheerIdx : 0;
+    var len = cheerTemplates().length || 1;
+    return ((n % len) + len) % len;
+  }
+
+  function setCheerIndex(n) {
+    var st = getState();
+    if (!st || !st.data) return;
+    st.data.cheerIdx = n;
+    persist();
+  }
+
+  function advanceCheerTemplate() {
+    var len = cheerTemplates().length || 1;
+    setCheerIndex((cheerIndex() + 1) % len);
+  }
+
+  var cheerPendingPartnerId = null;
+
+  function openCheerSheet(partnerId) {
+    cheerPendingPartnerId = partnerId;
+    var sheet = $("cheerSheet");
+    if (sheet) sheet.hidden = false;
+    renderCheerSheetPreview();
+  }
+
+  function closeCheerSheet() {
+    cheerPendingPartnerId = null;
+    var sheet = $("cheerSheet");
+    if (sheet) sheet.hidden = true;
+  }
+
+  function renderCheerSheetPreview() {
+    var templates = cheerTemplates();
+    var idx = cheerIndex();
+    var body = templates[idx] || templates[0] || "";
+    var meta = $("cheerSheetMeta");
+    var preview = $("cheerSheetBody");
+    if (meta) meta.textContent = "Cheer " + (idx + 1) + " of " + templates.length;
+    if (preview) preview.textContent = '"' + body + '"';
+  }
+
+  async function confirmSendCheer() {
+    if (!cheerPendingPartnerId) return;
+    var templates = cheerTemplates();
+    var idx = cheerIndex();
+    var body = templates[idx] || templates[0] || "Proud of you — keep going.";
+    var btn = $("cheerConfirmSend");
+    try {
+      if (btn) btn.textContent = "Sending…";
+      await Cloud.sendEvent(cheerPendingPartnerId, "cheer", body);
+      advanceCheerTemplate();
+      closeCheerSheet();
+      if (btn) btn.textContent = "Send this →";
+    } catch (err) {
+      if (btn) btn.textContent = "Send this →";
+      alert(err.message || "Could not send cheer");
+    }
   }
 
   function chipClass(it) {
@@ -1298,6 +1370,7 @@ window.FS = window.FS || {};
       var t = e.target.closest(
         "#authOpenBtn,#authCloseBtn,#authSubmitBtn,#authCreateBtn,#authSignOutBtn,#railCopyInvite,#leaderCopyInvite,#authCopyInvite," +
         "#teamInviteOpen,#teamInviteClose,#teamInviteX,#exportBridgeBtn,#importLiveTreeBtn,#cheerDismiss,#notifySponsorBtn,[data-goto-bridge],[data-copy-nudge],[data-cheer],[data-note]," +
+        "#cheerSheetClose,#cheerSheetCancel,#cheerChooseAnother,#cheerConfirmSend," +
         "[data-cal-day],[data-cal-select],[data-cal-status],[data-cal-swap],[data-cal-week],[data-cal-nav],[data-cal-view],[data-cal-add],[data-cal-clear]," +
         "[data-cal-new],[data-cal-edit],[data-cal-item],[data-cal-accept],[data-cal-cadence],[data-cal-setup-toggle],[data-cal-save],[data-cal-delete]," +
         "[data-lib-tab],[data-lib-open],[data-lib-commit],[data-lib-add],[data-curio-open]," +
@@ -1549,16 +1622,20 @@ window.FS = window.FS || {};
         return;
       }
       if (t.hasAttribute("data-cheer")) {
-        var pid = t.getAttribute("data-cheer");
-        var templates = window.FS.CONFIG.cheerTemplates || ["Proud of you — keep going."];
-        var body = templates[Math.floor(Math.random() * templates.length)];
-        try {
-          await Cloud.sendEvent(pid, "cheer", body);
-          t.textContent = "Sent ✓";
-          setTimeout(function () { t.textContent = "Send cheer"; }, 1400);
-        } catch (err) {
-          alert(err.message || "Could not send cheer");
-        }
+        openCheerSheet(t.getAttribute("data-cheer"));
+        return;
+      }
+      if (t.id === "cheerSheetClose" || t.id === "cheerSheetCancel") {
+        closeCheerSheet();
+        return;
+      }
+      if (t.id === "cheerChooseAnother") {
+        advanceCheerTemplate();
+        renderCheerSheetPreview();
+        return;
+      }
+      if (t.id === "cheerConfirmSend") {
+        await confirmSendCheer();
         return;
       }
       if (t.hasAttribute("data-note")) {

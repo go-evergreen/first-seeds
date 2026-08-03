@@ -2826,6 +2826,12 @@
   var tourIdx = 0;
   var tourPlaceTimer = null;
   var tourTargetEl = null;
+  var tourKind = "main"; /* main | team */
+
+  function currentTourTips() {
+    if (tourKind === "team") return CFG.teamTour || [];
+    return CFG.tour || [];
+  }
 
   function clearTourHighlight() {
     if (tourTargetEl) {
@@ -2936,7 +2942,8 @@
 
   function startTour() {
     var wrap = document.getElementById("tour");
-    var tips = CFG.tour || [];
+    tourKind = "main";
+    var tips = currentTourTips();
     if (!wrap || !tips.length) {
       state.tourDone = true;
       save();
@@ -2950,14 +2957,55 @@
     renderTourStep();
   }
 
+  function startTeamTour() {
+    var wrap = document.getElementById("tour");
+    if (!wrap) return;
+    if (wrap.classList.contains("open")) return;
+    if (state.data.teamTourDone) return;
+    tourKind = "team";
+    var tips = currentTourTips();
+    if (!tips.length) {
+      state.data.teamTourDone = true;
+      save();
+      return;
+    }
+    tourIdx = 0;
+    state.active = "leader";
+    save();
+    renderNav();
+    renderPanels();
+    wrap.classList.add("open");
+    setOverlayOpen(true);
+    centerTourCard();
+    /* Let leader cards paint before spotlighting */
+    setTimeout(function () { renderTourStep(); }, 280);
+  }
+
+  function maybeStartTeamTour(count) {
+    if (!count || count < 1) return;
+    if (state.data.teamTourDone) return;
+    if (!state.tourDone) return; /* finish home tour first */
+    var wrap = document.getElementById("tour");
+    if (wrap && wrap.classList.contains("open")) return;
+    if (state.active !== "leader") return;
+    startTeamTour();
+  }
+  window.FS.maybeStartTeamTour = maybeStartTeamTour;
+
   function renderTourStep() {
-    var tips = CFG.tour || [];
+    var tips = currentTourTips();
     var tip = tips[tourIdx];
     if (!tip) return;
     setText("tourTitle", tip.title);
     setText("tourBody", tip.body);
     var next = document.getElementById("tourNext");
-    if (next) next.textContent = tourIdx >= tips.length - 1 ? "Start planting →" : "Next";
+    if (next) {
+      if (tourKind === "team") {
+        next.textContent = tourIdx >= tips.length - 1 ? "Got it — let's coach →" : "Next";
+      } else {
+        next.textContent = tourIdx >= tips.length - 1 ? "Start planting →" : "Next";
+      }
+    }
     var dots = document.getElementById("tourDots");
     if (dots) {
       dots.innerHTML = "";
@@ -2987,7 +3035,12 @@
     if (card) {
       card.style.cssText = "";
     }
-    state.tourDone = true;
+    if (tourKind === "team") {
+      state.data.teamTourDone = true;
+    } else {
+      state.tourDone = true;
+    }
+    tourKind = "main";
     save();
     setOverlayOpen(false);
     renderGreetings();
@@ -2998,7 +3051,7 @@
     if (!next || next.dataset.wired === "1") return;
     next.dataset.wired = "1";
     next.addEventListener("click", function () {
-      var tips = CFG.tour || [];
+      var tips = currentTourTips();
       if (tourIdx >= tips.length - 1) return finishTour();
       tourIdx++;
       renderTourStep();
@@ -3006,7 +3059,7 @@
     window.addEventListener("resize", function () {
       var wrap = document.getElementById("tour");
       if (!wrap || !wrap.classList.contains("open")) return;
-      var tips = CFG.tour || [];
+      var tips = currentTourTips();
       var tip = tips[tourIdx];
       if (tip && tourTargetEl) placeTourChrome(tourTargetEl, tip.placement);
     });
