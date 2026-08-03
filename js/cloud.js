@@ -129,11 +129,22 @@ window.FS = window.FS || {};
         tour_done: !!u.tour_done,
         invite_code: u.invite_code,
         sponsor_id: u.sponsor_id || null,
+        invited_by_id: u.invited_by_id || null,
+        is_org_admin: !!u.is_org_admin,
+        is_super_admin: !!u.is_super_admin,
         last_active_at: u.last_active_at,
         lead_slug: u.lead_slug || "",
         lead_blurb: u.lead_blurb || "",
         lead_thanks: u.lead_thanks || ""
       };
+    },
+
+    isOrgAdmin: function () {
+      return !!(sessionUser && sessionUser.is_org_admin);
+    },
+
+    isSuperAdmin: function () {
+      return !!(sessionUser && sessionUser.is_super_admin);
     },
 
     DEFAULT_LEAD_THANKS:
@@ -195,6 +206,9 @@ window.FS = window.FS || {};
           tour_done: false,
           invite_code: makeCode(),
           sponsor_id: null,
+          invited_by_id: null,
+          is_org_admin: false,
+          is_super_admin: false,
           last_active_at: new Date().toISOString(),
           progress: blankProgress()
         };
@@ -206,6 +220,7 @@ window.FS = window.FS || {};
           var u2 = store.users[id2];
           if (u2.invite_code === pending && u2.id !== user.id) {
             user.sponsor_id = u2.id;
+            if (!user.invited_by_id) user.invited_by_id = u2.id;
             Cloud.clearPendingJoin();
           }
         });
@@ -434,6 +449,106 @@ window.FS = window.FS || {};
         return out;
       }
       return { roots: kidsOf(sessionUser.id, MAX), depth: MAX };
+    },
+
+    mySupportContext: async function () {
+      if (!sessionUser) return null;
+      if (configured() && client) {
+        var { data, error } = await client.rpc("my_support_context");
+        if (error) throw error;
+        return data || null;
+      }
+      var store = localStore();
+      var me = store.users[sessionUser.id];
+      if (!me) return null;
+      var inv = me.invited_by_id ? store.users[me.invited_by_id] : null;
+      var sp = me.sponsor_id ? store.users[me.sponsor_id] : null;
+      return {
+        invited_by_id: me.invited_by_id || null,
+        invited_by_name: inv ? (inv.display_name || inv.email) : null,
+        sponsor_id: me.sponsor_id || null,
+        sponsor_name: sp ? (sp.display_name || sp.email) : null
+      };
+    },
+
+    adminListProfiles: async function () {
+      if (!sessionUser) throw new Error("Sign in first.");
+      if (!Cloud.isOrgAdmin()) throw new Error("Org admin only.");
+      if (configured() && client) {
+        var { data, error } = await client.rpc("admin_list_profiles");
+        if (error) throw error;
+        return data || [];
+      }
+      var store = localStore();
+      return Object.keys(store.users).map(function (id) {
+        var u = store.users[id];
+        return {
+          id: u.id,
+          display_name: u.display_name,
+          email: u.email,
+          sponsor_id: u.sponsor_id || null,
+          invited_by_id: u.invited_by_id || null,
+          is_org_admin: !!u.is_org_admin,
+          is_super_admin: !!u.is_super_admin,
+          hub_mode: u.hub_mode || "",
+          created_at: u.created_at || u.last_active_at || ""
+        };
+      }).sort(function (a, b) {
+        return String(a.display_name || a.email || "").localeCompare(String(b.display_name || b.email || ""), undefined, { sensitivity: "base" });
+      });
+    },
+
+    reparentPartner: async function (partnerId, newSponsorId) {
+      if (!sessionUser) throw new Error("Sign in first.");
+      if (!Cloud.isOrgAdmin()) throw new Error("Org admin only.");
+      if (configured() && client) {
+        var { data, error } = await client.rpc("reparent_partner", {
+          partner: partnerId,
+          new_sponsor: newSponsorId
+        });
+        if (error) throw error;
+        return data;
+      }
+      var store = localStore();
+      var partner = store.users[partnerId];
+      var sponsor = store.users[newSponsorId];
+      if (!partner || !sponsor) throw new Error("Partner or new sponsor not found.");
+      if (partnerId === newSponsorId) throw new Error("Someone cannot be under themselves.");
+      var walk = newSponsorId;
+      var hops = 0;
+      while (walk && hops < 64) {
+        if (walk === partnerId) throw new Error("That move would create a loop in the tree.");
+        walk = store.users[walk] && store.users[walk].sponsor_id;
+        hops++;
+      }
+      partner.sponsor_id = newSponsorId;
+      store.users[partnerId] = partner;
+      localSave(store);
+      return { partner_id: partnerId, sponsor_id: newSponsorId };
+    },
+
+    setOrgAdmin: async function (partnerId, enabled) {
+      if (!sessionUser) throw new Error("Sign in first.");
+      if (!Cloud.isSuperAdmin()) throw new Error("Super admin only.");
+      if (partnerId === sessionUser.id && !enabled) {
+        throw new Error("You cannot remove your own admin access here.");
+      }
+      if (configured() && client) {
+        var { data, error } = await client.rpc("set_org_admin", {
+          partner: partnerId,
+          enabled: !!enabled
+        });
+        if (error) throw error;
+        return data;
+      }
+      var store = localStore();
+      var partner = store.users[partnerId];
+      if (!partner) throw new Error("Partner not found.");
+      if (partner.is_super_admin) throw new Error("Cannot change org-admin flag on a super admin.");
+      partner.is_org_admin = !!enabled;
+      store.users[partnerId] = partner;
+      localSave(store);
+      return { partner_id: partnerId, is_org_admin: !!enabled };
     },
 
     sendEvent: async function (partnerId, kind, body) {

@@ -20,7 +20,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,400;1,9..144,500&family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/styles.css?v=119">
+<link rel="stylesheet" href="css/styles.css?v=120">
 </head>
 <body>
 
@@ -198,6 +198,7 @@
     </div>
 
     <div class="cheer-banner" id="cheerBanner" hidden></div>
+    <div class="support-banner live-card" id="supportBanner" hidden></div>
     <div class="leader-note-banner live-card" id="leaderNoteBanner" hidden></div>
 
     <div class="content" id="mainContent">
@@ -828,6 +829,10 @@
           </div>
         </div>
         <p class="sec-sub">The people building alongside you — check in, cheer them on, watch the family grow.</p>
+        <div class="team-admin-bar" id="teamAdminBar" hidden>
+          <button type="button" class="live-team-sort-btn" id="teamRearrangeToggle" aria-pressed="false">Rearrange team</button>
+          <span class="team-admin-hint" id="teamRearrangeHint" hidden>Tap a person → Move under… Mentoring follows the new Level 1. Invited-by stays the same.</span>
+        </div>
 
         <button type="button" class="team-invite-backdrop" id="teamInviteClose" aria-label="Close invite" hidden></button>
 
@@ -1032,6 +1037,25 @@
   </div>
 </div>
 
+<!-- ═══ MOVE UNDER PICKER ═══ -->
+<div class="cheer-sheet" id="teamMoveSheet" hidden>
+  <button type="button" class="cheer-sheet-backdrop" id="teamMoveClose" aria-label="Close"></button>
+  <div class="cheer-sheet-card team-person-card" role="dialog" aria-modal="true" aria-labelledby="teamMoveTitle">
+    <div class="team-person-head">
+      <div class="live-tag">MOVE UNDER</div>
+      <button type="button" class="team-person-x" id="teamMoveX" aria-label="Close">×</button>
+    </div>
+    <h3 id="teamMoveTitle">Choose a new Level 1</h3>
+    <p class="team-person-hint" id="teamMoveLead"></p>
+    <label class="field">
+      <span class="field-label">Search</span>
+      <input type="search" class="cal-input" id="teamMoveSearch" placeholder="Name or email" autocomplete="off">
+    </label>
+    <div class="team-move-list" id="teamMoveList" role="listbox"></div>
+    <button type="button" class="cheer-sheet-cancel" id="teamMoveCancel">Cancel</button>
+  </div>
+</div>
+
 <!-- ═══ MINI TOUR ═══ -->
 <div class="overlay tour" id="tour" role="dialog" aria-modal="true" aria-labelledby="tourTitle">
   <div class="tour-spotlight" id="tourSpotlight" hidden aria-hidden="true"></div>
@@ -1044,18 +1068,18 @@
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="js/config.js?v=119"></script>
-<script src="js/supabase-config.js?v=119"></script>
-<script src="js/data.js?v=119"></script>
-<script src="js/content.js?v=119"></script>
-<script src="js/content-vault.js?v=119"></script>
-<script src="js/products.js?v=119"></script>
-<script src="js/plant.js?v=119"></script>
-<script src="js/tree.js?v=119"></script>
-<script src="js/calendar.js?v=119"></script>
-<script src="js/cloud.js?v=119"></script>
-<script src="js/bridge-ui.js?v=119"></script>
-<script src="js/app.js?v=119"></script>
-<script src="js/pwa.js?v=119"></script>
+<script src="js/config.js?v=120"></script>
+<script src="js/supabase-config.js?v=120"></script>
+<script src="js/data.js?v=120"></script>
+<script src="js/content.js?v=120"></script>
+<script src="js/content-vault.js?v=120"></script>
+<script src="js/products.js?v=120"></script>
+<script src="js/plant.js?v=120"></script>
+<script src="js/tree.js?v=120"></script>
+<script src="js/calendar.js?v=120"></script>
+<script src="js/cloud.js?v=120"></script>
+<script src="js/bridge-ui.js?v=120"></script>
+<script src="js/app.js?v=120"></script>
+<script src="js/pwa.js?v=120"></script>
 </body>
 </html>

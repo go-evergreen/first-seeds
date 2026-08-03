@@ -207,6 +207,41 @@ window.FS = window.FS || {};
       '</div></div><button type="button" class="cheer-dismiss" id="cheerDismiss">Got it</button>';
   }
 
+  async function renderSupportBanner() {
+    var el = $("supportBanner");
+    if (!el) return;
+    if (!Cloud.isSignedIn()) {
+      el.hidden = true;
+      return;
+    }
+    var ctx = null;
+    try {
+      ctx = await Cloud.mySupportContext();
+    } catch (e) {
+      el.hidden = true;
+      return;
+    }
+    if (!ctx || (!ctx.invited_by_name && !ctx.sponsor_name)) {
+      el.hidden = true;
+      return;
+    }
+    var inviter = (ctx.invited_by_name || "").trim();
+    var sponsor = (ctx.sponsor_name || "").trim();
+    var line = "";
+    if (inviter && sponsor && ctx.invited_by_id && ctx.sponsor_id && ctx.invited_by_id === ctx.sponsor_id) {
+      line = "<strong>" + esc(inviter) + "</strong> invited you to First Seeds — they’re here to help support you.";
+    } else if (inviter && sponsor) {
+      line = "<strong>" + esc(inviter) + "</strong> invited you to First Seeds. <strong>" +
+        esc(sponsor) + "</strong> is here to help support you.";
+    } else if (sponsor) {
+      line = "<strong>" + esc(sponsor) + "</strong> is here to help support you.";
+    } else {
+      line = "<strong>" + esc(inviter) + "</strong> invited you to First Seeds.";
+    }
+    el.hidden = false;
+    el.innerHTML = '<div class="live-tag">YOUR SUPPORT</div><p class="support-banner-line">' + line + "</p>";
+  }
+
   async function renderPulse() {
     var el = $("teamPulse");
     if (!el) return;
@@ -340,6 +375,7 @@ window.FS = window.FS || {};
     });
     if (!rows.length) {
       root.innerHTML = '<p class="body-p">Nobody\'s linked yet. Share your join link — when they sign in, they show up here with live progress.</p>';
+      paintTeamAdminBar();
       await renderLiveTeamGraph(graph, rows);
       markTeamJoinsSeen(rows);
       paintTeamBadge(0);
@@ -427,6 +463,7 @@ window.FS = window.FS || {};
     var colCount = (buckets.nudge.length ? 1 : 0) + (buckets.motion.length ? 1 : 0) + (buckets.ready.length ? 1 : 0);
     root.className = "leader-board cols-" + Math.max(1, colCount);
     root.innerHTML = '<div class="leader-board-kicker">MENTORING</div>' + (colsHtml || '<p class="leader-empty">Everyone\'s settled for now.</p>');
+    paintTeamAdminBar();
     await renderLiveTeamGraph(graph, rows);
     markTeamJoinsSeen(rows);
     paintTeamBadge(0);
@@ -589,13 +626,92 @@ window.FS = window.FS || {};
   }
 
   var teamPersonCache = {};
+  var teamMovePartnerId = null;
+  var adminProfileCache = [];
+
+  function teamRearrangeOn() {
+    var st = getState ? getState() : null;
+    return !!(st && st.data && st.data.teamRearrangeMode && Cloud.isOrgAdmin());
+  }
+
+  function setTeamRearrangeOn(on) {
+    if (!getState) return;
+    var st = getState();
+    if (!st.data) st.data = {};
+    st.data.teamRearrangeMode = !!on && Cloud.isOrgAdmin();
+    persist();
+  }
+
+  function paintTeamAdminBar() {
+    var bar = $("teamAdminBar");
+    var btn = $("teamRearrangeToggle");
+    var hint = $("teamRearrangeHint");
+    if (!bar || !btn) return;
+    if (!Cloud.isSignedIn() || !Cloud.isOrgAdmin()) {
+      bar.hidden = true;
+      setTeamRearrangeOn(false);
+      return;
+    }
+    bar.hidden = false;
+    var on = teamRearrangeOn();
+    btn.classList.toggle("on", on);
+    btn.setAttribute("aria-pressed", on ? "true" : "false");
+    btn.textContent = on ? "Done rearranging" : "Rearrange team";
+    if (hint) hint.hidden = !on;
+  }
 
   function closeTeamPersonSheet() {
     var sheet = $("teamPersonSheet");
     if (sheet) sheet.hidden = true;
   }
 
-  function openTeamPersonSheet(partnerId) {
+  function closeTeamMoveSheet() {
+    teamMovePartnerId = null;
+    var sheet = $("teamMoveSheet");
+    if (sheet) sheet.hidden = true;
+  }
+
+  function descendantIdSet(profiles, rootId) {
+    var bySponsor = {};
+    (profiles || []).forEach(function (p) {
+      if (!p || !p.sponsor_id) return;
+      if (!bySponsor[p.sponsor_id]) bySponsor[p.sponsor_id] = [];
+      bySponsor[p.sponsor_id].push(p.id);
+    });
+    var out = {};
+    var stack = [rootId];
+    while (stack.length) {
+      var id = stack.pop();
+      var kids = bySponsor[id] || [];
+      for (var i = 0; i < kids.length; i++) {
+        if (out[kids[i]]) continue;
+        out[kids[i]] = true;
+        stack.push(kids[i]);
+      }
+    }
+    return out;
+  }
+
+  async function openTeamPersonSheet(partnerId) {
+    if ((Cloud.isOrgAdmin() || Cloud.isSuperAdmin()) && !adminProfileCache.length) {
+      try {
+        adminProfileCache = await Cloud.adminListProfiles();
+        adminProfileCache.forEach(function (p) {
+          if (!teamPersonCache[p.id]) return;
+          teamPersonCache[p.id].is_org_admin = !!p.is_org_admin;
+          teamPersonCache[p.id].is_super_admin = !!p.is_super_admin;
+          if (p.created_at && !teamPersonCache[p.id].created_at) {
+            teamPersonCache[p.id].created_at = p.created_at;
+          }
+        });
+      } catch (e) {}
+    } else if (adminProfileCache.length) {
+      adminProfileCache.forEach(function (p) {
+        if (p.id !== partnerId || !teamPersonCache[p.id]) return;
+        teamPersonCache[p.id].is_org_admin = !!p.is_org_admin;
+        teamPersonCache[p.id].is_super_admin = !!p.is_super_admin;
+      });
+    }
     var person = teamPersonCache[partnerId];
     if (!person) return;
     var sheet = $("teamPersonSheet");
@@ -606,7 +722,9 @@ window.FS = window.FS || {};
     if (!sheet || !nameEl || !chips || !facts || !actions) return;
     nameEl.textContent = person.display_name || person.email || "Partner";
     chips.innerHTML = hubModeChipHtml(person.hub_mode) +
-      (person.under ? '<span class="live-l1-under on">' + person.under + " under</span>" : "");
+      (person.under ? '<span class="live-l1-under on">' + person.under + " under</span>" : "") +
+      (person.is_org_admin ? '<span class="team-mode-chip is-full">Org admin</span>' : "") +
+      (person.is_super_admin ? '<span class="team-mode-chip is-full">Super admin</span>' : "");
     var factRows = [
       ["Joined", formatJoinedOn(person.created_at)],
       ["Last active", person.daysSinceActive == null ? "—" :
@@ -623,11 +741,140 @@ window.FS = window.FS || {};
     if (person.isDirect) {
       html += '<button type="button" class="btn" data-cheer="' + esc(partnerId) + '">Send cheer</button>';
       html += '<button type="button" class="btn-ghost" data-note="' + esc(partnerId) + '">Leave note</button>';
-    } else {
+    } else if (!Cloud.isOrgAdmin()) {
       html += '<p class="team-person-hint">Cheer and notes are for your Level 1 — this person is deeper on the tree.</p>';
+    }
+    if (Cloud.isOrgAdmin() && teamRearrangeOn()) {
+      html += '<button type="button" class="btn" data-team-move="' + esc(partnerId) + '">Move under…</button>';
+    }
+    if (Cloud.isSuperAdmin() && partnerId !== (Cloud.user() && Cloud.user().id) && !person.is_super_admin) {
+      if (person.is_org_admin) {
+        html += '<button type="button" class="btn-ghost" data-team-admin="' + esc(partnerId) + '" data-admin-on="0">Remove org admin</button>';
+      } else {
+        html += '<button type="button" class="btn-ghost" data-team-admin="' + esc(partnerId) + '" data-admin-on="1">Make org admin</button>';
+      }
     }
     actions.innerHTML = html;
     sheet.hidden = false;
+  }
+
+  function renderTeamMoveList(query) {
+    var list = $("teamMoveList");
+    if (!list || !teamMovePartnerId) return;
+    var q = String(query || "").trim().toLowerCase();
+    var blocked = descendantIdSet(adminProfileCache, teamMovePartnerId);
+    blocked[teamMovePartnerId] = true;
+    var person = teamPersonCache[teamMovePartnerId] || {};
+    var html = "";
+    var shown = 0;
+    adminProfileCache.forEach(function (p) {
+      if (!p || blocked[p.id]) return;
+      var label = p.display_name || p.email || "Partner";
+      var hay = (label + " " + (p.email || "")).toLowerCase();
+      if (q && hay.indexOf(q) < 0) return;
+      shown++;
+      if (shown > 80) return;
+      html += '<button type="button" class="team-move-option" data-team-move-to="' + esc(p.id) + '">';
+      html += '<span class="team-move-option-name">' + esc(label) + "</span>";
+      if (p.email && p.display_name) html += '<span class="team-move-option-meta">' + esc(p.email) + "</span>";
+      html += "</button>";
+    });
+    if (!html) {
+      html = '<p class="team-person-hint">No valid people match. Pick someone who isn’t under ' +
+        esc(person.display_name || person.email || "them") + ".</p>";
+    } else if (shown > 80) {
+      html += '<p class="team-person-hint">Showing first 80 — refine your search.</p>';
+    }
+    list.innerHTML = html;
+  }
+
+  async function openTeamMoveSheet(partnerId) {
+    if (!Cloud.isOrgAdmin() || !teamRearrangeOn()) return;
+    var person = teamPersonCache[partnerId];
+    if (!person) return;
+    closeTeamPersonSheet();
+    teamMovePartnerId = partnerId;
+    var sheet = $("teamMoveSheet");
+    var title = $("teamMoveTitle");
+    var lead = $("teamMoveLead");
+    var search = $("teamMoveSearch");
+    if (!sheet) return;
+    if (title) title.textContent = "Move " + (person.display_name || person.email || "partner");
+    if (lead) {
+      lead.textContent = "Choose who they’ll sit under. Mentoring (cheers, notes, progress) moves with the new Level 1. Who invited them stays the same.";
+    }
+    try {
+      adminProfileCache = await Cloud.adminListProfiles();
+    } catch (err) {
+      alert((err && err.message) || "Could not load people.");
+      return;
+    }
+    /* Enrich cache with admin flags for person sheet later */
+    adminProfileCache.forEach(function (p) {
+      if (!teamPersonCache[p.id]) {
+        teamPersonCache[p.id] = {
+          id: p.id,
+          display_name: p.display_name,
+          email: p.email,
+          hub_mode: p.hub_mode,
+          created_at: p.created_at || "",
+          is_org_admin: !!p.is_org_admin,
+          is_super_admin: !!p.is_super_admin,
+          isDirect: false,
+          under: 0
+        };
+      } else {
+        teamPersonCache[p.id].is_org_admin = !!p.is_org_admin;
+        teamPersonCache[p.id].is_super_admin = !!p.is_super_admin;
+      }
+    });
+    if (search) search.value = "";
+    renderTeamMoveList("");
+    sheet.hidden = false;
+    if (search) setTimeout(function () { search.focus(); }, 50);
+  }
+
+  async function confirmTeamMove(newSponsorId) {
+    if (!teamMovePartnerId || !newSponsorId) return;
+    var person = teamPersonCache[teamMovePartnerId] || {};
+    var sponsor = null;
+    adminProfileCache.forEach(function (p) {
+      if (p.id === newSponsorId) sponsor = p;
+    });
+    var fromName = person.display_name || person.email || "this partner";
+    var toName = (sponsor && (sponsor.display_name || sponsor.email)) || "the selected person";
+    var ok = window.confirm(
+      "Move " + fromName + " under " + toName + "?\n\n" +
+      "Mentoring moves to " + toName + ". Invited-by stays the same."
+    );
+    if (!ok) return;
+    try {
+      await Cloud.reparentPartner(teamMovePartnerId, newSponsorId);
+      closeTeamMoveSheet();
+      await renderLeader();
+    } catch (err) {
+      alert((err && err.message) || "Could not move this person.");
+    }
+  }
+
+  async function toggleOrgAdmin(partnerId, enabled) {
+    if (!Cloud.isSuperAdmin()) return;
+    var person = teamPersonCache[partnerId] || {};
+    var name = person.display_name || person.email || "this partner";
+    var ok = window.confirm(
+      enabled
+        ? "Make " + name + " an org admin?\n\nThey’ll be able to rearrange the team. Only you can grant or remove admin."
+        : "Remove org admin from " + name + "?\n\nThey’ll keep their place on the tree but can no longer rearrange."
+    );
+    if (!ok) return;
+    try {
+      await Cloud.setOrgAdmin(partnerId, enabled);
+      adminProfileCache = [];
+      if (teamPersonCache[partnerId]) teamPersonCache[partnerId].is_org_admin = !!enabled;
+      await openTeamPersonSheet(partnerId);
+    } catch (err) {
+      alert((err && err.message) || "Could not update admin access.");
+    }
   }
 
   async function renderLiveTeamGraph(graphPrefetch, downlineRows) {
@@ -941,6 +1188,7 @@ window.FS = window.FS || {};
 
   function openCheerSheet(partnerId) {
     closeTeamPersonSheet();
+    closeTeamMoveSheet();
     cheerPendingPartnerId = partnerId;
     var sheet = $("cheerSheet");
     if (sheet) sheet.hidden = false;
@@ -1684,8 +1932,10 @@ window.FS = window.FS || {};
   async function afterAuth() {
     renderAuthChrome();
     await renderCheers();
+    await renderSupportBanner();
     await renderPulse();
     await renderLeaderNoteBanner();
+    paintTeamAdminBar();
     if (getState && getState().active === "leader") await renderLeader();
     if (getState && (getState().active === "calendar" || getState().active === "tend")) renderCalendar();
     if (getState && getState().active === "leads") await renderLeads();
@@ -1713,6 +1963,11 @@ window.FS = window.FS || {};
     wired = true;
     document.addEventListener("keydown", function (e) {
       if (e.key === "Escape") {
+        var moveSheet = $("teamMoveSheet");
+        if (moveSheet && !moveSheet.hidden) {
+          closeTeamMoveSheet();
+          return;
+        }
         var personSheet = $("teamPersonSheet");
         if (personSheet && !personSheet.hidden) {
           closeTeamPersonSheet();
@@ -1733,6 +1988,14 @@ window.FS = window.FS || {};
         if (sb) sb.click();
       }
     });
+    document.addEventListener("input", function (e) {
+      var t = e.target;
+      if (!t) return;
+      if (t.id === "teamMoveSearch") {
+        renderTeamMoveList(t.value);
+      }
+    });
+
     document.addEventListener("change", function (e) {
       var t = e.target;
       if (!t) return;
@@ -1771,6 +2034,7 @@ window.FS = window.FS || {};
         "#teamInviteOpen,#teamInviteClose,#teamInviteX,#exportBridgeBtn,#importLiveTreeBtn,#cheerDismiss,#notifySponsorBtn,[data-goto-bridge],[data-copy-nudge],[data-cheer],[data-note],[data-leader-log]," +
         "#cheerSheetClose,#cheerSheetCancel,#cheerChooseAnother,#cheerConfirmSend," +
         "#teamPersonClose,#teamPersonX,#teamPersonCancel,[data-team-sort],[data-team-person]," +
+        "#teamRearrangeToggle,#teamMoveClose,#teamMoveX,#teamMoveCancel,[data-team-move],[data-team-move-to],[data-team-admin]," +
         "[data-cal-day],[data-cal-select],[data-cal-status],[data-cal-swap],[data-cal-week],[data-cal-nav],[data-cal-view],[data-cal-add],[data-cal-clear]," +
         "[data-cal-new],[data-cal-edit],[data-cal-item],[data-cal-accept],[data-cal-cadence],[data-cal-setup-toggle],[data-cal-save],[data-cal-delete]," +
         "[data-lib-tab],[data-lib-open],[data-lib-commit],[data-lib-add],[data-curio-open]," +
@@ -2032,6 +2296,28 @@ window.FS = window.FS || {};
       }
       if (t.id === "teamPersonClose" || t.id === "teamPersonX" || t.id === "teamPersonCancel") {
         closeTeamPersonSheet();
+        return;
+      }
+      if (t.id === "teamMoveClose" || t.id === "teamMoveX" || t.id === "teamMoveCancel") {
+        closeTeamMoveSheet();
+        return;
+      }
+      if (t.id === "teamRearrangeToggle") {
+        setTeamRearrangeOn(!teamRearrangeOn());
+        paintTeamAdminBar();
+        return;
+      }
+      if (t.hasAttribute("data-team-move")) {
+        openTeamMoveSheet(t.getAttribute("data-team-move"));
+        return;
+      }
+      if (t.hasAttribute("data-team-move-to")) {
+        await confirmTeamMove(t.getAttribute("data-team-move-to"));
+        return;
+      }
+      if (t.hasAttribute("data-team-admin")) {
+        var adminOn = t.getAttribute("data-admin-on") === "1";
+        await toggleOrgAdmin(t.getAttribute("data-team-admin"), adminOn);
         return;
       }
       if (t.hasAttribute("data-team-sort")) {
