@@ -80,9 +80,9 @@ button{font-family:inherit;cursor:pointer}
 .support-banner{margin:0 56px;margin-top:12px;padding:14px 18px}
 .support-banner[hidden]{display:none!important}
 .support-banner-line{margin:0;font-size:14px;line-height:1.5;color:var(--green)}
-.team-admin-hint{font-size:12.5px;line-height:1.4;color:var(--bark);max-width:36em;margin:0 0 10px}
-.team-rearrange-btn{font-size:11px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;padding:6px 10px;border-radius:8px;flex-shrink:0}
-.team-rearrange-btn.on{background:var(--green);color:#fff;border-color:var(--green)}
+.team-admin-hint{font-size:12px;line-height:1.4;color:var(--bark);max-width:36em;margin:0 0 10px}
+.team-rearrange-btn{margin-left:2px}
+.team-rearrange-btn.on{background:var(--green)!important;color:#fff!important;box-shadow:none}
 .team-move-list{display:flex;flex-direction:column;gap:6px;max-height:min(42vh,360px);overflow:auto;margin:12px 0 8px;-webkit-overflow-scrolling:touch}
 .team-move-option{display:flex;flex-direction:column;align-items:flex-start;gap:2px;width:100%;border:1px solid var(--sand);border-radius:12px;background:var(--paper);padding:10px 12px;cursor:pointer;font:inherit;text-align:left}
 .team-move-option:hover,.team-move-option:focus-visible{border-color:var(--moss);background:#eef2ec;outline:none}

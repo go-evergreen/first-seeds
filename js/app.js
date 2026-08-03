@@ -2975,6 +2975,24 @@
     card.style.transform = "translate(-50%, -50%)";
   }
 
+  /* Open collapsed mentoring sections/cards so tour targets actually have layout */
+  function prepareTeamTourTarget(tip) {
+    if (tourKind !== "team") return;
+    var cols = document.querySelectorAll("#leaderLists details.leader-col");
+    for (var i = 0; i < cols.length; i++) cols[i].open = true;
+    var firstCard = document.querySelector("#leaderLists details.leader-card");
+    if (firstCard) firstCard.open = true;
+    var sel = tip && tip.target;
+    if (!sel) return;
+    var el = document.querySelector(sel);
+    if (!el) return;
+    var node = el;
+    while (node && node !== document.body) {
+      if (node.tagName === "DETAILS") node.open = true;
+      node = node.parentElement;
+    }
+  }
+
   function placeTourChrome(targetEl, placement) {
     var card = document.getElementById("tourCard");
     var spot = document.getElementById("tourSpotlight");
@@ -2989,26 +3007,40 @@
     var vw = window.innerWidth;
     var vh = window.innerHeight;
 
-    /* Tall blocks (live team tree, boards) — spotlight the top band so the tip isn't buried */
-    var maxSpotH = Math.max(72, Math.floor(vh * 0.34));
+    /* Hidden / not laid out yet */
+    if (rect.width < 2 && rect.height < 2) {
+      centerTourCard();
+      return;
+    }
+
+    /* Tall blocks — spotlight the top band so the tip isn't buried under a huge hole */
+    var maxSpotH = Math.max(64, Math.floor(vh * 0.28));
     var spotH = Math.min(rect.height + pad * 2, maxSpotH);
     var spotTop = Math.max(6, rect.top - pad);
     var spotLeft = Math.max(6, rect.left - pad);
     var spotRight = Math.min(vw - 6, rect.right + pad);
     var spotBottom = Math.min(vh - 6, spotTop + spotH);
-    /* Keep spotlight attached to the visible top of the target */
     if (spotBottom > vh - 6) {
       spotBottom = vh - 6;
       spotTop = Math.max(6, spotBottom - spotH);
     }
 
     if (spot) {
+      var prevTop = parseFloat(spot.style.top) || spotTop;
+      var jump = Math.abs(spotTop - prevTop) > 100;
+      if (jump) spot.style.transition = "none";
       spot.hidden = false;
       spot.style.top = spotTop + "px";
       spot.style.left = spotLeft + "px";
       spot.style.width = Math.max(24, spotRight - spotLeft) + "px";
       spot.style.height = Math.max(24, spotBottom - spotTop) + "px";
-      spot.style.borderRadius = targetEl.closest(".bottom-nav-btn") ? "16px" : "18px";
+      spot.style.borderRadius = targetEl.closest(".bottom-nav-btn") ? "16px" : "14px";
+      if (jump) {
+        /* Re-enable transition on next frame so later steps still ease gently */
+        requestAnimationFrame(function () {
+          if (spot) spot.style.transition = "";
+        });
+      }
     }
 
     card.style.transform = "none";
@@ -3016,21 +3048,20 @@
     card.style.width = cardW + "px";
     card.style.maxWidth = cardW + "px";
     var cardH = card.offsetHeight || 200;
+    var navSafe = 72; /* leave room above bottom nav */
 
-    var spaceBelow = vh - spotBottom - gap;
+    var spaceBelow = vh - spotBottom - gap - navSafe;
     var spaceAbove = spotTop - gap;
     var place = placement || "auto";
-    var tall = rect.height > vh * 0.42;
-    if (tall) {
-      /* Prefer anchoring the tip in free space, not under a huge card */
+    var tall = rect.height > vh * 0.36;
+
+    if (place === "auto" || tall) {
       place = spaceBelow >= cardH + 8 ? "below" : (spaceAbove >= cardH + 8 ? "above" : "center");
-    } else {
-      if (place === "auto") {
-        place = (spaceBelow >= cardH + 8 || spaceBelow >= spaceAbove) ? "below" : "above";
-      }
-      if (place === "below" && spaceBelow < Math.min(cardH, 120) && spaceAbove > spaceBelow) place = "above";
-      if (place === "above" && spaceAbove < Math.min(cardH, 120) && spaceBelow > spaceAbove) place = "below";
     }
+    if (place === "below" && spaceBelow < Math.min(cardH, 130) && spaceAbove > spaceBelow) place = "above";
+    if (place === "above" && spaceAbove < Math.min(cardH, 130) && spaceBelow > spaceAbove) place = "below";
+    /* Near the bottom of the screen, prefer the tip above the hole */
+    if (spotBottom > vh * 0.62 && spaceAbove >= Math.min(cardH, 140)) place = "above";
 
     if (place === "center") {
       centerTourCard();
@@ -3043,7 +3074,7 @@
 
     var left = spotLeft + ((spotRight - spotLeft) / 2) - (cardW / 2);
     left = Math.min(Math.max(12, left), vw - cardW - 12);
-    top = Math.min(Math.max(12, top), vh - cardH - 12);
+    top = Math.min(Math.max(12, top), vh - cardH - navSafe);
 
     card.style.top = top + "px";
     card.style.left = left + "px";
@@ -3053,13 +3084,28 @@
 
   function scrollTourTargetIntoView(el) {
     if (!el) return;
-    /* Tour sets body.overlay-open { overflow:hidden }, which blocks scrollIntoView —
-       briefly lift the lock so cheer/note (and other below-fold targets) can move onscreen.
-       Use instant scroll — smooth can get cancelled when overflow locks again. */
+    /* Open any closed details ancestors first */
+    var node = el;
+    while (node && node !== document.body) {
+      if (node.tagName === "DETAILS") node.open = true;
+      node = node.parentElement;
+    }
+    /* Tour sets body.overlay-open { overflow:hidden }, which blocks scrollIntoView */
     var locked = document.body.classList.contains("overlay-open");
     if (locked) document.body.classList.remove("overlay-open");
     try {
-      el.scrollIntoView({ block: "center", inline: "nearest", behavior: "auto" });
+      var rect = el.getBoundingClientRect();
+      var vh = window.innerHeight;
+      /* Prefer center for small targets; nearest for tall ones so we don't overshoot */
+      var block = rect.height > vh * 0.4 ? "nearest" : "center";
+      el.scrollIntoView({ block: block, inline: "nearest", behavior: "auto" });
+      /* If still clipped under the bottom nav / header, nudge window scroll */
+      rect = el.getBoundingClientRect();
+      if (rect.top < 70) {
+        window.scrollBy(0, rect.top - 80);
+      } else if (rect.bottom > vh - 80) {
+        window.scrollBy(0, rect.bottom - (vh - 90));
+      }
     } catch (err) {
       try { el.scrollIntoView(true); } catch (err2) { /* ignore */ }
     }
@@ -3069,8 +3115,15 @@
   function scheduleTourPlacement(tip) {
     clearTimeout(tourPlaceTimer);
     clearTourHighlight();
+    var attempts = 0;
     var tryPlace = function () {
+      prepareTeamTourTarget(tip);
       var el = tip && tip.target ? document.querySelector(tip.target) : null;
+      if ((!el || (el.getBoundingClientRect().width < 2 && el.getBoundingClientRect().height < 2)) && attempts < 10) {
+        attempts++;
+        tourPlaceTimer = setTimeout(tryPlace, 120);
+        return;
+      }
       if (!el) {
         centerTourCard();
         return;
@@ -3079,12 +3132,13 @@
       el.classList.add("tour-target-on");
       scrollTourTargetIntoView(el);
       placeTourChrome(el, tip.placement);
-      /* Second pass after layout settles (fonts, nested overflow, bottom nav) */
+      /* Second pass after layout settles */
       tourPlaceTimer = setTimeout(function () {
         if (!tourTargetEl) return;
+        prepareTeamTourTarget(tip);
         scrollTourTargetIntoView(tourTargetEl);
         placeTourChrome(tourTargetEl, tip.placement);
-      }, 280);
+      }, 320);
     };
     requestAnimationFrame(function () {
       requestAnimationFrame(tryPlace);
@@ -3131,8 +3185,19 @@
     wrap.classList.add("open");
     setOverlayOpen(true);
     centerTourCard();
-    /* Let leader cards paint before spotlighting */
-    setTimeout(function () { renderTourStep(); }, 280);
+    /* Wait until Team UI (tree / mentoring) has painted — renderLeader is async */
+    var tries = 0;
+    var waitReady = function () {
+      var ready = document.querySelector("#liveTeamGraph:not([hidden]) .live-team-head, #leaderLists .leader-card, #leaderLists .leader-empty");
+      if (ready || tries >= 20) {
+        prepareTeamTourTarget(tips[0]);
+        renderTourStep();
+        return;
+      }
+      tries++;
+      setTimeout(waitReady, 100);
+    };
+    setTimeout(waitReady, 200);
   }
 
   function maybeStartTeamTour(count) {

@@ -438,7 +438,9 @@ window.FS = window.FS || {};
         var pct = Math.round((ctx.sectionsDone / Math.max(1, ctx.sectionTotal)) * 100);
         var isMentorDemo = !mentorMarked;
         mentorMarked = true;
-        var cardOpen = isMentorDemo || !!(stCol && stCol.data.leaderCardOpen[p.id]);
+        var cardPref = stCol && stCol.data.leaderCardOpen ? stCol.data.leaderCardOpen[p.id] : undefined;
+        /* First card defaults open for tour; honor explicit close/open after that */
+        var cardOpen = cardPref === true || (cardPref == null && isMentorDemo);
         html += '<details class="leader-card" data-partner="' + esc(p.id) + '" data-leader-card="' + esc(p.id) + '"' +
           (cardOpen ? " open" : "") + ">";
         html += '<summary class="leader-card-sum">';
@@ -854,7 +856,9 @@ window.FS = window.FS || {};
     if (!ok) return;
     try {
       await Cloud.reparentPartner(teamMovePartnerId, newSponsorId);
+      adminProfileCache = [];
       closeTeamMoveSheet();
+      closeTeamPersonSheet();
       await renderLeader();
     } catch (err) {
       alert((err && err.message) || "Could not move this person.");
@@ -966,9 +970,8 @@ window.FS = window.FS || {};
     html += '<div class="live-team-sort" role="group" aria-label="Sort team tree">';
     html += '<button type="button" class="live-team-sort-btn' + (sortMode === "legs" ? " on" : "") + '" data-team-sort="legs">Most legs</button>';
     html += '<button type="button" class="live-team-sort-btn' + (sortMode === "newest" ? " on" : "") + '" data-team-sort="newest">Newest</button>';
-    html += "</div>";
     if (Cloud.isOrgAdmin()) {
-      html += '<button type="button" class="btn-ghost team-rearrange-btn' + (rearrangeOn ? " on" : "") +
+      html += '<button type="button" class="live-team-sort-btn team-rearrange-btn' + (rearrangeOn ? " on" : "") +
         '" id="teamRearrangeToggle" aria-pressed="' + (rearrangeOn ? "true" : "false") + '">' +
         (rearrangeOn ? "Done" : "Rearrange") + "</button>";
     }
@@ -2006,7 +2009,8 @@ window.FS = window.FS || {};
       var t = e.target;
       if (!t || t.tagName !== "DETAILS" || !getState) return;
       var st = getState();
-      if (!st || !st.data) return;
+      if (!st) return;
+      if (!st.data) st.data = {};
       if (t.hasAttribute("data-leader-col")) {
         if (!st.data.leaderColOpen) st.data.leaderColOpen = {};
         st.data.leaderColOpen[t.getAttribute("data-leader-col")] = !!t.open;
@@ -2335,6 +2339,8 @@ window.FS = window.FS || {};
         return;
       }
       if (t.id === "teamRearrangeToggle") {
+        closeTeamPersonSheet();
+        closeTeamMoveSheet();
         setTeamRearrangeOn(!teamRearrangeOn());
         try {
           var rearrangeRows = await Cloud.listDownline();
