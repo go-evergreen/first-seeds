@@ -1936,7 +1936,8 @@
       if (state.active === "leader") window.FS.BridgeUI.renderLeader();
       if (state.active === "leads" && window.FS.BridgeUI.renderLeads) window.FS.BridgeUI.renderLeads();
       if (state.active === "welcome") window.FS.BridgeUI.renderPulse();
-      if (window.FS.BridgeUI.renderLeaderNoteBanner) window.FS.BridgeUI.renderLeaderNoteBanner();
+      if (window.FS.BridgeUI.refreshIncomingMessages) window.FS.BridgeUI.refreshIncomingMessages();
+      else if (window.FS.BridgeUI.renderLeaderNoteBanner) window.FS.BridgeUI.renderLeaderNoteBanner();
     }
   }
 

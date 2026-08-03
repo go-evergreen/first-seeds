@@ -456,17 +456,8 @@ window.FS = window.FS || {};
           body: body || ""
         });
         if (error) throw error;
-        if (kind === "cheer") {
-          /* also append to partner cheers in runway for quick banner */
-          var { data: row } = await client.from("runway_progress").select("cheers").eq("partner_id", partnerId).maybeSingle();
-          var cheers = (row && row.cheers) || [];
-          cheers.unshift({
-            from: sessionUser.display_name,
-            body: body,
-            at: new Date().toISOString()
-          });
-          await client.from("runway_progress").update({ cheers: cheers.slice(0, 20) }).eq("partner_id", partnerId);
-        }
+        /* Banner reads unread rows from team_events — do not write runway_progress.cheers
+           here (RLS only lets the partner update their own runway row). */
         return;
       }
       var store = localStore();
@@ -479,7 +470,8 @@ window.FS = window.FS || {};
           from: sessionUser.display_name,
           body: body,
           kind: kind,
-          at: new Date().toISOString()
+          at: new Date().toISOString(),
+          read: false
         });
         partner.progress.cheers = partner.progress.cheers.slice(0, 20);
       }
@@ -572,22 +564,120 @@ window.FS = window.FS || {};
 
     unreadCheers: async function () {
       if (!sessionUser) return [];
+      if (configured() && client) {
+        var { data, error } = await client.from("team_events")
+          .select("id, body, created_at")
+          .eq("partner_id", sessionUser.id)
+          .eq("kind", "cheer")
+          .is("read_at", null)
+          .order("created_at", { ascending: false })
+          .limit(10);
+        if (error) throw error;
+        return (data || []).map(function (row) {
+          return {
+            id: row.id,
+            body: row.body || "",
+            at: row.created_at,
+            from: "your leader"
+          };
+        });
+      }
       var prog = await Cloud.pullProgress();
-      return (prog && prog.cheers) || [];
+      return ((prog && prog.cheers) || []).filter(function (c) {
+        return c && c.kind !== "notify" && !c.read;
+      });
+    },
+
+    /* Cheers (and notes when available) you've sent to partners — for mentor history UI */
+    listOutreachMap: async function (partnerIds) {
+      var map = {};
+      (partnerIds || []).forEach(function (id) { map[id] = []; });
+      if (!sessionUser || !(partnerIds || []).length) return map;
+
+      function pushItem(partnerId, item) {
+        if (!map[partnerId]) map[partnerId] = [];
+        map[partnerId].push(item);
+      }
+
+      if (configured() && client) {
+        var { data: events } = await client.from("team_events")
+          .select("partner_id, kind, body, created_at")
+          .eq("sponsor_id", sessionUser.id)
+          .in("partner_id", partnerIds)
+          .in("kind", ["cheer", "nudge"])
+          .order("created_at", { ascending: false })
+          .limit(200);
+        (events || []).forEach(function (ev) {
+          pushItem(ev.partner_id, {
+            kind: ev.kind === "nudge" ? "nudge" : "cheer",
+            body: ev.body || "",
+            at: ev.created_at
+          });
+        });
+        var { data: notes } = await client.from("leader_notes")
+          .select("partner_id, body, created_at")
+          .eq("sponsor_id", sessionUser.id)
+          .in("partner_id", partnerIds);
+        (notes || []).forEach(function (n) {
+          if (!(n.body || "").trim()) return;
+          pushItem(n.partner_id, {
+            kind: "note",
+            body: n.body || "",
+            at: n.created_at
+          });
+        });
+      } else {
+        var store = localStore();
+        partnerIds.forEach(function (id) {
+          var u = store.users[id];
+          if (!u) return;
+          ((u.progress && u.progress.cheers) || []).forEach(function (c) {
+            if (c.kind === "notify") return;
+            pushItem(id, {
+              kind: c.kind === "nudge" ? "nudge" : "cheer",
+              body: c.body || "",
+              at: c.at || ""
+            });
+          });
+          (u.leader_notes || []).forEach(function (n) {
+            if (n.sponsor_id && n.sponsor_id !== sessionUser.id) return;
+            if (!(n.body || "").trim()) return;
+            pushItem(id, {
+              kind: "note",
+              body: n.body || "",
+              at: n.updated_at || n.created_at || ""
+            });
+          });
+        });
+      }
+
+      Object.keys(map).forEach(function (id) {
+        map[id].sort(function (a, b) {
+          return String(b.at || "").localeCompare(String(a.at || ""));
+        });
+        map[id] = map[id].slice(0, 20);
+      });
+      return map;
     },
 
     clearCheers: async function () {
       if (!sessionUser) return;
       if (configured() && client) {
-        await client.from("runway_progress").update({ cheers: [] }).eq("partner_id", sessionUser.id);
-      } else {
-        var store = localStore();
-        var u = store.users[sessionUser.id];
-        if (u && u.progress) {
-          u.progress.cheers = [];
-          store.users[sessionUser.id] = u;
-          localSave(store);
-        }
+        await client.from("team_events")
+          .update({ read_at: new Date().toISOString() })
+          .eq("partner_id", sessionUser.id)
+          .eq("kind", "cheer")
+          .is("read_at", null);
+        return;
+      }
+      var store = localStore();
+      var u = store.users[sessionUser.id];
+      if (u && u.progress && u.progress.cheers) {
+        u.progress.cheers = (u.progress.cheers || []).map(function (c) {
+          return Object.assign({}, c, { read: true });
+        });
+        store.users[sessionUser.id] = u;
+        localSave(store);
       }
     },
 

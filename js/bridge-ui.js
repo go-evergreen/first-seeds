@@ -200,9 +200,11 @@ window.FS = window.FS || {};
       return;
     }
     var c = cheers[0];
+    var more = cheers.length > 1 ? ' <span class="cheer-more">+' + (cheers.length - 1) + " more</span>" : "";
     banner.hidden = false;
-    banner.innerHTML = '<div class="cheer-tag">FROM YOUR LEADER</div><div class="cheer-body">' +
-      esc(c.body || "") + '</div><button type="button" class="cheer-dismiss" id="cheerDismiss">Got it</button>';
+    banner.innerHTML = '<div class="cheer-copy"><div class="cheer-tag">CHEER FROM YOUR LEADER' + more +
+      '</div><div class="cheer-body">' + esc(c.body || "") +
+      '</div></div><button type="button" class="cheer-dismiss" id="cheerDismiss">Got it</button>';
   }
 
   async function renderPulse() {
@@ -218,6 +220,90 @@ window.FS = window.FS || {};
       pulse.groveTrees + '</strong> names on warm lists across the team · <strong>' +
       pulse.blooming + '</strong> partners blooming · <strong>' +
       pulse.downlineCount + '</strong> people linked to you</p>';
+  }
+
+  function formatOutreachWhen(iso) {
+    if (!iso) return "";
+    try {
+      var d = new Date(iso);
+      if (isNaN(d.getTime())) return "";
+      var days = daysBetween(d, new Date());
+      if (days === 0) return "Today";
+      if (days === 1) return "Yesterday";
+      if (days < 7) return days + "d ago";
+      return d.toLocaleDateString(undefined, { month: "short", day: "numeric" });
+    } catch (e) {
+      return "";
+    }
+  }
+
+  function outreachKindLabel(kind) {
+    if (kind === "note") return "Note";
+    if (kind === "nudge") return "Nudge";
+    return "Cheer";
+  }
+
+  function mergeOutreachLists(remoteList, localList) {
+    var out = [];
+    var seen = {};
+    function add(item) {
+      if (!item || !(item.body || "").trim()) return;
+      var key = (item.kind || "cheer") + "|" + String(item.body || "").trim() + "|" + String(item.at || "").slice(0, 16);
+      if (seen[key]) return;
+      seen[key] = true;
+      out.push({
+        kind: item.kind || "cheer",
+        body: item.body || "",
+        at: item.at || ""
+      });
+    }
+    (localList || []).forEach(add);
+    (remoteList || []).forEach(add);
+    out.sort(function (a, b) {
+      return String(b.at || "").localeCompare(String(a.at || ""));
+    });
+    return out.slice(0, 20);
+  }
+
+  function appendOutreachLog(partnerId, kind, body) {
+    if (!getState || !partnerId || !(body || "").trim()) return;
+    var st = getState();
+    if (!st.data.outreachLog) st.data.outreachLog = {};
+    if (!st.data.outreachLog[partnerId]) st.data.outreachLog[partnerId] = [];
+    st.data.outreachLog[partnerId].unshift({
+      kind: kind,
+      body: body,
+      at: new Date().toISOString()
+    });
+    st.data.outreachLog[partnerId] = st.data.outreachLog[partnerId].slice(0, 30);
+    if (!st.data.leaderLogOpen) st.data.leaderLogOpen = {};
+    st.data.leaderLogOpen[partnerId] = true;
+    persist();
+  }
+
+  function outreachLogHtml(partnerId, items) {
+    if (!(items || []).length) return "";
+    var st = getState ? getState() : null;
+    var open = !!(st && st.data.leaderLogOpen && st.data.leaderLogOpen[partnerId]);
+    var latest = items[0];
+    var summary = outreachKindLabel(latest.kind).toLowerCase() +
+      (latest.at ? " · " + formatOutreachWhen(latest.at) : "");
+    var html = '<div class="leader-log">';
+    html += '<button type="button" class="leader-log-toggle" data-leader-log="' + esc(partnerId) + '" aria-expanded="' + (open ? "true" : "false") + '">';
+    html += '<span class="leader-log-toggle-main">Messages sent <span class="leader-log-count">' + items.length + "</span></span>";
+    html += '<span class="leader-log-toggle-sub">Last ' + esc(summary) + "</span>";
+    html += '<span class="leader-log-chev" aria-hidden="true">' + (open ? "▴" : "▾") + "</span>";
+    html += "</button>";
+    html += '<div class="leader-log-panel"' + (open ? "" : " hidden") + '>';
+    items.forEach(function (it) {
+      html += '<div class="leader-log-item is-' + esc(it.kind || "cheer") + '">';
+      html += '<div class="leader-log-meta"><span class="leader-log-kind">' + esc(outreachKindLabel(it.kind)) +
+        '</span><span class="leader-log-when">' + esc(formatOutreachWhen(it.at)) + "</span></div>";
+      html += '<p class="leader-log-body">' + esc(it.body) + "</p>";
+      html += "</div>";
+    });
+    html += "</div></div>";
+    return html;
   }
 
   async function renderLeader() {
@@ -246,6 +332,18 @@ window.FS = window.FS || {};
       await renderLiveTeamGraph(graph, rows);
       return;
     }
+    var partnerIds = rows.map(function (r) { return r.profile.id; });
+    var remoteOutreach = {};
+    try {
+      remoteOutreach = await Cloud.listOutreachMap(partnerIds);
+    } catch (e) {
+      remoteOutreach = {};
+    }
+    var localLog = (getState && getState().data && getState().data.outreachLog) || {};
+    var outreachById = {};
+    partnerIds.forEach(function (id) {
+      outreachById[id] = mergeOutreachLists(remoteOutreach[id] || [], localLog[id] || []);
+    });
     var now = new Date();
     var buckets = { nudge: [], motion: [], ready: [] };
     var mentorMarked = false;
@@ -298,6 +396,7 @@ window.FS = window.FS || {};
             html += '<div class="leader-ping">Pinged you ' + (pingAge === 0 ? "today" : pingAge + "d ago") + '</div>';
           }
         }
+        html += outreachLogHtml(p.id, outreachById[p.id] || []);
         html += '<div class="leader-card-actions"' + (isMentorDemo ? ' data-team-tour="mentor"' : "") + '>';
         html += '<button type="button" class="btn-ghost leader-action-btn" data-cheer="' + esc(p.id) + '"' +
           (isMentorDemo ? ' data-team-tour="cheer"' : "") + '>Send cheer</button>';
@@ -452,6 +551,12 @@ window.FS = window.FS || {};
     el.hidden = false;
     el.innerHTML = '<div class="live-tag">NOTE FROM YOUR LEADER</div><p class="body-p" style="margin:0">' +
       esc(note.body) + '</p>';
+  }
+
+  function refreshIncomingMessages() {
+    if (!Cloud.isSignedIn()) return;
+    renderCheers().catch(function () {});
+    renderLeaderNoteBanner().catch(function () {});
   }
 
   function openCalSheet() {
@@ -627,9 +732,11 @@ window.FS = window.FS || {};
     try {
       if (btn) btn.textContent = "Sending…";
       await Cloud.sendEvent(cheerPendingPartnerId, "cheer", body);
+      appendOutreachLog(cheerPendingPartnerId, "cheer", body);
       advanceCheerTemplate();
       closeCheerSheet();
       if (btn) btn.textContent = "Send this →";
+      await renderLeader();
     } catch (err) {
       if (btn) btn.textContent = "Send this →";
       alert(err.message || "Could not send cheer");
@@ -1413,7 +1520,7 @@ window.FS = window.FS || {};
     document.addEventListener("click", async function (e) {
       var t = e.target.closest(
         "#authOpenBtn,#authCloseBtn,#authSubmitBtn,#authCreateBtn,#authSignOutBtn,#railCopyInvite,#leaderCopyInvite,#authCopyInvite," +
-        "#teamInviteOpen,#teamInviteClose,#teamInviteX,#exportBridgeBtn,#importLiveTreeBtn,#cheerDismiss,#notifySponsorBtn,[data-goto-bridge],[data-copy-nudge],[data-cheer],[data-note]," +
+        "#teamInviteOpen,#teamInviteClose,#teamInviteX,#exportBridgeBtn,#importLiveTreeBtn,#cheerDismiss,#notifySponsorBtn,[data-goto-bridge],[data-copy-nudge],[data-cheer],[data-note],[data-leader-log]," +
         "#cheerSheetClose,#cheerSheetCancel,#cheerChooseAnother,#cheerConfirmSend," +
         "[data-cal-day],[data-cal-select],[data-cal-status],[data-cal-swap],[data-cal-week],[data-cal-nav],[data-cal-view],[data-cal-add],[data-cal-clear]," +
         "[data-cal-new],[data-cal-edit],[data-cal-item],[data-cal-accept],[data-cal-cadence],[data-cal-setup-toggle],[data-cal-save],[data-cal-delete]," +
@@ -1678,6 +1785,21 @@ window.FS = window.FS || {};
         openCheerSheet(t.getAttribute("data-cheer"));
         return;
       }
+      if (t.hasAttribute("data-leader-log")) {
+        var logPid = t.getAttribute("data-leader-log");
+        var stLog = getState();
+        if (!stLog.data.leaderLogOpen) stLog.data.leaderLogOpen = {};
+        stLog.data.leaderLogOpen[logPid] = !stLog.data.leaderLogOpen[logPid];
+        persist();
+        var wrap = t.closest(".leader-log");
+        var panel = wrap && wrap.querySelector(".leader-log-panel");
+        var chev = t.querySelector(".leader-log-chev");
+        var open = !!stLog.data.leaderLogOpen[logPid];
+        t.setAttribute("aria-expanded", open ? "true" : "false");
+        if (panel) panel.hidden = !open;
+        if (chev) chev.textContent = open ? "▴" : "▾";
+        return;
+      }
       if (t.id === "cheerSheetClose" || t.id === "cheerSheetCancel") {
         closeCheerSheet();
         return;
@@ -1704,8 +1826,10 @@ window.FS = window.FS || {};
             sectionId = partnerRow.progress.active;
           }
           await Cloud.saveLeaderNote(notePid, sectionId, noteBody);
+          appendOutreachLog(notePid, "note", noteBody);
           t.textContent = "Saved ✓";
           setTimeout(function () { t.textContent = "Leave note"; }, 1400);
+          await renderLeader();
         } catch (err) {
           alert(err.message || "Could not save note");
         }
@@ -2291,6 +2415,10 @@ window.FS = window.FS || {};
       if (Cloud.isSignedIn()) await mergeCloudProgress();
       await afterAuth();
       Cloud.onChange(function () { afterAuth(); });
+      document.addEventListener("visibilitychange", function () {
+        if (document.visibilityState === "visible") refreshIncomingMessages();
+      });
+      window.addEventListener("focus", function () { refreshIncomingMessages(); });
     },
     syncNow: async function () {
       if (!Cloud.isSignedIn()) return;
@@ -2315,6 +2443,7 @@ window.FS = window.FS || {};
     renderPulse: renderPulse,
     renderCheers: renderCheers,
     renderLeaderNoteBanner: renderLeaderNoteBanner,
+    refreshIncomingMessages: refreshIncomingMessages,
     renderLeads: renderLeads,
     openAuth: openAuth
   };
