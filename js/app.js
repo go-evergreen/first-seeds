@@ -139,7 +139,7 @@
     return false;
   }
 
-  /* Starter path: roots → ground → grove → tend → done
+  /* Starter path: roots → ground → grove → done
      Full path:    roots → ground → grove → tree → plant → tend → done */
   function nextAfter(id) {
     if (isStarter()) {
@@ -427,7 +427,13 @@
 
     var pathNote = document.getElementById("welcomePathNote");
     if (pathNote) {
-      pathNote.innerHTML = "Your plant lives here. Content, Leads, Learn, and your path stay one tap away at the bottom.";
+      if (isStarter()) {
+        pathNote.innerHTML = "Your plant lives here. Leads, Learn, and your path stay one tap away at the bottom. Content and Team unlock on Full runway.";
+      } else if (isFull()) {
+        pathNote.innerHTML = "Your plant lives here. Content, Leads, Learn, Team, and your path stay one tap away at the bottom.";
+      } else {
+        pathNote.innerHTML = "Your plant lives here. Pick Getting started or Full runway in Settings — then your path stays one tap away at the bottom.";
+      }
     }
 
     var rh = document.getElementById("rootsHeadline");
@@ -517,7 +523,9 @@
       },
       grove: {
         title: "Map a few names.",
-        body: "List people who'd love the products, then tap up to 5 first chats — they land on your calendar. Partners are optional if you're building.",
+        body: isFull()
+          ? "List people who'd love the products, then tap up to 5 first chats — they land on your Content calendar. Partners are optional if you're building."
+          : "List people who'd love the products, then tap up to 5 first chats so you know who to reach out to first. Partners are optional if you're building.",
         cta: sectionStarted("grove") ? "Keep mapping your grove →" : "Open your grove →",
         why: "Affiliate-style or builder — customers first either way."
       },
@@ -556,10 +564,23 @@
           why: tip.why,
           primary: { label: tip.cta, goto: s.id },
           secondary: state.done.roots
-            ? { label: "Or peek at the calendar", goto: "calendar" }
+            ? (isFull()
+              ? { label: "Or peek at Content", goto: "calendar" }
+              : { label: "Or open Learn", goto: "know" })
             : null
         };
       }
+    }
+
+    /* Getting started ends here — no Content calendar promises */
+    if (isStarter()) {
+      return {
+        title: "Nice foundation.",
+        body: "You've got your story, page, and grove. Open Learn for clear facts — or unlock Full runway anytime for Content, Post Studio, and Team.",
+        why: "Calm prep beats a scramble, " + hey + ".",
+        primary: { label: "Open Learn →", goto: "know" },
+        secondary: { label: "Unlock Full runway →", action: "fullMode" }
+      };
     }
 
     var pulse = calendarWeekPulse();
@@ -576,8 +597,8 @@
       return {
         title: "Share one true thing.",
         body: pulse.posted === 0
-          ? "Your runway's done — nice. Grab one gentle idea from the calendar and mark it Posted when you share (or Skipped if today isn't the day)."
-          : ("You've marked " + pulse.posted + " posted this week. One more true post keeps the habit warm."),
+          ? "Your runway's done — nice. Grab one gentle idea from the calendar and mark it Done when you share (or Skipped if today isn't the day)."
+          : ("You've marked " + pulse.posted + " done this week. One more true post keeps the habit warm."),
         why: "No auto-post. Just a nudge so you don't go silent.",
         primary: { label: "Open Content →", goto: "calendar" },
         secondary: { label: "Notify my leader", goto: "done" }
@@ -620,6 +641,8 @@
     if (move.primary) {
       if (move.primary.action === "auth") {
         html += '<button type="button" class="btn" id="todayAuthBtn">' + esc(move.primary.label) + "</button>";
+      } else if (move.primary.action === "fullMode") {
+        html += '<button type="button" class="btn" id="todayUnlockFull">' + esc(move.primary.label) + "</button>";
       } else {
         html += '<button type="button" class="btn" data-goto="' + esc(move.primary.goto) + '" id="todayPrimaryBtn">' +
           esc(move.primary.label) + "</button>";
@@ -628,6 +651,8 @@
     if (move.secondary) {
       if (move.secondary.action === "auth") {
         html += '<button type="button" class="btn-ghost" id="todayAuthBtn">' + esc(move.secondary.label) + "</button>";
+      } else if (move.secondary.action === "fullMode") {
+        html += '<button type="button" class="btn-ghost" id="todayUnlockFull">' + esc(move.secondary.label) + "</button>";
       } else {
         html += '<button type="button" class="btn-ghost" data-goto="' + esc(move.secondary.goto) + '">' +
           esc(move.secondary.label) + "</button>";
@@ -646,12 +671,12 @@
     if (isStarter()) {
       if (eyebrow) eyebrow.textContent = "ROOTS DOWN";
       if (headline) headline.textContent = name ? ("Nice work, " + name + ".") : "Nice work.";
-      if (body) body.innerHTML = "You've got your story, your grove, your page, and a rhythm to carry you to October 1. That's a real foundation — and you did it before the doors opened. When you're ready for the dream team tree and Post Studio, unlock the Full runway anytime.";
+      if (body) body.innerHTML = "You've got your story, your page, and a grove of people to talk to. That's a real foundation — before the doors open. When you're ready for Content, the dream-team sketch, Post Studio, and Team, unlock the Full runway anytime.";
       if (levelUp) levelUp.hidden = false;
     } else {
       if (eyebrow) eyebrow.textContent = "IN FULL BLOOM";
       if (headline) headline.textContent = name ? ("Look what you grew, " + name + ".") : "Look what you grew.";
-      if (body) body.innerHTML = "You've got your story, your grove, clear facts in Learn, and a rhythm you can keep. That's calm prep — not a scramble. Keep showing up, keep flipping 🌱 to 🌳, and let launch feel like opening a door you already helped build.";
+      if (body) body.innerHTML = "You've got your story, your grove, drafts in Post Studio, and a Content habit you can keep. Team is where live partners show up when they join — Grow Your Tree stays your practice sketch. Keep showing up, keep flipping 🌱 to 🌳, and let launch feel like opening a door you already helped build.";
       if (levelUp) levelUp.hidden = true;
     }
   }
@@ -1453,7 +1478,8 @@
       html += "</ul>";
       if (!isModuleUnlocked(s.id)) {
         html += '<p class="module-check-lock">Locked until you finish ' +
-          esc(sectionLabel(priorSectionId(s.id) || "roots")) + ". Soft-unlock from the nav if you need a peek.</p>";
+          esc(sectionLabel(priorSectionId(s.id) || "roots")) +
+          ". Tap <strong>Open anyway</strong> on the lock message if you need a peek.</p>";
       }
       box.innerHTML = html;
     }
@@ -3344,7 +3370,7 @@
 
   /* ── clicks ──────────────────────────────────────────── */
   document.addEventListener("click", function (e) {
-    var t = e.target.closest("[data-goto],[data-complete],[data-grove-pick],[data-prod-nav],[data-prod-open],[data-choice],[data-rhythm],[data-copy],[data-tadd],[data-tstatus],[data-tdel],[data-seedtype],[data-menu-goto],[data-soft-unlock],[data-faq],[data-talk],[data-copy-toggle],#exportBtn,#exportBtn2,#resetBtn,#replayOnboardingBtn,#replayTeamTourBtn,#modeStarter,#modeFull,#lockToastUnlockFull,#leadPageBuiltIn,#leadPageCustom,#levelUpBtn,#settingsNavBtn,#menuCloseBtn,#menuCloseBackdrop,#todayAuthBtn,#lockToastClose");
+    var t = e.target.closest("[data-goto],[data-complete],[data-grove-pick],[data-prod-nav],[data-prod-open],[data-choice],[data-rhythm],[data-copy],[data-tadd],[data-tstatus],[data-tdel],[data-seedtype],[data-menu-goto],[data-soft-unlock],[data-faq],[data-talk],[data-copy-toggle],#exportBtn,#exportBtn2,#resetBtn,#replayOnboardingBtn,#replayTeamTourBtn,#modeStarter,#modeFull,#lockToastUnlockFull,#todayUnlockFull,#leadPageBuiltIn,#leadPageCustom,#levelUpBtn,#settingsNavBtn,#menuCloseBtn,#menuCloseBackdrop,#todayAuthBtn,#lockToastClose");
     if (!t) return;
 
     if (t.hasAttribute("data-talk")) {
@@ -3409,14 +3435,16 @@
       setHubMode("starter");
       return;
     }
-    if (t.id === "modeFull" || t.id === "lockToastUnlockFull" || t.id === "levelUpBtn") {
+    if (t.id === "modeFull" || t.id === "lockToastUnlockFull" || t.id === "todayUnlockFull" || t.id === "levelUpBtn") {
       setHubMode("full");
-      if (t.id === "levelUpBtn") {
+      if (t.id === "levelUpBtn" || t.id === "todayUnlockFull") {
         closeHubMenu();
         state.active = "welcome";
         save();
         renderNav();
         renderPanels();
+        renderTodayCard();
+        renderFinishCopy();
       }
       return;
     }

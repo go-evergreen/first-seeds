@@ -43,7 +43,7 @@ window.FS.CONFIG = {
     },
     {
       term: "Runway",
-      def: "Your step-by-step prep path (the modules on the left). Getting started is the shorter path; Full runway unlocks the dream team tree and Post Studio."
+      def: "Your step-by-step prep path on Sprout. Getting started is the shorter path; Full runway unlocks Content, the dream-team sketch, Post Studio, and Team."
     },
     {
       term: "Roots",
@@ -59,7 +59,7 @@ window.FS.CONFIG = {
     },
     {
       term: "Customers",
-      def: "People who'd care about the products even if business talk isn't their thing. Tap your first chats in the list — they land on your calendar to reach out."
+      def: "People who'd care about the products even if business talk isn't their thing. Tap your first chats in the list — that's your outreach list (and they show on the Content calendar on Full runway)."
     },
     {
       term: "Leads",

@@ -12,7 +12,7 @@ Zero build step: plain HTML/CSS/JS. Optional Supabase for accounts, invite links
 | **Join links** | `?join=CODE` attaches a new partner to their sponsor |
 | **Cloud save** | Runway answers sync when signed in |
 | **My people** | Leader triage: Needs a nudge / In motion / Blooming + copy-paste nudges + leave a note |
-| **Post calendar** | Suggested posts (4:1 give/ask + rest days); Drafted / Posted / Skipped |
+| **Post calendar** | Suggested posts (4:1 give/ask + rest days); Drafted / Done / Skipped |
 | **Cheers** | Leader one-tap encouragement (no chat) |
 | **Notify leader** | Finish-screen one-tap ping so your sponsor sees you asked for eyes |
 | **Team pulse** | Aggregate grove names / blooming counts on Home |
@@ -24,8 +24,8 @@ Zero build step: plain HTML/CSS/JS. Optional Supabase for accounts, invite links
 
 | Mode | Path |
 |---|---|
-| **Getting started** | Roots → Grove → Ground → Tend |
-| **Full runway** | All 6 sections (+ tree + Post Studio) |
+| **Getting started** | Roots → Ground → Grove → finish |
+| **Full runway** | + Grow Your Tree · Start Planting · Content (+ Team in nav) |
 
 ## Structure
 
@@ -69,4 +69,4 @@ Static host (GitHub Pages, Netlify, etc.). For Supabase magic links, use HTTPS a
 - % of invitees finishing Roots in 7 days
 - Runway completion before Oct 1
 - Drop in “what do I post?” DMs you send manually
-- Partners marking ≥3 calendar posts Posted / week in October
+- Partners marking ≥3 calendar cards Done / week in October
