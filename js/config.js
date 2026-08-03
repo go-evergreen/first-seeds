@@ -276,48 +276,55 @@ window.FS.CONFIG = {
   ],
 
   /* Coachmarks the first time someone appears on Team */
-  teamTourVersion: 3,
+  teamTourVersion: 4,
   teamTour: [
     {
-      title: "Someone joined your team",
-      body: "Share your unique team link anytime from here. When they sign in with it, they're linked to you — that's how First Seeds builds your live tree.",
+      title: "Your unique team link",
+      body: "Share this anytime from the button up top. When someone signs in with your link, they’re linked to you in First Seeds — that’s how your live team tree starts.",
       panel: "leader",
       target: '[data-team-tour="invite"]',
       placement: "below"
     },
     {
-      title: "Watch the family form",
-      body: "Your Growing Team shows Level 1 (and who they bring in). Bigger branches rise to the top so you can see who's gathering people with them.",
+      title: "Your growing team",
+      body: "This is your live tree. Tap a name for their card. Expand a row to see who they’ve brought in. Sort by Most legs (who’s gathering people) or Newest.",
       panel: "leader",
       target: '[data-team-tour="tree"]',
       placement: "below"
     },
     {
-      title: "Mentor by how they're moving",
-      body: "Needs a nudge only when someone's been quiet a while · In motion · Ready — based on real First Seeds progress, not just that they downloaded the app.",
+      title: "Mentoring — by how they’re moving",
+      body: "Needs a nudge · In motion · Ready. Tap a section to open or close it. Based on real First Seeds progress — not just that they signed up.",
       panel: "leader",
       target: '[data-team-tour="board"]',
       placement: "above"
     },
     {
-      title: "Copy a check-in to text them",
-      body: "Each card suggests a supportive line you can paste into iMessage or Instagram. Copy message lives inside the tip box — it doesn't send anything inside First Seeds.",
+      title: "Open a person to coach them",
+      body: "Tap a name in Mentoring to expand their card. You’ll see a suggested check-in you can copy into a text — nothing sends from inside First Seeds.",
       panel: "leader",
       target: '[data-team-tour="nudge"]',
       placement: "above"
     },
     {
       title: "Send a cheer in the app",
-      body: "Send cheer opens a preview first. You'll see the exact line, can choose another, then send — it shows up in their First Seeds as a banner from you.",
+      body: "Send cheer shows a preview first. Pick a line, then send — it appears in their First Seeds as a banner from you, even if they open the app later.",
       panel: "leader",
       target: '[data-team-tour="cheer"]',
       placement: "above"
     },
     {
       title: "Leave a personal note",
-      body: "Leave note is your custom message. Type a short line and they'll see it at the top of their runway — great for something more specific than a cheer.",
+      body: "Leave note is your own short message. They’ll see it at the top of their runway — perfect when you want something more specific than a cheer.",
       panel: "leader",
       target: '[data-team-tour="note"]',
+      placement: "above"
+    },
+    {
+      title: "Optional: sketch with real names",
+      body: "Down below, “Add live names to Grow Your Tree” copies people from this live team into your Grow Your Tree sketch — so your practice map can match who’s really with you.",
+      panel: "leader",
+      target: '[data-team-tour="tools"]',
       placement: "above"
     }
   ],

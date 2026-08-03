@@ -20,7 +20,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,400;1,9..144,500&family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/styles.css?v=121">
+<link rel="stylesheet" href="css/styles.css?v=123">
 </head>
 <body>
 
@@ -829,19 +829,16 @@
           </div>
         </div>
         <p class="sec-sub">The people building alongside you — check in, cheer them on, watch the family grow.</p>
-        <div class="team-admin-bar" id="teamAdminBar" hidden>
-          <button type="button" class="btn-ghost team-rearrange-btn" id="teamRearrangeToggle" aria-pressed="false">Rearrange team</button>
-          <span class="team-admin-hint" id="teamRearrangeHint" hidden>Tap a person → Move under… Mentoring follows the new Level 1. Invited-by stays the same.</span>
-        </div>
 
         <button type="button" class="team-invite-backdrop" id="teamInviteClose" aria-label="Close invite" hidden></button>
 
         <div class="live-card" id="liveTeamGraph" data-team-tour="tree" hidden></div>
         <div class="leader-board" id="leaderLists" data-team-tour="board"></div>
-        <div class="btn-row team-tools">
-          <button type="button" class="btn-ghost" id="importLiveTreeBtn">Pull real names into Grow Your Tree</button>
+        <div class="btn-row team-tools" data-team-tour="tools">
+          <button type="button" class="btn-ghost" id="importLiveTreeBtn">Add live names to Grow Your Tree</button>
           <button type="button" class="btn-ghost" id="exportBridgeBtn">Export Evergreen handoff JSON</button>
         </div>
+        <p class="team-tools-hint">Grow Your Tree is your practice sketch in the runway. This copies real people from your live team into that sketch so the map matches who’s actually with you.</p>
       </section>
 
       <footer class="site-foot">
@@ -1068,18 +1065,18 @@
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="js/config.js?v=121"></script>
-<script src="js/supabase-config.js?v=121"></script>
-<script src="js/data.js?v=121"></script>
-<script src="js/content.js?v=121"></script>
-<script src="js/content-vault.js?v=121"></script>
-<script src="js/products.js?v=121"></script>
-<script src="js/plant.js?v=121"></script>
-<script src="js/tree.js?v=121"></script>
-<script src="js/calendar.js?v=121"></script>
-<script src="js/cloud.js?v=121"></script>
-<script src="js/bridge-ui.js?v=121"></script>
-<script src="js/app.js?v=121"></script>
-<script src="js/pwa.js?v=121"></script>
+<script src="js/config.js?v=123"></script>
+<script src="js/supabase-config.js?v=123"></script>
+<script src="js/data.js?v=123"></script>
+<script src="js/content.js?v=123"></script>
+<script src="js/content-vault.js?v=123"></script>
+<script src="js/products.js?v=123"></script>
+<script src="js/plant.js?v=123"></script>
+<script src="js/tree.js?v=123"></script>
+<script src="js/calendar.js?v=123"></script>
+<script src="js/cloud.js?v=123"></script>
+<script src="js/bridge-ui.js?v=123"></script>
+<script src="js/app.js?v=123"></script>
+<script src="js/pwa.js?v=123"></script>
 </body>
 </html>

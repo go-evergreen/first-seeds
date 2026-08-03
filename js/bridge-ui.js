@@ -383,7 +383,6 @@ window.FS = window.FS || {};
     });
     if (!rows.length) {
       root.innerHTML = '<p class="body-p">Nobody\'s linked yet. Share your join link — when they sign in, they show up here with live progress.</p>';
-      paintTeamAdminBar();
       await renderLiveTeamGraph(graph, rows);
       markTeamJoinsSeen(rows);
       paintTeamBadge(0);
@@ -487,7 +486,6 @@ window.FS = window.FS || {};
     var colCount = (buckets.nudge.length ? 1 : 0) + (buckets.motion.length ? 1 : 0) + (buckets.ready.length ? 1 : 0);
     root.className = "leader-board cols-" + Math.max(1, colCount);
     root.innerHTML = '<div class="leader-board-kicker">MENTORING</div>' + (colsHtml || '<p class="leader-empty">Everyone\'s settled for now.</p>');
-    paintTeamAdminBar();
     await renderLiveTeamGraph(graph, rows);
     markTeamJoinsSeen(rows);
     paintTeamBadge(0);
@@ -664,24 +662,6 @@ window.FS = window.FS || {};
     if (!st.data) st.data = {};
     st.data.teamRearrangeMode = !!on && Cloud.isOrgAdmin();
     persist();
-  }
-
-  function paintTeamAdminBar() {
-    var bar = $("teamAdminBar");
-    var btn = $("teamRearrangeToggle");
-    var hint = $("teamRearrangeHint");
-    if (!bar || !btn) return;
-    if (!Cloud.isSignedIn() || !Cloud.isOrgAdmin()) {
-      bar.hidden = true;
-      setTeamRearrangeOn(false);
-      return;
-    }
-    bar.hidden = false;
-    var on = teamRearrangeOn();
-    btn.classList.toggle("on", on);
-    btn.setAttribute("aria-pressed", on ? "true" : "false");
-    btn.textContent = on ? "Done rearranging" : "Rearrange team";
-    if (hint) hint.hidden = !on;
   }
 
   function closeTeamPersonSheet() {
@@ -978,13 +958,24 @@ window.FS = window.FS || {};
     var total = countTreeDesc(roots);
     var l1 = roots.length;
     var deep = maxTeamDepth(roots);
+    var rearrangeOn = teamRearrangeOn();
     el.hidden = false;
     var html = '<div class="live-team-head">';
     html += '<div class="live-tag">YOUR GROWING TEAM</div>';
+    html += '<div class="live-team-tools">';
     html += '<div class="live-team-sort" role="group" aria-label="Sort team tree">';
     html += '<button type="button" class="live-team-sort-btn' + (sortMode === "legs" ? " on" : "") + '" data-team-sort="legs">Most legs</button>';
     html += '<button type="button" class="live-team-sort-btn' + (sortMode === "newest" ? " on" : "") + '" data-team-sort="newest">Newest</button>';
+    html += "</div>";
+    if (Cloud.isOrgAdmin()) {
+      html += '<button type="button" class="btn-ghost team-rearrange-btn' + (rearrangeOn ? " on" : "") +
+        '" id="teamRearrangeToggle" aria-pressed="' + (rearrangeOn ? "true" : "false") + '">' +
+        (rearrangeOn ? "Done" : "Rearrange") + "</button>";
+    }
     html += "</div></div>";
+    if (Cloud.isOrgAdmin() && rearrangeOn) {
+      html += '<p class="team-admin-hint">Tap a person → Move under… Mentoring follows the new Level 1. Invited-by stays the same.</p>';
+    }
     html += '<p class="live-team-lead">Tap a name for their details. Expand a row to see who they’ve brought in.</p>';
     html += '<div class="live-team-stats is-compact">';
     html += '<div class="live-stat"><strong>' + l1 + '</strong><span>Level 1</span></div>';
@@ -1959,7 +1950,6 @@ window.FS = window.FS || {};
     await renderSupportBanner();
     await renderPulse();
     await renderLeaderNoteBanner();
-    paintTeamAdminBar();
     if (getState && getState().active === "leader") await renderLeader();
     if (getState && (getState().active === "calendar" || getState().active === "tend")) renderCalendar();
     if (getState && getState().active === "leads") await renderLeads();
@@ -2308,7 +2298,7 @@ window.FS = window.FS || {};
           t.textContent = (result.added || result.updated)
             ? ("Pulled in " + result.added + " new · updated " + result.updated + " ✓")
             : "Already up to date ✓";
-          setTimeout(function () { t.textContent = "Pull real names into Grow Your Tree"; }, 2200);
+          setTimeout(function () { t.textContent = "Add live names to Grow Your Tree"; }, 2200);
           if (gotoPanel) gotoPanel("tree");
         } catch (err) {
           alert(err.message || "Could not import live team");
@@ -2346,7 +2336,11 @@ window.FS = window.FS || {};
       }
       if (t.id === "teamRearrangeToggle") {
         setTeamRearrangeOn(!teamRearrangeOn());
-        paintTeamAdminBar();
+        try {
+          var rearrangeRows = await Cloud.listDownline();
+          var rearrangeGraph = await Cloud.listTeamGraph();
+          await renderLiveTeamGraph(rearrangeGraph, rearrangeRows);
+        } catch (err) {}
         return;
       }
       if (t.hasAttribute("data-team-move")) {
