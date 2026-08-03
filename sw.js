@@ -2,7 +2,7 @@
    Strategy: network-first for app files so PWAs pick up deploys quickly.
    Offline: fall back to last good cache only if the network fails.
 */
-const CACHE_VERSION = "fs-v75";
+const CACHE_VERSION = "fs-v77";
 const CACHE_NAME = "first-seeds-" + CACHE_VERSION;
 
 const PRECACHE = [
@@ -51,7 +51,7 @@ function isAppAsset(url) {
     var u = new URL(url);
     if (u.origin !== self.location.origin) return false;
     var path = u.pathname;
-    if (/\.(?:js|css|html|webmanifest|svg|png|ico)(\?|$)/i.test(path)) return true;
+    if (/\.(?:js|css|html|webmanifest|svg|png|ico|webp|jpg|jpeg)(\?|$)/i.test(path)) return true;
     if (path.endsWith("/") || /\/first-seeds\/?$/i.test(path)) return true;
     return false;
   } catch (e) {

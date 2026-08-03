@@ -55,6 +55,25 @@ window.FS.CONTENT = {
   ],
 
   /* ── Curiosity posts — short unfinished stories / scroll-stoppers ── */
+  /* ── Curiosity photos (Post ideas → Photos) ──
+     full/ + thumbs/ under assets/curiosity/. Lazy-loaded; not precached. */
+  curiosityImages: [
+    {
+      id: "cotton-towels",
+      title: "Organic cotton towels",
+      alt: "Skincare bottles wrapped in organic cotton towels on marble",
+      pairsWith: "Freshness · packaging · glass return",
+      body: "No caption dump needed — let the lineup do the stopping. Pair with a short open loop about freshness or packaging."
+    },
+    {
+      id: "ingredient-bottle",
+      title: "What's in the bottle",
+      alt: "White pump bottle listing peptides, hyaluronic acid, and ceramides",
+      pairsWith: "Ingredients · clean labels · skin questions",
+      body: "Show the label, ask the question. Pair with a curiosity line about what's actually in the bottle — not a hard sell."
+    }
+  ],
+
   openLoops: [
     {
       title: "How long did it sit?",
@@ -66,7 +85,8 @@ window.FS.CONTENT = {
     },
     {
       title: "Paused on the word fresh",
-      body: "I've been reading ingredient labels more carefully. One brand from Austria made me pause on the word fresh…"
+      body: "I've been reading ingredient labels more carefully. One brand from Austria made me pause on the word fresh…",
+      imageId: "ingredient-bottle"
     },
     {
       title: "Expiry is the point",
@@ -74,15 +94,18 @@ window.FS.CONTENT = {
     },
     {
       title: "Clean… but who made it?",
-      body: "Tiny thing I noticed: a lot of \"clean\" labels still don't tell me who made it or why each ingredient is there."
+      body: "Tiny thing I noticed: a lot of \"clean\" labels still don't tell me who made it or why each ingredient is there.",
+      imageId: "ingredient-bottle"
     },
     {
       title: "Not selling — just learning",
-      body: "Not selling anything today — just sharing what I'm learning about freshness, glass packaging, and in-house production."
+      body: "Not selling anything today — just sharing what I'm learning about freshness, glass packaging, and in-house production.",
+      imageId: "cotton-towels"
     },
     {
       title: "Store aisle question",
-      body: "If you've ever stood in a store aisle wondering what's actually in the bottle… same."
+      body: "If you've ever stood in a store aisle wondering what's actually in the bottle… same.",
+      imageId: "ingredient-bottle"
     },
     {
       title: "Would I put this on my kid?",
@@ -98,7 +121,8 @@ window.FS.CONTENT = {
     },
     {
       title: "Glass you can send back",
-      body: "Heard about a brand that pays you to ship empty glass bottles back so they can sanitize them into new ones… and now I can't stop noticing every plastic pump in my bathroom."
+      body: "Heard about a brand that pays you to ship empty glass bottles back so they can sanitize them into new ones… and now I can't stop noticing every plastic pump in my bathroom.",
+      imageId: "cotton-towels"
     },
     {
       title: "Made like food",

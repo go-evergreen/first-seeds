@@ -1086,16 +1086,6 @@
     return html;
   }
 
-  function scrollProductLibIntoView() {
-    var root = document.getElementById("productLibRoot");
-    if (!root) return;
-    try {
-      root.scrollIntoView({ behavior: "smooth", block: "start" });
-    } catch (e) {
-      root.scrollIntoView(true);
-    }
-  }
-
   function renderProductLibrary() {
     var root = document.getElementById("productLibRoot");
     if (!root) return;
@@ -1712,6 +1702,13 @@
     lastSecs = typeof doneCount === "function" ? doneCount() : visualSecs;
   }
 
+  function settleViewTop() {
+    try {
+      if (document.activeElement && document.activeElement.blur) document.activeElement.blur();
+    } catch (e) {}
+    window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+  }
+
   function renderPanels() {
     var panels = document.querySelectorAll(".panel");
     for (var i = 0; i < panels.length; i++) {
@@ -1721,7 +1718,7 @@
     if (mainContent) {
       mainContent.classList.toggle("content-wide", state.active === "tend" || state.active === "calendar");
     }
-    window.scrollTo({ top: 0, behavior: "auto" });
+    settleViewTop();
     renderModuleChecklists();
     renderContentBanks();
     renderBottomNav();
@@ -2748,7 +2745,6 @@
       }
       state.active = "products";
       save(); renderNav(); renderPanels();
-      scrollProductLibIntoView();
       return;
     }
     if (t.hasAttribute("data-complete")) {

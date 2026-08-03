@@ -202,6 +202,8 @@ window.FS = window.FS || {};
       person: raw.person || "",
       notes: raw.notes || "",
       draft: draft,
+      image: raw.image || "",
+      imageId: raw.imageId || "",
       status: raw.status || "todo",
       altIndex: raw.altIndex || 0,
       suggested: !!raw.suggested,
@@ -223,6 +225,8 @@ window.FS = window.FS || {};
         person: saved.person || "",
         notes: saved.notes || "",
         draft: saved.draft || "",
+        image: saved.image || "",
+        imageId: saved.imageId || "",
         status: saved.status || "todo",
         altIndex: saved.altIndex || 0
       }, dateKey, rootsData)];
@@ -318,6 +322,8 @@ window.FS = window.FS || {};
       person: (partial && partial.person) || "",
       notes: (partial && partial.notes) || "",
       draft: draft,
+      image: (partial && partial.image) || "",
+      imageId: (partial && partial.imageId) || "",
       status: (partial && partial.status) || "todo"
     }, dateKey, rootsData);
   }
@@ -360,9 +366,52 @@ window.FS = window.FS || {};
     return calendarState;
   }
 
+  function curiosityImageById(id) {
+    if (!id) return null;
+    var list = (window.FS.CONTENT && window.FS.CONTENT.curiosityImages) || [];
+    for (var i = 0; i < list.length; i++) {
+      if (list[i].id === id) return list[i];
+    }
+    return null;
+  }
+
+  function resolveCuriosityImage(imageId) {
+    var meta = curiosityImageById(imageId);
+    if (!meta) return null;
+    return {
+      id: meta.id,
+      title: meta.title || "",
+      alt: meta.alt || meta.title || "",
+      pairsWith: meta.pairsWith || "",
+      body: meta.body || "",
+      src: "assets/curiosity/full/" + meta.id + ".webp",
+      thumb: "assets/curiosity/thumbs/" + meta.id + ".webp"
+    };
+  }
+
   function libraryBuckets() {
     var C = window.FS.CONTENT || {};
     var buckets = [];
+    buckets.push({
+      id: "photos",
+      title: "Photos",
+      hint: "Curiosity photos — tap to preview full size, tweak a caption, then add to a day. Thumbs stay light; full images load only when you open one.",
+      items: (C.curiosityImages || []).map(function (it) {
+        var resolved = resolveCuriosityImage(it.id);
+        return {
+          id: "photo-" + it.id,
+          type: "open_loop",
+          title: it.title,
+          body: it.body || "",
+          icon: "📷",
+          imageId: it.id,
+          image: resolved ? resolved.src : "",
+          thumb: resolved ? resolved.thumb : "",
+          alt: it.alt || it.title,
+          pairsWith: it.pairsWith || ""
+        };
+      })
+    });
     buckets.push({
       id: "hooks",
       title: "Curiosity posts",
@@ -370,7 +419,19 @@ window.FS = window.FS || {};
       items: (C.openLoops || []).map(function (it, i) {
         var body = typeof it === "string" ? it : (it.body || "");
         var title = (typeof it === "object" && it.title) ? it.title : ("Curiosity " + (i + 1));
-        return { id: "hook-" + i, type: "open_loop", title: title, body: body, icon: "✨" };
+        var imageId = (typeof it === "object" && it.imageId) ? it.imageId : "";
+        var resolved = resolveCuriosityImage(imageId);
+        return {
+          id: "hook-" + i,
+          type: "open_loop",
+          title: title,
+          body: body,
+          icon: "✨",
+          imageId: imageId,
+          image: resolved ? resolved.src : "",
+          thumb: resolved ? resolved.thumb : "",
+          alt: resolved ? resolved.alt : ""
+        };
       })
     });
     buckets.push({
@@ -563,6 +624,8 @@ window.FS = window.FS || {};
     syncGroveOutreach: syncGroveOutreach,
     clearCadenceSuggestions: clearCadenceSuggestions,
     libraryBuckets: libraryBuckets,
+    resolveCuriosityImage: resolveCuriosityImage,
+    curiosityImageById: curiosityImageById,
     countMarked: countMarked,
     countPosted: countPosted,
     countDrafted: countDrafted,

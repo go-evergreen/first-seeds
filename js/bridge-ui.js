@@ -338,7 +338,23 @@ window.FS = window.FS || {};
     var st = getState();
     if (st) {
       st.data.calendarEditing = null;
+      st.data.libraryEditing = null;
       if (persist) persist();
+    }
+  }
+
+  function setSheetKicker(text) {
+    var kicker = document.querySelector("#calSheet .cal-sheet-kicker");
+    if (kicker) kicker.textContent = text || "Card";
+  }
+
+  function selectedDayLabel(st) {
+    var selectedKey = (st && st.data.calendarSelected) || Cal.ymd(new Date());
+    try {
+      var dt = Cal.parseYmd(selectedKey);
+      return Cal.DOW[dt.getDay()] + " · " + Cal.MON[dt.getMonth()] + " " + dt.getDate();
+    } catch (e) {
+      return selectedKey;
     }
   }
 
@@ -532,16 +548,11 @@ window.FS = window.FS || {};
     if (!tabs || !list || !getState) return;
     var st = getState();
     var buckets = Cal.libraryBuckets();
-    var active = st.data.libraryTab || "hooks";
+    var active = st.data.libraryTab || "photos";
     if (!buckets.some(function (b) { return b.id === active; }) && buckets[0]) active = buckets[0].id;
     st.data.libraryTab = active;
 
-    var selectedKey = st.data.calendarSelected || Cal.ymd(new Date());
-    var dayLabel = selectedKey;
-    try {
-      var dt = Cal.parseYmd(selectedKey);
-      dayLabel = Cal.DOW[dt.getDay()] + " · " + Cal.MON[dt.getMonth()] + " " + dt.getDate();
-    } catch (e) {}
+    var dayLabel = selectedDayLabel(st);
     if (target) {
       target.hidden = false;
       target.textContent = "Adding to " + dayLabel + " · tap another day above to change";
@@ -557,16 +568,33 @@ window.FS = window.FS || {};
     if (bucket.hint) html += '<p class="cal-lib-hint">' + esc(bucket.hint) + "</p>";
     if (!bucket.items || !bucket.items.length) {
       html += '<p class="cal-lib-hint">Nothing in this shelf yet.</p>';
+    } else if (bucket.id === "photos") {
+      html += '<div class="cal-lib-photo-grid">';
+      bucket.items.forEach(function (it) {
+        html += '<button type="button" class="cal-lib-photo-card" data-lib-open="' + esc(bucket.id) + '" data-lib-id="' + esc(it.id) + '">';
+        if (it.thumb) {
+          html += '<img class="cal-lib-photo-img" src="' + esc(it.thumb) + '" alt="' + esc(it.alt || it.title) + '" loading="lazy" decoding="async" width="420" height="560">';
+        }
+        html += '<span class="cal-lib-photo-meta">';
+        html += '<span class="cal-lib-card-title">' + esc(it.title) + "</span>";
+        if (it.pairsWith) html += '<span class="cal-lib-photo-pairs">' + esc(it.pairsWith) + "</span>";
+        html += '<span class="cal-lib-open-hint">Open</span></span></button>';
+      });
+      html += "</div>";
     } else {
       bucket.items.forEach(function (it) {
         var meta = Cal.typeMeta ? Cal.typeMeta(it.type) : null;
-        html += '<div class="cal-lib-card">';
+        html += '<button type="button" class="cal-lib-card' + (it.thumb ? " has-thumb" : "") + '" data-lib-open="' + esc(bucket.id) + '" data-lib-id="' + esc(it.id) + '">';
+        if (it.thumb) {
+          html += '<img class="cal-lib-card-thumb" src="' + esc(it.thumb) + '" alt="" loading="lazy" decoding="async" width="72" height="96">';
+        }
+        html += '<div class="cal-lib-card-main">';
         html += '<div class="cal-lib-card-top"><div>';
         if (meta && meta.label) html += '<span class="cal-lib-card-type">' + esc(meta.label) + "</span>";
         html += '<span class="cal-lib-card-title">' + esc((it.icon ? it.icon + " " : "") + it.title) + "</span></div>";
-        html += '<button type="button" class="cal-lib-add" data-lib-add="' + esc(bucket.id) + '" data-lib-id="' + esc(it.id) + '">Add to day</button></div>';
-        html += '<p class="cal-lib-body">' + esc(Cal.snippetOf(it.body) || it.body || "") + "</p>";
-        html += "</div>";
+        html += '<span class="cal-lib-open-hint">Open</span></div>';
+        html += '<p class="cal-lib-body">' + esc(it.body || "") + "</p>";
+        html += "</div></button>";
       });
     }
     list.innerHTML = html;
@@ -583,8 +611,114 @@ window.FS = window.FS || {};
     return null;
   }
 
+  function openLibraryIdea(bucketId, itemId) {
+    var st = getState();
+    var lib = libraryItem(bucketId, itemId);
+    if (!st || !lib) return;
+    st.data.calendarEditing = null;
+    st.data.libraryEditing = {
+      bucketId: bucketId,
+      itemId: itemId,
+      type: lib.type || "open_loop",
+      title: lib.title || "",
+      body: lib.body || "",
+      icon: lib.icon || "",
+      imageId: lib.imageId || "",
+      image: lib.image || "",
+      alt: lib.alt || "",
+      pairsWith: lib.pairsWith || ""
+    };
+    persist();
+    renderLibraryEditor();
+    openCalSheet();
+  }
+
+  function renderLibraryEditor() {
+    var detail = $("calendarDetail");
+    var titleEl = $("calSheetTitle");
+    var st = getState();
+    if (!detail || !st || !st.data.libraryEditing) return;
+    var ed = st.data.libraryEditing;
+    var meta = Cal.typeMeta ? Cal.typeMeta(ed.type) : null;
+    var resolved = ed.imageId && Cal.resolveCuriosityImage
+      ? Cal.resolveCuriosityImage(ed.imageId)
+      : null;
+    var fullSrc = (resolved && resolved.src) || ed.image || "";
+    var alt = (resolved && resolved.alt) || ed.alt || ed.title || "";
+    setSheetKicker(ed.imageId ? "Photo" : ((meta && meta.label) || "Post idea"));
+    if (titleEl) titleEl.textContent = ed.title || "Post idea";
+
+    var html = "";
+    if (fullSrc) {
+      html += '<figure class="cal-lib-sheet-figure">';
+      html += '<img class="cal-lib-sheet-img" src="' + esc(fullSrc) + '" alt="' + esc(alt) + '" loading="eager" decoding="async">';
+      if (ed.pairsWith) html += '<figcaption class="cal-lib-sheet-cap">Pairs with: ' + esc(ed.pairsWith) + "</figcaption>";
+      html += "</figure>";
+    }
+    html +=
+      '<label class="field"><span class="field-label">Title</span>' +
+        '<input type="text" id="libTitle" class="cal-input" placeholder="Optional short label" value="' + esc(ed.title || "") + '"></label>' +
+      '<label class="field"><span class="field-label">Full draft</span>' +
+        '<textarea id="libDraft" rows="10" placeholder="Rewrite until it sounds like you…">' + esc(ed.body || "") + "</textarea>" +
+        '<span class="cal-lib-sheet-hint">Edits stay here until you add this to a day — then you can keep refining on the calendar card.</span></label>' +
+      '<p class="cal-lib-sheet-target">Will add to <strong>' + esc(selectedDayLabel(st)) + '</strong>. Tap another day on the calendar first if you want a different date.</p>' +
+      '<div class="cal-sheet-actions">' +
+        '<button type="button" class="btn" data-lib-commit>Add to day</button>' +
+        '<button type="button" class="btn-ghost" data-cal-save>Close</button>' +
+      "</div>";
+    detail.innerHTML = html;
+
+    var titleIn = $("libTitle");
+    var draftIn = $("libDraft");
+    if (titleIn) {
+      titleIn.addEventListener("input", function () {
+        var cur = getState();
+        if (!cur || !cur.data.libraryEditing) return;
+        cur.data.libraryEditing.title = titleIn.value;
+        if (titleEl) titleEl.textContent = titleIn.value || "Post idea";
+        persist();
+      });
+    }
+    if (draftIn) {
+      draftIn.addEventListener("input", function () {
+        var cur = getState();
+        if (!cur || !cur.data.libraryEditing) return;
+        cur.data.libraryEditing.body = draftIn.value;
+        persist();
+      });
+      setTimeout(function () {
+        try { draftIn.focus(); draftIn.setSelectionRange(0, 0); } catch (e) {}
+      }, 50);
+    }
+  }
+
+  function commitLibraryIdea() {
+    var st = getState();
+    if (!st || !st.data.libraryEditing) return;
+    var ed = st.data.libraryEditing;
+    var titleIn = $("libTitle");
+    var draftIn = $("libDraft");
+    if (titleIn) ed.title = titleIn.value;
+    if (draftIn) ed.body = draftIn.value;
+    var dateAdd = st.data.calendarSelected || Cal.ymd(new Date());
+    var image = ed.image || "";
+    if (!image && ed.imageId && Cal.resolveCuriosityImage) {
+      var r = Cal.resolveCuriosityImage(ed.imageId);
+      if (r) image = r.src;
+    }
+    st.data.libraryEditing = null;
+    createCard(dateAdd, {
+      type: ed.type || "open_loop",
+      title: ed.title || "",
+      draft: ed.body || "",
+      image: image,
+      imageId: ed.imageId || ""
+    });
+  }
+
   function openEditor(date, itemId) {
     var st = getState();
+    st.data.libraryEditing = null;
     st.data.calendarSelected = date;
     st.data.calendarEditing = { date: date, itemId: itemId || null };
     persist();
@@ -636,10 +770,23 @@ window.FS = window.FS || {};
       return;
     }
     var meta = Cal.typeMeta(item.type);
+    setSheetKicker("Card");
     if (titleEl) titleEl.textContent = Cal.prettyDate(Cal.parseYmd(date));
     var isOutreach = meta.kind === "outreach";
+    var imgSrc = item.image || "";
+    if (!imgSrc && item.imageId && Cal.resolveCuriosityImage) {
+      var ir = Cal.resolveCuriosityImage(item.imageId);
+      if (ir) imgSrc = ir.src;
+    }
 
-    detail.innerHTML =
+    var html = "";
+    if (imgSrc) {
+      html += '<figure class="cal-lib-sheet-figure">';
+      html += '<img class="cal-lib-sheet-img" src="' + esc(imgSrc) + '" alt="" loading="eager" decoding="async">';
+      html += '<figcaption class="cal-lib-sheet-cap">Photo stays with this card — save/share it from your device when you post.</figcaption>';
+      html += "</figure>";
+    }
+    html +=
       '<label class="field"><span class="field-label">Type</span>' +
         '<select id="calType" class="cal-select">' + renderTypeOptions(item.type) + "</select></label>" +
       (isOutreach || item.person || item.type === "personal"
@@ -662,6 +809,7 @@ window.FS = window.FS || {};
         '<button type="button" class="btn" data-cal-save>Done</button>' +
         '<button type="button" class="btn-ghost danger-ghost" data-cal-delete>Delete</button>' +
       "</div>";
+    detail.innerHTML = html;
 
     wireEditorFields(date, item.id);
   }
@@ -905,7 +1053,7 @@ window.FS = window.FS || {};
         "#exportBridgeBtn,#importLiveTreeBtn,#cheerDismiss,#notifySponsorBtn,[data-goto-bridge],[data-copy-nudge],[data-cheer],[data-note]," +
         "[data-cal-day],[data-cal-select],[data-cal-status],[data-cal-swap],[data-cal-week],[data-cal-nav],[data-cal-view],[data-cal-add],[data-cal-clear]," +
         "[data-cal-new],[data-cal-edit],[data-cal-item],[data-cal-accept],[data-cal-cadence],[data-cal-setup-toggle],[data-cal-save],[data-cal-delete]," +
-        "[data-lib-tab],[data-lib-add],#calSheetClose,#calSheetX," +
+        "[data-lib-tab],[data-lib-open],[data-lib-commit],[data-lib-add],#calSheetClose,#calSheetX," +
         "#leadsSignInBtn,#leadsCopyLink,#leadsPageSettingsBtn,#leadsPageSettingsSave,[data-leads-filter],[data-lead-status]"
       );
       if (!t) return;
@@ -1208,6 +1356,14 @@ window.FS = window.FS || {};
         renderLibrary();
         return;
       }
+      if (t.hasAttribute("data-lib-open")) {
+        openLibraryIdea(t.getAttribute("data-lib-open"), t.getAttribute("data-lib-id"));
+        return;
+      }
+      if (t.hasAttribute("data-lib-commit")) {
+        commitLibraryIdea();
+        return;
+      }
       if (t.hasAttribute("data-lib-add")) {
         var lib = libraryItem(t.getAttribute("data-lib-add"), t.getAttribute("data-lib-id"));
         if (!lib) return;
@@ -1216,7 +1372,9 @@ window.FS = window.FS || {};
         createCard(dateAdd, {
           type: lib.type || "open_loop",
           title: lib.title || "",
-          draft: lib.body || ""
+          draft: lib.body || "",
+          image: lib.image || "",
+          imageId: lib.imageId || ""
         });
         return;
       }
