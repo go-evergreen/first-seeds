@@ -970,12 +970,7 @@ window.FS = window.FS || {};
     html += '<div class="live-team-sort" role="group" aria-label="Sort team tree">';
     html += '<button type="button" class="live-team-sort-btn' + (sortMode === "legs" ? " on" : "") + '" data-team-sort="legs">Most legs</button>';
     html += '<button type="button" class="live-team-sort-btn' + (sortMode === "newest" ? " on" : "") + '" data-team-sort="newest">Newest</button>';
-    if (Cloud.isOrgAdmin()) {
-      html += '<button type="button" class="live-team-sort-btn team-rearrange-btn' + (rearrangeOn ? " on" : "") +
-        '" id="teamRearrangeToggle" aria-pressed="' + (rearrangeOn ? "true" : "false") + '">' +
-        (rearrangeOn ? "Done" : "Rearrange") + "</button>";
-    }
-    html += "</div></div>";
+    html += "</div></div></div>";
     if (Cloud.isOrgAdmin() && rearrangeOn) {
       html += '<p class="team-admin-hint">Tap a person → Move under… Mentoring follows the new Level 1. Invited-by stays the same.</p>';
     }
@@ -986,7 +981,14 @@ window.FS = window.FS || {};
     html += '<div class="live-stat"><strong>' + deep + '</strong><span>deep</span></div>';
     html += "</div>";
     html += '<div class="live-team">';
+    html += '<div class="live-team-you-row">';
     html += '<div class="live-team-you"><span class="live-team-you-mark" aria-hidden="true">🌿</span> You</div>';
+    if (Cloud.isOrgAdmin()) {
+      html += '<button type="button" class="team-rearrange-btn' + (rearrangeOn ? " on" : "") +
+        '" id="teamRearrangeToggle" aria-pressed="' + (rearrangeOn ? "true" : "false") + '">' +
+        (rearrangeOn ? "Done" : "Rearrange") + "</button>";
+    }
+    html += "</div>";
     html += '<div class="live-l1-list">';
     roots.forEach(function (p, idx) {
       var under = typeof p._under === "number" ? p._under : countTreeDesc(p.children);

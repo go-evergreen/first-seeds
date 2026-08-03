@@ -621,7 +621,7 @@
       if (move.primary.action === "auth") {
         html += '<button type="button" class="btn" id="todayAuthBtn">' + esc(move.primary.label) + "</button>";
       } else {
-        html += '<button type="button" class="btn" data-goto="' + esc(move.primary.goto) + '" id="welcomeCta">' +
+        html += '<button type="button" class="btn" data-goto="' + esc(move.primary.goto) + '" id="todayPrimaryBtn">' +
           esc(move.primary.label) + "</button>";
       }
     }
@@ -2975,15 +2975,18 @@
     card.style.transform = "translate(-50%, -50%)";
   }
 
-  /* Open collapsed mentoring sections/cards so tour targets actually have layout */
+  /* Open collapsed details only when this tip needs mentoring targets */
   function prepareTeamTourTarget(tip) {
     if (tourKind !== "team") return;
-    var cols = document.querySelectorAll("#leaderLists details.leader-col");
-    for (var i = 0; i < cols.length; i++) cols[i].open = true;
-    var firstCard = document.querySelector("#leaderLists details.leader-card");
-    if (firstCard) firstCard.open = true;
     var sel = tip && tip.target;
     if (!sel) return;
+    var needsMentorOpen = /nudge|cheer|note|mentor|leader-col|leaderLists/.test(sel);
+    if (needsMentorOpen) {
+      var cols = document.querySelectorAll("#leaderLists details.leader-col");
+      for (var i = 0; i < cols.length; i++) cols[i].open = true;
+      var firstCard = document.querySelector("#leaderLists details.leader-card");
+      if (firstCard) firstCard.open = true;
+    }
     var el = document.querySelector(sel);
     if (!el) return;
     var node = el;
@@ -2993,7 +2996,7 @@
     }
   }
 
-  function placeTourChrome(targetEl, placement) {
+  function placeTourChrome(targetEl, tipOrPlacement) {
     var card = document.getElementById("tourCard");
     var spot = document.getElementById("tourSpotlight");
     if (!card || !targetEl) {
@@ -3001,8 +3004,13 @@
       return;
     }
 
+    var tip = (tipOrPlacement && typeof tipOrPlacement === "object") ? tipOrPlacement : null;
+    var placement = tip ? (tip.placement || "auto") : (tipOrPlacement || "auto");
+    var fullSpot = !!(tip && tip.fullSpot);
+
     var pad = 8;
     var gap = 12;
+    var navSafe = 72; /* leave room above bottom nav */
     var rect = targetEl.getBoundingClientRect();
     var vw = window.innerWidth;
     var vh = window.innerHeight;
@@ -3013,15 +3021,17 @@
       return;
     }
 
-    /* Tall blocks — spotlight the top band so the tip isn't buried under a huge hole */
-    var maxSpotH = Math.max(64, Math.floor(vh * 0.28));
+    /* Default: cap tall targets. fullSpot (e.g. live team tree) shows most of the block. */
+    var maxSpotH = fullSpot
+      ? Math.max(160, Math.min(rect.height + pad * 2, vh - navSafe - 200))
+      : Math.max(64, Math.floor(vh * 0.28));
     var spotH = Math.min(rect.height + pad * 2, maxSpotH);
     var spotTop = Math.max(6, rect.top - pad);
     var spotLeft = Math.max(6, rect.left - pad);
     var spotRight = Math.min(vw - 6, rect.right + pad);
-    var spotBottom = Math.min(vh - 6, spotTop + spotH);
-    if (spotBottom > vh - 6) {
-      spotBottom = vh - 6;
+    var spotBottom = Math.min(vh - navSafe, spotTop + spotH);
+    if (spotBottom > vh - navSafe) {
+      spotBottom = vh - navSafe;
       spotTop = Math.max(6, spotBottom - spotH);
     }
 
@@ -3048,20 +3058,21 @@
     card.style.width = cardW + "px";
     card.style.maxWidth = cardW + "px";
     var cardH = card.offsetHeight || 200;
-    var navSafe = 72; /* leave room above bottom nav */
 
     var spaceBelow = vh - spotBottom - gap - navSafe;
     var spaceAbove = spotTop - gap;
     var place = placement || "auto";
-    var tall = rect.height > vh * 0.36;
+    var tall = fullSpot || rect.height > vh * 0.36;
 
-    if (place === "auto" || tall) {
-      place = spaceBelow >= cardH + 8 ? "below" : (spaceAbove >= cardH + 8 ? "above" : "center");
+    if (place === "auto" || (tall && place !== "above" && place !== "below")) {
+      place = spaceAbove >= cardH + 8 ? "above" : (spaceBelow >= cardH + 8 ? "below" : "center");
     }
     if (place === "below" && spaceBelow < Math.min(cardH, 130) && spaceAbove > spaceBelow) place = "above";
     if (place === "above" && spaceAbove < Math.min(cardH, 130) && spaceBelow > spaceAbove) place = "below";
     /* Near the bottom of the screen, prefer the tip above the hole */
     if (spotBottom > vh * 0.62 && spaceAbove >= Math.min(cardH, 140)) place = "above";
+    /* Full-tree steps: tip sits above so the people stay visible in the hole */
+    if (fullSpot && spaceAbove >= Math.min(cardH, 120)) place = "above";
 
     if (place === "center") {
       centerTourCard();
@@ -3082,7 +3093,7 @@
     card.style.bottom = "auto";
   }
 
-  function scrollTourTargetIntoView(el) {
+  function scrollTourTargetIntoView(el, tip) {
     if (!el) return;
     /* Open any closed details ancestors first */
     var node = el;
@@ -3096,12 +3107,20 @@
     try {
       var rect = el.getBoundingClientRect();
       var vh = window.innerHeight;
+      var fullSpot = !!(tip && tip.fullSpot);
       /* Prefer center for small targets; nearest for tall ones so we don't overshoot */
-      var block = rect.height > vh * 0.4 ? "nearest" : "center";
+      var block = fullSpot || rect.height > vh * 0.4 ? "nearest" : "center";
       el.scrollIntoView({ block: block, inline: "nearest", behavior: "auto" });
-      /* If still clipped under the bottom nav / header, nudge window scroll */
       rect = el.getBoundingClientRect();
-      if (rect.top < 70) {
+      if (fullSpot) {
+        /* Leave room above for the tip; do not pull tall trees back up afterward */
+        var tipRoom = 190;
+        var bottomSafe = vh - 80;
+        if (rect.top < tipRoom) window.scrollBy(0, rect.top - tipRoom);
+        rect = el.getBoundingClientRect();
+        /* Only nudge if the TOP of the target is below the fold — keep tip room */
+        if (rect.top > bottomSafe - 40) window.scrollBy(0, rect.top - tipRoom);
+      } else if (rect.top < 70) {
         window.scrollBy(0, rect.top - 80);
       } else if (rect.bottom > vh - 80) {
         window.scrollBy(0, rect.bottom - (vh - 90));
@@ -3119,25 +3138,32 @@
     var tryPlace = function () {
       prepareTeamTourTarget(tip);
       var el = tip && tip.target ? document.querySelector(tip.target) : null;
-      if ((!el || (el.getBoundingClientRect().width < 2 && el.getBoundingClientRect().height < 2)) && attempts < 10) {
+      /* Prefer a visible tree; skip hidden #liveTeamGraph when graph didn't paint */
+      if (el && el.hidden) el = null;
+      if (el && el.closest && el.closest("[hidden]")) el = null;
+      var rectOk = el && (function () {
+        var r = el.getBoundingClientRect();
+        return r.width >= 2 && r.height >= 2;
+      })();
+      if ((!el || !rectOk) && attempts < 10) {
         attempts++;
         tourPlaceTimer = setTimeout(tryPlace, 120);
         return;
       }
-      if (!el) {
+      if (!el || !rectOk) {
         centerTourCard();
         return;
       }
       tourTargetEl = el;
       el.classList.add("tour-target-on");
-      scrollTourTargetIntoView(el);
-      placeTourChrome(el, tip.placement);
+      scrollTourTargetIntoView(el, tip);
+      placeTourChrome(el, tip);
       /* Second pass after layout settles */
       tourPlaceTimer = setTimeout(function () {
         if (!tourTargetEl) return;
         prepareTeamTourTarget(tip);
-        scrollTourTargetIntoView(tourTargetEl);
-        placeTourChrome(tourTargetEl, tip.placement);
+        scrollTourTargetIntoView(tourTargetEl, tip);
+        placeTourChrome(tourTargetEl, tip);
       }, 320);
     };
     requestAnimationFrame(function () {
@@ -3290,7 +3316,7 @@
       if (!wrap || !wrap.classList.contains("open")) return;
       var tips = currentTourTips();
       var tip = tips[tourIdx];
-      if (tip && tourTargetEl) placeTourChrome(tourTargetEl, tip.placement);
+      if (tip && tourTargetEl) placeTourChrome(tourTargetEl, tip);
     });
   }
 
@@ -3309,7 +3335,7 @@
 
   /* ── clicks ──────────────────────────────────────────── */
   document.addEventListener("click", function (e) {
-    var t = e.target.closest("[data-goto],[data-complete],[data-grove-pick],[data-prod-nav],[data-prod-open],[data-choice],[data-rhythm],[data-copy],[data-tadd],[data-tstatus],[data-tdel],[data-seedtype],[data-menu-goto],[data-soft-unlock],[data-faq],[data-talk],[data-copy-toggle],#exportBtn,#exportBtn2,#resetBtn,#replayOnboardingBtn,#replayTeamTourBtn,#modeStarter,#modeFull,#leadPageBuiltIn,#leadPageCustom,#levelUpBtn,#settingsNavBtn,#menuCloseBtn,#menuCloseBackdrop,#todayAuthBtn,#lockToastClose");
+    var t = e.target.closest("[data-goto],[data-complete],[data-grove-pick],[data-prod-nav],[data-prod-open],[data-choice],[data-rhythm],[data-copy],[data-tadd],[data-tstatus],[data-tdel],[data-seedtype],[data-menu-goto],[data-soft-unlock],[data-faq],[data-talk],[data-copy-toggle],#exportBtn,#exportBtn2,#resetBtn,#replayOnboardingBtn,#replayTeamTourBtn,#modeStarter,#modeFull,#lockToastUnlockFull,#leadPageBuiltIn,#leadPageCustom,#levelUpBtn,#settingsNavBtn,#menuCloseBtn,#menuCloseBackdrop,#todayAuthBtn,#lockToastClose");
     if (!t) return;
 
     if (t.hasAttribute("data-talk")) {
@@ -3374,7 +3400,7 @@
       setHubMode("starter");
       return;
     }
-    if (t.id === "modeFull" || t.id === "levelUpBtn") {
+    if (t.id === "modeFull" || t.id === "lockToastUnlockFull" || t.id === "levelUpBtn") {
       setHubMode("full");
       if (t.id === "levelUpBtn") {
         closeHubMenu();
@@ -3414,7 +3440,7 @@
             '<div class="lock-toast-inner">' +
             "<p><strong>Content</strong> unlocks on Full runway — calendar, post vault, stories, and photos.</p>" +
             '<div class="lock-toast-actions">' +
-            '<button type="button" class="btn" id="modeFull">Unlock Full runway →</button>' +
+            '<button type="button" class="btn" id="lockToastUnlockFull">Unlock Full runway →</button>' +
             '<button type="button" class="lock-toast-x" id="lockToastClose" aria-label="Dismiss">×</button>' +
             "</div></div>";
         }

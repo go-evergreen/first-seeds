@@ -276,7 +276,7 @@ window.FS.CONFIG = {
   ],
 
   /* Coachmarks the first time someone appears on Team */
-  teamTourVersion: 5,
+  teamTourVersion: 7,
   teamTour: [
     {
       title: "Your unique team link",
@@ -289,8 +289,9 @@ window.FS.CONFIG = {
       title: "Your growing team",
       body: "This is your live tree. Tap a name for their card. Expand a row to see who they’ve brought in. Sort by Most legs (who’s gathering people) or Newest.",
       panel: "leader",
-      target: '[data-team-tour="tree"] .live-team-head',
-      placement: "below"
+      target: '[data-team-tour="tree"]',
+      placement: "above",
+      fullSpot: true
     },
     {
       title: "Mentoring — by how they’re moving",
