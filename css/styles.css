@@ -125,13 +125,17 @@ button{font-family:inherit;cursor:pointer}
 .invite-block{margin:12px 0}
 .invite-input{width:100%;border:1px solid var(--rail-deep);border-radius:8px;background:rgba(245,246,242,.7);color:var(--green);padding:8px 10px;font-size:11px;font-family:inherit}
 .invite-input.light{background:var(--white);color:var(--green);border-color:var(--sand);font-size:13px;padding:10px 12px}
-.team-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin:0 0 8px;position:relative}
+.team-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:0 0 8px;position:relative}
 .team-head h1{margin:0;flex:1;min-width:0}
-.team-invite-wrap{position:relative;flex-shrink:0;max-width:min(280px,62vw)}
-.team-invite-cue{display:inline-flex;align-items:center;gap:8px;border:1.5px solid var(--sand);background:var(--white);border-radius:999px;padding:10px 14px 10px 16px;cursor:pointer;font:inherit;text-align:left;color:var(--green);box-shadow:var(--shadow);transition:border-color .15s,background .15s,transform .15s}
+.team-invite-wrap{position:relative;flex-shrink:0}
+.team-invite-cue{display:inline-flex;align-items:center;gap:0;border:1.5px solid var(--sand);background:var(--white);border-radius:16px;padding:9px 14px;cursor:pointer;font:inherit;text-align:left;color:var(--green);box-shadow:var(--shadow);transition:border-color .15s,background .15s,transform .15s}
 .team-invite-cue:hover,.team-invite-cue[aria-expanded="true"]{border-color:var(--moss);background:#eef2ec;transform:translateY(-1px)}
-.team-invite-cue-text{font-size:12.5px;font-weight:700;line-height:1.25;color:var(--green);max-width:12em}
-.team-invite-cue-arrow{font-size:15px;font-weight:700;color:var(--moss);line-height:1;flex-shrink:0}
+.team-invite-cue-text{display:block;font-size:12.5px;font-weight:700;line-height:1.25;color:var(--green);white-space:nowrap}
+@media (min-width:520px){
+  .team-invite-cue{border-radius:999px;padding:10px 16px}
+  .team-invite-cue-text br{display:none}
+  .team-invite-cue-text{white-space:nowrap}
+}
 .team-invite-backdrop{position:fixed;inset:0;z-index:79;border:none;background:transparent;cursor:default;padding:0}
 .team-invite-backdrop[hidden]{display:none!important}
 .team-invite-pop{position:absolute;top:calc(100% + 10px);right:0;z-index:80;width:min(340px,calc(100vw - 32px))}
