@@ -524,6 +524,19 @@ window.FS.CONTENT = {
         trap: "Raving about supplements (or anything) you haven't lived with. \"Haven't tried those myself yet, so I won't oversell them\" beats a hollow rave every time."
       },
       {
+        id: "warm-not-tried",
+        cat: "Warm",
+        q: "\"Have you tried them?\" / \"What do you think of the results?\" — and you haven't used them yet",
+        mechanism: "Pre-launch in a new market, a lot of us are still waiting on legal shipping. Pretending you've used something you haven't is the fastest way to lose the trust that made them ask. Honesty + secondhand excitement + a question back keeps you credible and keeps the conversation going.",
+        note: "Name the shipping reality plainly — they can't legally ship here until later this year. Point to friends' real reviews if you've heard them, then flip it: what are they most curious to try? Don't invent results or borrow someone else's story as your own.",
+        playLabel: "The play — honest wait, then curiosity",
+        lines: [
+          { who: "Them", text: "have you tried them? how do they actually perform?" },
+          { who: "You", text: "i'm still waiting to get my hands on them! it's tricky when a company enters a new market — they can't legally ship here until later this year 😅\n\nbut a few friends have tried some things and oh my gosh, the reviews are incredible. honestly makes me even more excited. what are you most looking forward to trying?" }
+        ],
+        trap: "Faking personal results, or turning friends' reviews into clinical claims. Secondhand excitement is fine — \"it cleared my acne\" when it didn't happen to you is not."
+      },
+      {
         id: "biz-curious",
         cat: "Business",
         q: "Someone seems curious about becoming a partner too",

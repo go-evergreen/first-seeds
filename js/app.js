@@ -22,7 +22,7 @@
       data: {},
       done: {},
       active: "welcome",
-      settings: { hubMode: "", partnerName: "", growthMoment: true, growthToast: true },
+      settings: { hubMode: "", partnerName: "", growthMoment: true, growthToast: true, weekStartsOn: "sunday" },
       tourDone: false
     };
   }
@@ -35,6 +35,13 @@
     if (!state.settings.partnerName) state.settings.partnerName = "";
     if (typeof state.settings.growthMoment !== "boolean") state.settings.growthMoment = true;
     if (typeof state.settings.growthToast !== "boolean") state.settings.growthToast = true;
+    if (state.settings.weekStartsOn !== "monday" && state.settings.weekStartsOn !== "sunday") {
+      state.settings.weekStartsOn = "sunday";
+    }
+  }
+
+  function calendarWeekStart() {
+    return state.settings.weekStartsOn === "monday" ? 1 : 0;
   }
 
   function loadState() {
@@ -469,8 +476,11 @@
   function calendarWeekPulse() {
     if (!window.FS.Calendar) return { posted: 0, drafted: 0, total: 0, restToday: false };
     var cal = state.data.calendar || {};
-    var plan = window.FS.Calendar.plan(CFG, cal, state.data, { cadence: state.data.calendarCadence === true });
-    var slice = window.FS.Calendar.weekSlice(plan, new Date(), state.data.calendarWeekOffset || 0);
+    var plan = window.FS.Calendar.plan(CFG, cal, state.data, {
+      cadence: state.data.calendarCadence === true,
+      weekStart: calendarWeekStart()
+    });
+    var slice = window.FS.Calendar.weekSlice(plan, new Date(), state.data.calendarWeekOffset || 0, calendarWeekStart());
     var week = slice.days || [];
     var stats = window.FS.Calendar.weekStats(week);
     var today = window.FS.Calendar.ymd(new Date());
@@ -1453,6 +1463,7 @@
     var menu = document.getElementById("hubMenu");
     if (!menu) return;
     syncGrowthSettingsUI();
+    syncWeekStartSettingsUI();
     menu.hidden = false;
     document.body.classList.add("hub-menu-open");
     renderBottomNav();
@@ -1708,6 +1719,36 @@
     var toast = document.getElementById("optGrowthToast");
     if (moment) moment.checked = state.settings.growthMoment !== false;
     if (toast) toast.checked = state.settings.growthToast !== false;
+  }
+
+  function syncWeekStartSettingsUI() {
+    var sun = document.getElementById("weekStartSun");
+    var mon = document.getElementById("weekStartMon");
+    var isMon = state.settings.weekStartsOn === "monday";
+    if (sun) sun.classList.toggle("on", !isMon);
+    if (mon) mon.classList.toggle("on", isMon);
+  }
+
+  function setWeekStartsOn(value) {
+    var next = value === "monday" ? "monday" : "sunday";
+    if (state.settings.weekStartsOn === next) return;
+    state.settings.weekStartsOn = next;
+    save();
+    syncWeekStartSettingsUI();
+    renderPanels();
+  }
+
+  function wireWeekStartSettings() {
+    var sun = document.getElementById("weekStartSun");
+    var mon = document.getElementById("weekStartMon");
+    if (sun && !sun.dataset.bound) {
+      sun.dataset.bound = "1";
+      sun.addEventListener("click", function () { setWeekStartsOn("sunday"); });
+    }
+    if (mon && !mon.dataset.bound) {
+      mon.dataset.bound = "1";
+      mon.addEventListener("click", function () { setWeekStartsOn("monday"); });
+    }
   }
 
   function wireGrowthSettings() {
@@ -3512,7 +3553,9 @@
   renderBrand();
   wireOnboarding();
   wireGrowthSettings();
+  wireWeekStartSettings();
   syncGrowthSettingsUI();
+  syncWeekStartSettingsUI();
   wireTour();
   updateModeUI();
   renderNav();

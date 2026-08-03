@@ -94,10 +94,24 @@ window.FS = window.FS || {};
     return x;
   }
 
-  function startOfWeek(d) {
+  /* weekStart: 0 = Sunday, 1 = Monday */
+  function normalizeWeekStart(weekStart) {
+    return weekStart === 1 || weekStart === "monday" || weekStart === "Mon" ? 1 : 0;
+  }
+
+  function startOfWeek(d, weekStart) {
+    weekStart = normalizeWeekStart(weekStart);
     var x = new Date(d.getFullYear(), d.getMonth(), d.getDate());
-    x.setDate(x.getDate() - x.getDay());
+    var diff = (x.getDay() - weekStart + 7) % 7;
+    x.setDate(x.getDate() - diff);
     return x;
+  }
+
+  function dowLabels(weekStart) {
+    weekStart = normalizeWeekStart(weekStart);
+    var out = [];
+    for (var i = 0; i < 7; i++) out.push(DOW[(weekStart + i) % 7]);
+    return out;
   }
 
   function startOfMonth(d) {
@@ -260,7 +274,7 @@ window.FS = window.FS || {};
     /* Include full month grid range around today for empty browsing */
     var monthStart = startOfMonth(today);
     var monthEnd = new Date(today.getFullYear(), today.getMonth() + 1, 0);
-    var gridStart = startOfWeek(monthStart);
+    var gridStart = startOfWeek(monthStart, opts.weekStart);
     for (var g = 0; g < 42; g++) dates[ymd(addDays(gridStart, g))] = true;
 
     return Object.keys(dates).sort().map(function (dateKey) {
@@ -591,6 +605,9 @@ window.FS = window.FS || {};
     CATEGORIES: CATEGORIES,
     STATUSES: STATUSES,
     DOW: DOW,
+    dowLabels: dowLabels,
+    normalizeWeekStart: normalizeWeekStart,
+    startOfWeek: startOfWeek,
     MON: MON,
     MON_LONG: MON_LONG,
     uid: uid,
@@ -612,10 +629,10 @@ window.FS = window.FS || {};
     snippetOf: snippetOf,
     weekStats: weekStats,
     runwayStats: runwayStats,
-    weekSlice: function (planDays, anchor, weekOffset) {
+    weekSlice: function (planDays, anchor, weekOffset, weekStart) {
       weekOffset = weekOffset || 0;
       anchor = anchor || new Date();
-      var start = startOfWeek(addDays(anchor, weekOffset * 7));
+      var start = startOfWeek(addDays(anchor, weekOffset * 7), weekStart);
       var byDate = {};
       (planDays || []).forEach(function (d) { byDate[d.date] = d; });
       var days = [];
@@ -637,11 +654,11 @@ window.FS = window.FS || {};
         label: MON[start.getMonth()] + " " + start.getDate() + " – " + MON[addDays(start, 6).getMonth()] + " " + addDays(start, 6).getDate()
       };
     },
-    monthSlice: function (planDays, anchor, monthOffset) {
+    monthSlice: function (planDays, anchor, monthOffset, weekStart) {
       monthOffset = monthOffset || 0;
       anchor = anchor || new Date();
       var first = startOfMonth(new Date(anchor.getFullYear(), anchor.getMonth() + monthOffset, 1));
-      var gridStart = startOfWeek(first);
+      var gridStart = startOfWeek(first, weekStart);
       var byDate = {};
       (planDays || []).forEach(function (d) { byDate[d.date] = d; });
       var cells = [];

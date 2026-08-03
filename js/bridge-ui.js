@@ -39,7 +39,7 @@ window.FS = window.FS || {};
     var last = row.profile.last_active_at ? new Date(row.profile.last_active_at) : new Date(0);
     var now = new Date();
     var plan = Cal.plan(cfg, cal, data);
-    var slice = Cal.weekSlice(plan, now, 0);
+    var slice = Cal.weekSlice(plan, now, 0, weekStartPref(getState && getState()));
     var stats = Cal.weekStats(slice.days || []);
     var pre = new Date(now.getFullYear(), cfg.preRegDate.month - 1, cfg.preRegDate.day);
     if (pre < now) pre = new Date(now.getFullYear() + 1, cfg.preRegDate.month - 1, cfg.preRegDate.day);
@@ -464,6 +464,10 @@ window.FS = window.FS || {};
     return st.data.calendarCadence === true;
   }
 
+  function weekStartPref(st) {
+    return st && st.settings && st.settings.weekStartsOn === "monday" ? 1 : 0;
+  }
+
   function renderTypeOptions(selected) {
     return Cal.EVENT_TYPES.map(function (t) {
       return '<option value="' + t.id + '"' + (t.id === selected ? " selected" : "") + ">" +
@@ -712,12 +716,16 @@ window.FS = window.FS || {};
 
     var view = state.data.calendarView === "week" ? "week" : "month";
     var useCadence = cadenceEnabled(state);
-    var plan = Cal.plan(window.FS.CONFIG, state.data.calendar, state.data, { cadence: useCadence });
+    var weekStart = weekStartPref(state);
+    var plan = Cal.plan(window.FS.CONFIG, state.data.calendar, state.data, {
+      cadence: useCadence,
+      weekStart: weekStart
+    });
 
     var todayKey = Cal.ymd(new Date());
     var slice = view === "month"
-      ? Cal.monthSlice(plan, new Date(), state.data.calendarMonthOffset)
-      : Cal.weekSlice(plan, new Date(), state.data.calendarWeekOffset);
+      ? Cal.monthSlice(plan, new Date(), state.data.calendarMonthOffset, weekStart)
+      : Cal.weekSlice(plan, new Date(), state.data.calendarWeekOffset, weekStart);
     var visibleDays = view === "month" ? (slice.cells || []) : (slice.days || []);
 
     if (!state.data.calendarSelected) state.data.calendarSelected = todayKey;
@@ -751,7 +759,7 @@ window.FS = window.FS || {};
     grid.className = "cal-grid " + (view === "month" ? "cal-grid-month" : "cal-grid-week");
     var html = "";
     if (view === "month") {
-      html += '<div class="cal-month-dows">' + Cal.DOW.map(function (d) {
+      html += '<div class="cal-month-dows">' + Cal.dowLabels(weekStart).map(function (d) {
         return "<span>" + d.slice(0, 3) + "</span>";
       }).join("") + "</div>";
       html += '<div class="cal-month-cells">';
@@ -1379,7 +1387,7 @@ window.FS = window.FS || {};
         "[data-cal-day],[data-cal-select],[data-cal-status],[data-cal-swap],[data-cal-week],[data-cal-nav],[data-cal-view],[data-cal-add],[data-cal-clear]," +
         "[data-cal-new],[data-cal-edit],[data-cal-item],[data-cal-accept],[data-cal-cadence],[data-cal-setup-toggle],[data-cal-save],[data-cal-delete]," +
         "[data-lib-tab],[data-lib-open],[data-lib-commit],[data-lib-add],[data-curio-open]," +
-        "[data-vault-open],[data-vault-lane],[data-vault-week],[data-vault-format-tab]," +
+        "[data-vault-open],[data-vault-lane],[data-vault-week],[data-vault-format-tab],[data-vault-promoting-tab]," +
         "#curiosityLightboxClose,#curiosityLightboxX,#calSheetClose,#calSheetX," +
         "#leadsSignInBtn,#leadsCopyLink,#leadsPageSettingsBtn,#leadsPageSettingsSave,[data-leads-filter],[data-lead-status]"
       );
@@ -1392,6 +1400,14 @@ window.FS = window.FS || {};
       if (t.hasAttribute("data-vault-format-tab")) {
         var vbFmt = ensureVaultBrowse("vault");
         vbFmt.format = t.getAttribute("data-vault-format-tab") || "";
+        persist();
+        renderContentVault();
+        return;
+      }
+      if (t.hasAttribute("data-vault-promoting-tab")) {
+        var vbPromo = ensureVaultBrowse("vault");
+        vbPromo.promoting = t.getAttribute("data-vault-promoting-tab") || "";
+        vbPromo.lane = "all";
         persist();
         renderContentVault();
         return;
@@ -1875,7 +1891,8 @@ window.FS = window.FS || {};
         hubMode: local.settings.hubMode || Cloud.user().hub_mode || "",
         partnerName: local.settings.partnerName || Cloud.user().display_name || "",
         growthMoment: typeof local.settings.growthMoment === "boolean" ? local.settings.growthMoment : true,
-        growthToast: typeof local.settings.growthToast === "boolean" ? local.settings.growthToast : true
+        growthToast: typeof local.settings.growthToast === "boolean" ? local.settings.growthToast : true,
+        weekStartsOn: local.settings.weekStartsOn === "monday" ? "monday" : "sunday"
       },
       tourDone: local.tourDone || Cloud.user().tour_done,
       cheers: remote.cheers || []
@@ -1994,7 +2011,10 @@ window.FS = window.FS || {};
   function renderVaultFilters(browse) {
     var html = '<div class="vault-filters">';
     html += '<label class="vault-filter"><span class="sr-only">Search</span><input type="search" class="prod-search" id="vaultSearch" placeholder="Search hooks, products, topics…" value="' + esc(browse.q || "") + '" autocomplete="off"></label>';
-    html += '<div class="vault-format-row" role="tablist" aria-label="Content type">';
+
+    html += '<div class="vault-filter-group">';
+    html += '<div class="vault-filter-label">Content type</div>';
+    html += '<div class="vault-chip-row" role="tablist" aria-label="Content type">';
     [
       { id: "", label: "All" },
       { id: "reel", label: "Reels" },
@@ -2004,15 +2024,19 @@ window.FS = window.FS || {};
       { id: "facebook", label: "Facebook" }
     ].forEach(function (f) {
       var on = (browse.format || "") === f.id;
-      html += '<button type="button" class="vault-format-tab fmt-tab' + (f.id ? " fmt-" + f.id : "") + (on ? " on" : "") + '" data-vault-format-tab="' + esc(f.id) + '" role="tab" aria-selected="' + (on ? "true" : "false") + '">' + esc(f.label) + "</button>";
-    });
-    html += "</div>";
-    html += '<label class="vault-filter"><span>Promoting</span><select id="vaultPromotingFilter" class="cal-select">' + renderPromotingOptions(browse.promoting || "") + "</select></label>";
-    html += '<div class="vault-lane-row" role="tablist" aria-label="Lane">';
-    [{ id: "all", label: "All lanes" }, { id: "product", label: "Product" }, { id: "mission", label: "Mission" }, { id: "business", label: "Business" }, { id: "lifestyle", label: "Lifestyle" }, { id: "seasonal", label: "Seasonal" }].forEach(function (l) {
-      html += '<button type="button" class="vault-lane' + (browse.lane === l.id ? " on" : "") + '" data-vault-lane="' + l.id + '">' + esc(l.label) + "</button>";
+      html += '<button type="button" class="vault-filter-chip fmt-tab' + (f.id ? " fmt-" + f.id : "") + (on ? " on" : "") + '" data-vault-format-tab="' + esc(f.id) + '" role="tab" aria-selected="' + (on ? "true" : "false") + '">' + esc(f.label) + "</button>";
     });
     html += "</div></div>";
+
+    html += '<div class="vault-filter-group">';
+    html += '<div class="vault-filter-label">Content pillar</div>';
+    html += '<div class="vault-chip-row" role="tablist" aria-label="Content pillar">';
+    var pillars = [{ id: "", label: "All" }].concat(vaultMeta().promoting || []);
+    pillars.forEach(function (p) {
+      var on = (browse.promoting || "") === (p.id || "");
+      html += '<button type="button" class="vault-filter-chip promo-tab' + (p.id ? " promo-" + p.id : "") + (on ? " on" : "") + '" data-vault-promoting-tab="' + esc(p.id || "") + '" role="tab" aria-selected="' + (on ? "true" : "false") + '">' + esc(p.label) + "</button>";
+    });
+    html += "</div></div></div>";
     return html;
   }
 
@@ -2023,15 +2047,6 @@ window.FS = window.FS || {};
       search.dataset.bound = "1";
       search.addEventListener("input", function () {
         browse.q = search.value;
-        persist();
-        rerender();
-      });
-    }
-    var pf = $("vaultPromotingFilter");
-    if (pf && !pf.dataset.bound) {
-      pf.dataset.bound = "1";
-      pf.addEventListener("change", function () {
-        browse.promoting = pf.value;
         persist();
         rerender();
       });
@@ -2047,7 +2062,7 @@ window.FS = window.FS || {};
       '<div class="talk-guide-nav"><button type="button" class="prod-pill on" data-goto="tend">← Back to Content</button></div>' +
       '<p class="eyebrow">POST VAULT</p>' +
       '<h1 class="prod-head-title">Posts, Reels &amp; Stories</h1>' +
-      '<p class="prod-head-sub">One library — filter by type, open a card, rewrite in your voice, then add it to a day.</p>' +
+      '<p class="prod-head-sub">Tap a type or pillar to filter, open a card, rewrite in your voice, then add it to a day.</p>' +
       '<p class="vault-target-line">Adding to <strong>' + esc(selectedDayLabel(getState())) + "</strong> · tap a calendar day first to change</p>" +
       renderVaultFilters(browse) +
       '<p class="vault-count">' + list.length + " idea" + (list.length === 1 ? "" : "s") + "</p>" +
