@@ -121,11 +121,11 @@ window.FS.CONFIG = {
     authSkip: "Continue without signing in",
     authHint: "New here? Tap Create account. Already have one? Sign in with the same email.",
 
-    installEyebrow: "Keep it handy",
-    installTitle: "Save First Seeds on your phone",
-    installLead: "It opens like an app from your home screen — no App Store needed. Which are you on?",
-    installCta: "Got it — continue →",
-    installSkip: "Skip for now",
+    installEyebrow: "One important step",
+    installTitle: "Add First Seeds to your Home Screen",
+    installLead: "This isn’t an App Store download — you’ll save it once so it opens like an app. Pick your device, follow the taps, then confirm below.",
+    installCta: "I've added it →",
+    installSkip: "I'll add it later",
 
     modeEyebrow: "Your path",
     modeTitle: "How much do you want on your plate?",

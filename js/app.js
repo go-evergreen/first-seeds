@@ -2588,39 +2588,57 @@
   }
 
   function installGuideHtml(platform) {
+    var head = '<p class="onboard-install-do">Do this now — before you continue</p>';
     if (platform === "ios") {
-      return '<ol class="onboard-install-steps">' +
-        "<li>Open this page in <strong>Safari</strong> (not Chrome or Instagram’s browser).</li>" +
-        "<li>Tap the <strong>Share</strong> button at the bottom (or top) of Safari.</li>" +
-        "<li>Scroll and tap <strong>Add to Home Screen</strong>.</li>" +
-        "<li>Tap <strong>Add</strong> — First Seeds will sit on your home screen like an app.</li>" +
+      return head +
+        '<ol class="onboard-install-steps">' +
+        "<li>Open this page in <strong>Safari</strong> (not Chrome, and not inside Instagram or Texts).</li>" +
+        "<li>Tap the <strong>Share</strong> button " +
+        '<span class="onboard-install-glyph" aria-hidden="true">□↑</span> ' +
+        "at the bottom of Safari (or top on iPad).</li>" +
+        '<li class="onboard-install-key">Scroll and tap <strong>Add to Home Screen</strong>.</li>' +
+        "<li>Tap <strong>Add</strong> in the top right — you should see a First Seeds icon on your Home Screen.</li>" +
         "</ol>" +
-        '<p class="onboard-install-note">Tip: if you don’t see “Add to Home Screen,” scroll the share sheet all the way down.</p>';
+        '<p class="onboard-install-note">If you don’t see “Add to Home Screen,” scroll the share sheet all the way down. Then come back here and check the box below.</p>';
     }
     if (platform === "android") {
       var installBtn = deferredInstallPrompt
         ? '<button type="button" class="btn overlay-btn" id="onboardInstallPromptBtn" style="margin-bottom:12px">Install First Seeds →</button>'
         : "";
-      return installBtn +
+      return head + installBtn +
         '<ol class="onboard-install-steps">' +
         "<li>Use <strong>Chrome</strong> on your phone (best results).</li>" +
         "<li>Tap the <strong>⋮</strong> menu (top right).</li>" +
-        "<li>Tap <strong>Install app</strong> or <strong>Add to Home screen</strong>.</li>" +
-        "<li>Confirm — then open First Seeds from your home screen anytime.</li>" +
+        '<li class="onboard-install-key">Tap <strong>Install app</strong> or <strong>Add to Home screen</strong>.</li>' +
+        "<li>Confirm — then look for the First Seeds icon on your Home Screen.</li>" +
         "</ol>" +
-        '<p class="onboard-install-note">On some Androids it says “Install” in the address bar instead of the menu.</p>';
+        '<p class="onboard-install-note">On some Androids it says “Install” in the address bar instead of the menu. After it’s added, check the box below.</p>';
     }
     /* desktop */
     var deskBtn = deferredInstallPrompt
       ? '<button type="button" class="btn overlay-btn" id="onboardInstallPromptBtn" style="margin-bottom:12px">Install First Seeds →</button>'
       : "";
-    return deskBtn +
+    return head + deskBtn +
       '<ol class="onboard-install-steps">' +
-      "<li>In <strong>Chrome</strong> or <strong>Edge</strong>, look for an install icon in the address bar (a screen / ⊕).</li>" +
-      "<li>Or open the browser menu → <strong>Install First Seeds</strong> / <strong>Apps → Install this site as an app</strong>.</li>" +
+      '<li class="onboard-install-key">In <strong>Chrome</strong> or <strong>Edge</strong>, click the install icon in the address bar (a screen / ⊕), or menu → <strong>Install First Seeds</strong>.</li>' +
       "<li>On a Mac with Safari: <strong>File → Add to Dock</strong> (or Share → Add to Dock).</li>" +
+      "<li>Phone is usually better day-to-day — you can install there later from the same link.</li>" +
       "</ol>" +
-      '<p class="onboard-install-note">Phone is friendlier day-to-day — you can always install there later from the same link.</p>';
+      '<p class="onboard-install-note">Once it’s installed (or you’ve decided to do it on your phone later), use the buttons below.</p>';
+  }
+
+  function syncInstallNextEnabled() {
+    var next = document.getElementById("onboardingInstallNext");
+    var confirm = document.getElementById("onboardInstallConfirm");
+    var skip = document.getElementById("onboardingInstallSkip");
+    if (!next) return;
+    if (isRunningAsInstalledApp() || installPlatform === "standalone") {
+      next.disabled = false;
+      return;
+    }
+    var confirmed = !!(confirm && confirm.checked);
+    next.disabled = !installPlatform || !confirmed;
+    if (skip) skip.hidden = false;
   }
 
   function selectInstallPlatform(platform) {
@@ -2632,6 +2650,8 @@
       choices[i].classList.toggle("on", choices[i].getAttribute("data-install-platform") === installPlatform);
     }
     var guide = document.getElementById("onboardInstallGuide");
+    var confirmWrap = document.getElementById("onboardInstallConfirmWrap");
+    var confirm = document.getElementById("onboardInstallConfirm");
     var next = document.getElementById("onboardingInstallNext");
     if (guide) {
       guide.hidden = !installPlatform;
@@ -2646,10 +2666,17 @@
           } catch (e) {}
           deferredInstallPrompt = null;
           promptBtn.hidden = true;
+          if (confirm) {
+            confirm.checked = true;
+            syncInstallNextEnabled();
+          }
         });
       }
     }
-    if (next) next.disabled = !installPlatform;
+    if (confirmWrap) confirmWrap.hidden = !installPlatform;
+    if (confirm && !installPlatform) confirm.checked = false;
+    if (next && OB && OB.installCta) next.textContent = OB.installCta;
+    syncInstallNextEnabled();
   }
 
   function renderOnboardingStep() {
@@ -2697,8 +2724,10 @@
         var lead = document.getElementById("obInstallLead");
         var next = document.getElementById("onboardingInstallNext");
         var choices = document.getElementById("onboardInstallChoices");
+        var confirmWrap = document.getElementById("onboardInstallConfirmWrap");
         if (lead) lead.textContent = "Nice — you’re already using First Seeds as an app on this device.";
         if (choices) choices.hidden = true;
+        if (confirmWrap) confirmWrap.hidden = true;
         if (guide) {
           guide.hidden = false;
           guide.innerHTML = '<p class="onboard-install-note" style="margin:0">You’re set. Continue to pick how deep you want your runway.</p>';
@@ -2725,13 +2754,28 @@
     btn.disabled = !ok;
   }
 
-  function startOnboarding() {
+  var onboardingReplay = false;
+
+  function startOnboarding(opts) {
+    opts = opts || {};
     var wrap = document.getElementById("onboarding");
-    if (!wrap || modeChosen()) return;
-    /* Resume mid-flow if they already shared a name (e.g. returned from magic link). */
-    if (partnerName() && cloudSignedIn()) onboardingStep = 4;
-    else if (partnerName()) onboardingStep = 3;
-    else onboardingStep = 0;
+    if (!wrap) return;
+    /* Normal boot only shows onboarding until a path is chosen; Settings replay bypasses that. */
+    if (!opts.replay && modeChosen()) return;
+    onboardingReplay = !!opts.replay;
+    if (opts.replay) {
+      onboardingStep = 0;
+      var conf = document.getElementById("onboardInstallConfirm");
+      if (conf) conf.checked = false;
+      var confirmWrap = document.getElementById("onboardInstallConfirmWrap");
+      if (confirmWrap) confirmWrap.hidden = true;
+    } else if (partnerName() && cloudSignedIn()) {
+      onboardingStep = 4;
+    } else if (partnerName()) {
+      onboardingStep = 3;
+    } else {
+      onboardingStep = 0;
+    }
     renderOnboardingStep();
     wrap.classList.add("open");
     setOverlayOpen(true);
@@ -2745,8 +2789,15 @@
     save();
     renderNav();
     renderPanels();
-    if (!state.tourDone) startTour();
+    var wasReplay = onboardingReplay;
+    onboardingReplay = false;
+    if (!wasReplay && !state.tourDone) startTour();
     else setOverlayOpen(false);
+  }
+
+  function replayOnboardingFromSettings() {
+    closeHubMenu();
+    startOnboarding({ replay: true });
   }
 
   function wireOnboarding() {
@@ -2857,10 +2908,19 @@
         selectInstallPlatform(ev.currentTarget.getAttribute("data-install-platform"));
       });
     }
+    var installConfirm = document.getElementById("onboardInstallConfirm");
+    if (installConfirm && !installConfirm.dataset.bound) {
+      installConfirm.dataset.bound = "1";
+      installConfirm.addEventListener("change", syncInstallNextEnabled);
+    }
     var installNext = document.getElementById("onboardingInstallNext");
     if (installNext) {
       installNext.addEventListener("click", function () {
         if (!installPlatform && !isRunningAsInstalledApp()) return;
+        if (!isRunningAsInstalledApp() && installPlatform !== "standalone") {
+          var conf = document.getElementById("onboardInstallConfirm");
+          if (!conf || !conf.checked) return;
+        }
         advanceToModeStep();
       });
     }
@@ -3048,16 +3108,19 @@
     renderTourStep();
   }
 
-  function startTeamTour() {
+  function startTeamTour(opts) {
+    opts = opts || {};
     var wrap = document.getElementById("tour");
     if (!wrap) return;
     if (wrap.classList.contains("open")) return;
-    if (state.data.teamTourDone) return;
+    if (!opts.replay && state.data.teamTourDone) return;
     tourKind = "team";
     var tips = currentTourTips();
     if (!tips.length) {
-      state.data.teamTourDone = true;
-      save();
+      if (!opts.replay) {
+        state.data.teamTourDone = true;
+        save();
+      }
       return;
     }
     tourIdx = 0;
@@ -3086,6 +3149,11 @@
     startTeamTour();
   }
   window.FS.maybeStartTeamTour = maybeStartTeamTour;
+
+  function replayTeamTourFromSettings() {
+    closeHubMenu();
+    startTeamTour({ replay: true });
+  }
 
   function renderTourStep() {
     var tips = currentTourTips();
@@ -3176,7 +3244,7 @@
 
   /* ── clicks ──────────────────────────────────────────── */
   document.addEventListener("click", function (e) {
-    var t = e.target.closest("[data-goto],[data-complete],[data-grove-pick],[data-prod-nav],[data-prod-open],[data-choice],[data-rhythm],[data-copy],[data-tadd],[data-tstatus],[data-tdel],[data-seedtype],[data-menu-goto],[data-soft-unlock],[data-faq],[data-talk],[data-copy-toggle],#exportBtn,#exportBtn2,#resetBtn,#modeStarter,#modeFull,#leadPageBuiltIn,#leadPageCustom,#levelUpBtn,#settingsNavBtn,#menuCloseBtn,#menuCloseBackdrop,#todayAuthBtn,#lockToastClose");
+    var t = e.target.closest("[data-goto],[data-complete],[data-grove-pick],[data-prod-nav],[data-prod-open],[data-choice],[data-rhythm],[data-copy],[data-tadd],[data-tstatus],[data-tdel],[data-seedtype],[data-menu-goto],[data-soft-unlock],[data-faq],[data-talk],[data-copy-toggle],#exportBtn,#exportBtn2,#resetBtn,#replayOnboardingBtn,#replayTeamTourBtn,#modeStarter,#modeFull,#leadPageBuiltIn,#leadPageCustom,#levelUpBtn,#settingsNavBtn,#menuCloseBtn,#menuCloseBackdrop,#todayAuthBtn,#lockToastClose");
     if (!t) return;
 
     if (t.hasAttribute("data-talk")) {
@@ -3454,6 +3522,8 @@
       return;
     }
     if (t.id === "exportBtn" || t.id === "exportBtn2") { exportAnswers(); return; }
+    if (t.id === "replayOnboardingBtn") { replayOnboardingFromSettings(); return; }
+    if (t.id === "replayTeamTourBtn") { replayTeamTourFromSettings(); return; }
     if (t.id === "resetBtn") {
       if (confirm("Start over? This clears all your saved answers on this device.")) {
         try { localStorage.removeItem(CFG.storeKey); } catch (err) {}
