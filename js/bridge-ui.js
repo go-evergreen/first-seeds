@@ -375,6 +375,28 @@ window.FS = window.FS || {};
     return "cal-chip cat-" + cat + (st !== "todo" ? " is-" + st : "");
   }
 
+  function renderDayBars(day) {
+    var html = '<div class="cal-cell-bars" aria-hidden="true">';
+    var shown = 0;
+    (day.items || []).forEach(function (it) {
+      if (shown >= 3) return;
+      if (it.kind === "rest" || it.type === "reactive") return;
+      html += '<span class="cal-bar cat-' + esc(it.category || "content") +
+        (it.status === "posted" ? " is-posted" : "") +
+        (it.status === "skipped" ? " is-skipped" : "") + '"></span>';
+      shown++;
+    });
+    if (!((day.items || []).length) && day.suggested && shown < 3) {
+      html += '<span class="cal-bar ghost"></span>';
+      shown++;
+    }
+    if (!shown && (day.items || []).some(function (it) { return it.kind === "rest" || it.type === "reactive"; })) {
+      html += '<span class="cal-bar cat-rest"></span>';
+    }
+    html += "</div>";
+    return html;
+  }
+
   function renderDayChips(day) {
     var html = "";
     (day.items || []).forEach(function (it) {
@@ -392,19 +414,55 @@ window.FS = window.FS || {};
     return html;
   }
 
+  function countDated(days) {
+    var n = 0;
+    (days || []).forEach(function (d) {
+      var has = (d.items || []).some(function (it) {
+        return !(it.kind === "rest" || it.type === "reactive");
+      });
+      if (!has && d.suggested) has = true;
+      if (has) n++;
+    });
+    return n;
+  }
+
+  function renderDayDetail(day) {
+    var el = $("calendarDayDetail");
+    if (!el) return;
+    if (!day) {
+      el.innerHTML = "";
+      el.hidden = true;
+      return;
+    }
+    el.hidden = false;
+    var dt = Cal.parseYmd(day.date);
+    var label = Cal.DOW[dt.getDay()] + " · " + Cal.MON[dt.getMonth()] + " " + dt.getDate();
+    var chips = renderDayChips(day);
+    el.innerHTML =
+      '<div class="cal-day-detail-head">' +
+        '<div><span class="cal-day-detail-kicker">Selected day</span>' +
+        '<strong class="cal-day-detail-title">' + esc(label) + "</strong></div>" +
+        '<button type="button" class="cal-day-detail-add" data-cal-new="' + day.date + '">＋ Add</button>' +
+      "</div>" +
+      (chips
+        ? '<div class="cal-day-detail-chips">' + chips + "</div>"
+        : '<p class="cal-day-detail-empty">Nothing on this day yet — add a card or pull one from Post ideas.</p>');
+  }
+
   function renderCalendar() {
     var grid = $("calendarGrid");
     var phaseEl = $("calendarPhases");
     var navEl = $("calendarWeekNav");
     var setupEl = $("calendarSetup");
     var toggleEl = $("calendarViewToggle");
+    var datedEl = $("calendarDated");
     if (!grid || !getState) return;
     var state = getState();
     if (!state || !state.data) return;
     if (!state.data.calendar) state.data.calendar = {};
     if (typeof state.data.calendarWeekOffset !== "number") state.data.calendarWeekOffset = 0;
     if (typeof state.data.calendarMonthOffset !== "number") state.data.calendarMonthOffset = 0;
-    if (!state.data.calendarView) state.data.calendarView = "week";
+    if (!state.data.calendarView) state.data.calendarView = "month";
     if (!state.data.libraryTab) state.data.libraryTab = "hooks";
 
     var cadenceChosen = state.data.calendarCadence === true || state.data.calendarCadence === false;
@@ -448,15 +506,15 @@ window.FS = window.FS || {};
                 "</div>" +
                 '<p class="cal-setup-hint" style="margin-top:8px">' +
                 (cadenceEnabled(state)
-                  ? "Light chips on empty days are suggestions — tap one to keep it, edit the draft, or grab a different idea below."
-                  : "Add a card with ＋ on a day, or tap a ready draft under Post ideas.") +
+                  ? "Soft bars on empty days are suggestions — tap the day, then the chip below to keep it."
+                  : "Tap a day, then ＋ Add — or pull a ready draft from Post ideas.") +
                 "</p>")) +
             "</div>")
           : "") +
         "</div>";
     }
 
-    var view = state.data.calendarView === "month" ? "month" : "week";
+    var view = state.data.calendarView === "week" ? "week" : "month";
     var useCadence = cadenceEnabled(state);
     var plan = Cal.plan(window.FS.CONFIG, state.data.calendar, state.data, { cadence: useCadence });
 
@@ -465,9 +523,14 @@ window.FS = window.FS || {};
       ? Cal.monthSlice(plan, new Date(), state.data.calendarMonthOffset)
       : Cal.weekSlice(plan, new Date(), state.data.calendarWeekOffset);
     var visibleDays = view === "month" ? (slice.cells || []) : (slice.days || []);
-    var weekForStats = view === "week" ? visibleDays : Cal.weekSlice(plan, new Date(), 0).days;
-    var weekStats = Cal.weekStats(weekForStats);
-    var runway = Cal.runwayStats(plan);
+
+    if (!state.data.calendarSelected) state.data.calendarSelected = todayKey;
+    var selectedKey = state.data.calendarSelected;
+
+    var monthDatedSource = view === "month"
+      ? visibleDays.filter(function (d) { return d.inMonth; })
+      : visibleDays;
+    var datedCount = countDated(monthDatedSource);
 
     if (toggleEl) {
       var btns = toggleEl.querySelectorAll("[data-cal-view]");
@@ -478,10 +541,7 @@ window.FS = window.FS || {};
       }
     }
 
-    var statsEl = $("calendarStats");
-    if (statsEl) {
-      statsEl.textContent = runway.cards + " cards · " + runway.posted + " done · " + runway.drafted + " drafted · week " + weekStats.posted + "/" + Math.max(weekStats.total, 0);
-    }
+    if (datedEl) datedEl.textContent = datedCount + " dated";
 
     if (navEl) {
       var off = view === "month" ? state.data.calendarMonthOffset : state.data.calendarWeekOffset;
@@ -493,38 +553,39 @@ window.FS = window.FS || {};
     }
 
     if (phaseEl) {
-      var phaseDay = Cal.findDay(plan, todayKey) || visibleDays[0];
+      var phaseDay = Cal.findDay(plan, selectedKey) || Cal.findDay(plan, todayKey) || visibleDays[0];
       var ph = (phaseDay && phaseDay.phase) || { label: "", tip: "" };
       phaseEl.innerHTML = ph.label
-        ? ('<span class="cal-phase-pill">' + esc(ph.label) + '</span><span class="cal-phase-tip">' + esc(ph.tip || "") + "</span>")
+        ? ('<div class="cal-phase-card">' +
+          '<div class="cal-phase-card-title"><span class="cal-phase-dot" aria-hidden="true"></span>' +
+          esc(ph.label) + "</div>" +
+          (ph.tip ? '<p class="cal-phase-card-tip">' + esc(ph.tip) + "</p>" : "") +
+          "</div>")
         : "";
     }
-
-    if (!state.data.calendarSelected) state.data.calendarSelected = todayKey;
 
     grid.className = "cal-grid " + (view === "month" ? "cal-grid-month" : "cal-grid-week");
     var html = "";
     if (view === "month") {
-      html += '<div class="cal-month-dows">' + Cal.DOW.map(function (d) { return "<span>" + d + "</span>"; }).join("") + "</div>";
+      html += '<div class="cal-month-dows">' + Cal.DOW.map(function (d) {
+        return "<span>" + d.slice(0, 3) + "</span>";
+      }).join("") + "</div>";
       html += '<div class="cal-month-cells">';
       visibleDays.forEach(function (d) {
-        html += '<div class="cal-cell' +
-          (d.date === state.data.calendarSelected ? " on" : "") +
+        html += '<button type="button" class="cal-cell' +
+          (d.date === selectedKey ? " on" : "") +
           (d.date === todayKey ? " today" : "") +
-          (d.inMonth ? "" : " out") + '" data-cal-select="' + d.date + '">';
-        html += '<div class="cal-cell-top">';
+          (d.inMonth ? "" : " out") + '" data-cal-select="' + d.date + '" aria-label="' + esc(d.date) + '">';
         html += '<span class="cal-cell-num">' + d.dayNum + "</span>";
-        html += '<button type="button" class="cal-cell-add" data-cal-new="' + d.date + '" aria-label="Add">＋</button>';
-        html += "</div>";
-        html += '<div class="cal-cell-chips">' + renderDayChips(d) + "</div>";
-        html += "</div>";
+        html += renderDayBars(d);
+        html += "</button>";
       });
       html += "</div>";
     } else {
       visibleDays.forEach(function (d) {
         var dt = Cal.parseYmd(d.date);
         html += '<div class="cal-cell week' +
-          (d.date === state.data.calendarSelected ? " on" : "") +
+          (d.date === selectedKey ? " on" : "") +
           (d.date === todayKey ? " today" : "") + '" data-cal-select="' + d.date + '">';
         html += '<div class="cal-cell-top">';
         html += '<div><span class="cal-dow">' + Cal.DOW[dt.getDay()] + '</span>';
@@ -537,6 +598,18 @@ window.FS = window.FS || {};
     }
     grid.innerHTML = html;
 
+    var selectedDay = Cal.findDay(plan, selectedKey);
+    if (!selectedDay) {
+      for (var si = 0; si < visibleDays.length; si++) {
+        if (visibleDays[si].date === selectedKey) { selectedDay = visibleDays[si]; break; }
+      }
+    }
+    if (view === "month") renderDayDetail(selectedDay);
+    else {
+      var detailEl = $("calendarDayDetail");
+      if (detailEl) { detailEl.innerHTML = ""; detailEl.hidden = true; }
+    }
+
     renderLibrary();
     if (state.data.calendarEditing) renderCalEditor();
   }
@@ -548,7 +621,7 @@ window.FS = window.FS || {};
     if (!tabs || !list || !getState) return;
     var st = getState();
     var buckets = Cal.libraryBuckets();
-    var active = st.data.libraryTab || "photos";
+    var active = st.data.libraryTab || "hooks";
     if (!buckets.some(function (b) { return b.id === active; }) && buckets[0]) active = buckets[0].id;
     st.data.libraryTab = active;
 
@@ -568,26 +641,10 @@ window.FS = window.FS || {};
     if (bucket.hint) html += '<p class="cal-lib-hint">' + esc(bucket.hint) + "</p>";
     if (!bucket.items || !bucket.items.length) {
       html += '<p class="cal-lib-hint">Nothing in this shelf yet.</p>';
-    } else if (bucket.id === "photos") {
-      html += '<div class="cal-lib-photo-grid">';
-      bucket.items.forEach(function (it) {
-        html += '<button type="button" class="cal-lib-photo-card" data-lib-open="' + esc(bucket.id) + '" data-lib-id="' + esc(it.id) + '">';
-        if (it.thumb) {
-          html += '<img class="cal-lib-photo-img" src="' + esc(it.thumb) + '" alt="' + esc(it.alt || it.title) + '" loading="lazy" decoding="async" width="420" height="560">';
-        }
-        html += '<span class="cal-lib-photo-meta">';
-        html += '<span class="cal-lib-card-title">' + esc(it.title) + "</span>";
-        if (it.pairsWith) html += '<span class="cal-lib-photo-pairs">' + esc(it.pairsWith) + "</span>";
-        html += '<span class="cal-lib-open-hint">Open</span></span></button>';
-      });
-      html += "</div>";
     } else {
       bucket.items.forEach(function (it) {
         var meta = Cal.typeMeta ? Cal.typeMeta(it.type) : null;
-        html += '<button type="button" class="cal-lib-card' + (it.thumb ? " has-thumb" : "") + '" data-lib-open="' + esc(bucket.id) + '" data-lib-id="' + esc(it.id) + '">';
-        if (it.thumb) {
-          html += '<img class="cal-lib-card-thumb" src="' + esc(it.thumb) + '" alt="" loading="lazy" decoding="async" width="72" height="96">';
-        }
+        html += '<button type="button" class="cal-lib-card" data-lib-open="' + esc(bucket.id) + '" data-lib-id="' + esc(it.id) + '">';
         html += '<div class="cal-lib-card-main">';
         html += '<div class="cal-lib-card-top"><div>';
         if (meta && meta.label) html += '<span class="cal-lib-card-type">' + esc(meta.label) + "</span>";
@@ -598,6 +655,73 @@ window.FS = window.FS || {};
       });
     }
     list.innerHTML = html;
+  }
+
+  function renderCuriosityPhotos() {
+    var root = $("curiosityPhotosRoot");
+    if (!root) return;
+    var list = (window.FS.CONTENT && window.FS.CONTENT.curiosityImages) || [];
+    var html =
+      '<div class="curio-photos-nav">' +
+        '<button type="button" class="prod-pill on" data-goto="tend">← Back to Content</button>' +
+      "</div>" +
+      '<p class="eyebrow">FOR YOUR CURIOSITY POSTS</p>' +
+      '<h1 class="curio-photos-title">Curiosity photos</h1>' +
+      '<p class="curio-photos-intro">Tap a circle to open the full photo. Press and hold the image to save it to your camera roll — then pair it with a curiosity post from Post ideas.</p>';
+
+    if (!list.length) {
+      html += '<p class="cal-lib-hint">No photos yet — check back soon.</p>';
+      root.innerHTML = html;
+      return;
+    }
+
+    html += '<div class="curio-photo-circles" role="list">';
+    list.forEach(function (it) {
+      var resolved = Cal.resolveCuriosityImage ? Cal.resolveCuriosityImage(it.id) : null;
+      if (!resolved) return;
+      html += '<button type="button" class="curio-photo-circle" role="listitem" data-curio-open="' + esc(it.id) + '" aria-label="Open ' + esc(it.title) + '">';
+      html += '<span class="curio-photo-circle-img-wrap">';
+      html += '<img src="' + esc(resolved.thumb) + '" alt="" loading="lazy" decoding="async" width="120" height="120">';
+      html += "</span>";
+      html += '<span class="curio-photo-circle-label">' + esc(it.title) + "</span>";
+      html += "</button>";
+    });
+    html += "</div>";
+    root.innerHTML = html;
+  }
+
+  function openCuriosityLightbox(imageId) {
+    var resolved = Cal.resolveCuriosityImage ? Cal.resolveCuriosityImage(imageId) : null;
+    var box = $("curiosityLightbox");
+    var img = $("curiosityLightboxImg");
+    var title = $("curiosityLightboxTitle");
+    var pairs = $("curiosityLightboxPairs");
+    if (!resolved || !box || !img) return;
+    if (title) title.textContent = resolved.title || "Photo";
+    img.src = resolved.src;
+    img.alt = resolved.alt || resolved.title || "";
+    if (pairs) {
+      if (resolved.pairsWith) {
+        pairs.hidden = false;
+        pairs.textContent = "Pairs well with: " + resolved.pairsWith;
+      } else {
+        pairs.hidden = true;
+        pairs.textContent = "";
+      }
+    }
+    box.hidden = false;
+    document.body.classList.add("curio-lightbox-open");
+  }
+
+  function closeCuriosityLightbox() {
+    var box = $("curiosityLightbox");
+    var img = $("curiosityLightboxImg");
+    if (box) box.hidden = true;
+    if (img) {
+      img.removeAttribute("src");
+      img.alt = "";
+    }
+    document.body.classList.remove("curio-lightbox-open");
   }
 
   function libraryItem(bucketId, itemId) {
@@ -1038,6 +1162,13 @@ window.FS = window.FS || {};
     if (wired) return;
     wired = true;
     document.addEventListener("keydown", function (e) {
+      if (e.key === "Escape") {
+        var box = $("curiosityLightbox");
+        if (box && !box.hidden) {
+          closeCuriosityLightbox();
+          return;
+        }
+      }
       if (e.key !== "Enter") return;
       var overlay = $("authOverlay");
       if (!overlay || !overlay.classList.contains("open")) return;
@@ -1053,7 +1184,8 @@ window.FS = window.FS || {};
         "#exportBridgeBtn,#importLiveTreeBtn,#cheerDismiss,#notifySponsorBtn,[data-goto-bridge],[data-copy-nudge],[data-cheer],[data-note]," +
         "[data-cal-day],[data-cal-select],[data-cal-status],[data-cal-swap],[data-cal-week],[data-cal-nav],[data-cal-view],[data-cal-add],[data-cal-clear]," +
         "[data-cal-new],[data-cal-edit],[data-cal-item],[data-cal-accept],[data-cal-cadence],[data-cal-setup-toggle],[data-cal-save],[data-cal-delete]," +
-        "[data-lib-tab],[data-lib-open],[data-lib-commit],[data-lib-add],#calSheetClose,#calSheetX," +
+        "[data-lib-tab],[data-lib-open],[data-lib-commit],[data-lib-add],[data-curio-open]," +
+        "#curiosityLightboxClose,#curiosityLightboxX,#calSheetClose,#calSheetX," +
         "#leadsSignInBtn,#leadsCopyLink,#leadsPageSettingsBtn,#leadsPageSettingsSave,[data-leads-filter],[data-lead-status]"
       );
       if (!t) return;
@@ -1282,6 +1414,14 @@ window.FS = window.FS || {};
       if (t.id === "calSheetClose" || t.id === "calSheetX" || t.hasAttribute("data-cal-save")) {
         closeCalSheet();
         renderCalendar();
+        return;
+      }
+      if (t.id === "curiosityLightboxClose" || t.id === "curiosityLightboxX") {
+        closeCuriosityLightbox();
+        return;
+      }
+      if (t.hasAttribute("data-curio-open")) {
+        openCuriosityLightbox(t.getAttribute("data-curio-open"));
         return;
       }
       if (t.hasAttribute("data-cal-view")) {
@@ -1526,6 +1666,8 @@ window.FS = window.FS || {};
     },
     renderLeader: renderLeader,
     renderCalendar: renderCalendar,
+    renderCuriosityPhotos: renderCuriosityPhotos,
+    closeCuriosityLightbox: closeCuriosityLightbox,
     renderPulse: renderPulse,
     renderCheers: renderCheers,
     renderLeaderNoteBanner: renderLeaderNoteBanner,

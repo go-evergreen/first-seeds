@@ -167,7 +167,7 @@
   }
 
   function isModuleUnlocked(id) {
-    if (!id || id === "welcome" || id === "done" || id === "calendar" || id === "leader" || id === "know" || id === "tend" || id === "products" || id === "leads") return true;
+    if (!id || id === "welcome" || id === "done" || id === "calendar" || id === "leader" || id === "know" || id === "tend" || id === "products" || id === "curiosity-photos" || id === "leads") return true;
     if (!sectionVisible(id)) return false;
     if (softUnlocked(id)) return true;
     if (state.done[id]) return true;
@@ -353,6 +353,13 @@
     if (authCta && OB.authCta) authCta.textContent = OB.authCta;
     var authSkip = document.getElementById("onboardingSkipAuth");
     if (authSkip && OB.authSkip) authSkip.textContent = OB.authSkip;
+    setText("obInstallEyebrow", OB.installEyebrow);
+    setText("obInstallTitle", OB.installTitle);
+    setText("obInstallLead", OB.installLead);
+    var installNext = document.getElementById("onboardingInstallNext");
+    if (installNext && OB.installCta) installNext.textContent = OB.installCta;
+    var installSkip = document.getElementById("onboardingInstallSkip");
+    if (installSkip && OB.installSkip) installSkip.textContent = OB.installSkip;
     setText("obModeEyebrow", OB.modeEyebrow);
     setText("obModeTitle", OB.modeTitle);
     setText("obModeLead", OB.modeLead);
@@ -407,7 +414,7 @@
 
     var pathNote = document.getElementById("welcomePathNote");
     if (pathNote) {
-      pathNote.innerHTML = "Your plant lives here. Calendar, Leads, Know, and your path stay one tap away at the bottom.";
+      pathNote.innerHTML = "Your plant lives here. Content, Leads, Know, and your path stay one tap away at the bottom.";
     }
 
     var rh = document.getElementById("rootsHeadline");
@@ -511,9 +518,9 @@
         why: "Launch feels calmer when the words are already yours."
       },
       tend: {
-        title: "Tend your calendar.",
-        body: "Open week or month view. Edit a draft, schedule a reach-out, or mark three days done. Nothing auto-posts.",
-        cta: sectionStarted("tend") ? "Keep your calendar warm →" : "Open Calendar →",
+        title: "Tend your content.",
+        body: "Open week or month view. Edit a draft, grab a photo, or mark three days done. Nothing auto-posts.",
+        cta: sectionStarted("tend") ? "Keep your content warm →" : "Open Content →",
         why: "A garden grows from showing up, not one big planting day."
       }
     };
@@ -556,7 +563,7 @@
           ? "Your runway's done — nice. Grab one gentle idea from the calendar and mark it Posted when you share (or Skipped if today isn't the day)."
           : ("You've marked " + pulse.posted + " posted this week. One more true post keeps the habit warm."),
         why: "No auto-post. Just a nudge so you don't go silent.",
-        primary: { label: "Open post calendar →", goto: "calendar" },
+        primary: { label: "Open Content →", goto: "calendar" },
         secondary: { label: "Notify my leader", goto: "done" }
       };
     }
@@ -565,7 +572,7 @@
     if (Cloud && Cloud.isSignedIn && Cloud.isSignedIn()) {
       return {
         title: "You're in motion.",
-        body: "Growth checklist humming and calendar warm. Open Team if you're leading partners — or leave your leader a quiet ping that you're still here.",
+        body: "Growth checklist humming and content warm. Open Team if you're leading partners — or leave your leader a quiet ping that you're still here.",
         why: "Showing up is the whole game, " + hey + ".",
         primary: { label: "Team →", goto: "leader" },
         secondary: { label: "Notify my leader", goto: "done" }
@@ -574,9 +581,9 @@
 
     return {
       title: "Look at you.",
-      body: "You've done the quiet work most people skip. Keep the calendar warm, and sign in so your progress can travel with you.",
+      body: "You've done the quiet work most people skip. Keep the content warm, and sign in so your progress can travel with you.",
       why: "October will feel different because of this.",
-      primary: { label: "Open post calendar →", goto: "calendar" },
+      primary: { label: "Open Content →", goto: "calendar" },
       secondary: { label: "Sign in / Account", action: "auth" }
     };
   }
@@ -1361,7 +1368,7 @@
       renderNav();
     }
     var tab = "";
-    if (state.active === "tend" || state.active === "calendar") tab = "calendar";
+    if (state.active === "tend" || state.active === "calendar" || state.active === "curiosity-photos") tab = "content";
     else if (state.active === "know" || state.active === "products") tab = "know";
     else if (state.active === "leader") tab = "team";
     else if (state.active === "leads") tab = "leads";
@@ -1730,6 +1737,12 @@
     }
     if (state.active === "products") {
       renderProductLibrary();
+    }
+    if (state.active === "curiosity-photos" && window.FS.BridgeUI && window.FS.BridgeUI.renderCuriosityPhotos) {
+      window.FS.BridgeUI.renderCuriosityPhotos();
+    }
+    if (state.active !== "curiosity-photos" && window.FS.BridgeUI && window.FS.BridgeUI.closeCuriosityLightbox) {
+      window.FS.BridgeUI.closeCuriosityLightbox();
     }
     if (state.active === "plant") {
       renderSeedTypes();
@@ -2347,16 +2360,115 @@
 
   /* ── onboarding ──────────────────────────────────────── */
   var onboardingStep = 0;
-  var ONBOARD_STEPS = 5;
-  var ONBOARD_THEMES = ["onboarding-welcome", "onboarding-circle", "onboarding-name", "onboarding-auth", "onboarding-mode"];
+  var ONBOARD_STEPS = 6;
+  var ONBOARD_THEMES = [
+    "onboarding-welcome",
+    "onboarding-circle",
+    "onboarding-name",
+    "onboarding-auth",
+    "onboarding-install",
+    "onboarding-mode"
+  ];
+  var installPlatform = "";
+  var deferredInstallPrompt = null;
+
+  window.addEventListener("beforeinstallprompt", function (e) {
+    e.preventDefault();
+    deferredInstallPrompt = e;
+  });
 
   function cloudSignedIn() {
     return !!(window.FS.Cloud && window.FS.Cloud.isSignedIn && window.FS.Cloud.isSignedIn());
   }
 
-  function advanceToModeStep() {
+  function isRunningAsInstalledApp() {
+    try {
+      if (window.matchMedia && window.matchMedia("(display-mode: standalone)").matches) return true;
+      if (window.navigator.standalone === true) return true;
+    } catch (e) {}
+    return false;
+  }
+
+  function guessInstallPlatform() {
+    var ua = navigator.userAgent || "";
+    if (/iPhone|iPad|iPod/i.test(ua)) return "ios";
+    if (/Android/i.test(ua)) return "android";
+    return "desktop";
+  }
+
+  function advanceToInstallStep() {
     onboardingStep = 4;
     renderOnboardingStep();
+  }
+
+  function advanceToModeStep() {
+    onboardingStep = 5;
+    renderOnboardingStep();
+  }
+
+  function installGuideHtml(platform) {
+    if (platform === "ios") {
+      return '<ol class="onboard-install-steps">' +
+        "<li>Open this page in <strong>Safari</strong> (not Chrome or Instagram’s browser).</li>" +
+        "<li>Tap the <strong>Share</strong> button at the bottom (or top) of Safari.</li>" +
+        "<li>Scroll and tap <strong>Add to Home Screen</strong>.</li>" +
+        "<li>Tap <strong>Add</strong> — First Seeds will sit on your home screen like an app.</li>" +
+        "</ol>" +
+        '<p class="onboard-install-note">Tip: if you don’t see “Add to Home Screen,” scroll the share sheet all the way down.</p>';
+    }
+    if (platform === "android") {
+      var installBtn = deferredInstallPrompt
+        ? '<button type="button" class="btn overlay-btn" id="onboardInstallPromptBtn" style="margin-bottom:12px">Install First Seeds →</button>'
+        : "";
+      return installBtn +
+        '<ol class="onboard-install-steps">' +
+        "<li>Use <strong>Chrome</strong> on your phone (best results).</li>" +
+        "<li>Tap the <strong>⋮</strong> menu (top right).</li>" +
+        "<li>Tap <strong>Install app</strong> or <strong>Add to Home screen</strong>.</li>" +
+        "<li>Confirm — then open First Seeds from your home screen anytime.</li>" +
+        "</ol>" +
+        '<p class="onboard-install-note">On some Androids it says “Install” in the address bar instead of the menu.</p>';
+    }
+    /* desktop */
+    var deskBtn = deferredInstallPrompt
+      ? '<button type="button" class="btn overlay-btn" id="onboardInstallPromptBtn" style="margin-bottom:12px">Install First Seeds →</button>'
+      : "";
+    return deskBtn +
+      '<ol class="onboard-install-steps">' +
+      "<li>In <strong>Chrome</strong> or <strong>Edge</strong>, look for an install icon in the address bar (a screen / ⊕).</li>" +
+      "<li>Or open the browser menu → <strong>Install First Seeds</strong> / <strong>Apps → Install this site as an app</strong>.</li>" +
+      "<li>On a Mac with Safari: <strong>File → Add to Dock</strong> (or Share → Add to Dock).</li>" +
+      "</ol>" +
+      '<p class="onboard-install-note">Phone is friendlier day-to-day — you can always install there later from the same link.</p>';
+  }
+
+  function selectInstallPlatform(platform) {
+    installPlatform = platform || "";
+    state.data.installPlatform = installPlatform;
+    save();
+    var choices = document.querySelectorAll("#onboardInstallChoices [data-install-platform]");
+    for (var i = 0; i < choices.length; i++) {
+      choices[i].classList.toggle("on", choices[i].getAttribute("data-install-platform") === installPlatform);
+    }
+    var guide = document.getElementById("onboardInstallGuide");
+    var next = document.getElementById("onboardingInstallNext");
+    if (guide) {
+      guide.hidden = !installPlatform;
+      guide.innerHTML = installPlatform ? installGuideHtml(installPlatform) : "";
+      var promptBtn = document.getElementById("onboardInstallPromptBtn");
+      if (promptBtn) {
+        promptBtn.addEventListener("click", async function () {
+          if (!deferredInstallPrompt) return;
+          try {
+            deferredInstallPrompt.prompt();
+            await deferredInstallPrompt.userChoice;
+          } catch (e) {}
+          deferredInstallPrompt = null;
+          promptBtn.hidden = true;
+        });
+      }
+    }
+    if (next) next.disabled = !installPlatform;
   }
 
   function renderOnboardingStep() {
@@ -2393,10 +2505,34 @@
       var msg = document.getElementById("onboardingAuthMsg");
       if (msg) msg.textContent = "";
       if (cloudSignedIn()) {
-        advanceToModeStep();
+        advanceToInstallStep();
         return;
       }
       if (emailIn) setTimeout(function () { emailIn.focus(); }, 50);
+    }
+    if (onboardingStep === 4) {
+      if (isRunningAsInstalledApp()) {
+        var guide = document.getElementById("onboardInstallGuide");
+        var lead = document.getElementById("obInstallLead");
+        var next = document.getElementById("onboardingInstallNext");
+        var choices = document.getElementById("onboardInstallChoices");
+        if (lead) lead.textContent = "Nice — you’re already using First Seeds as an app on this device.";
+        if (choices) choices.hidden = true;
+        if (guide) {
+          guide.hidden = false;
+          guide.innerHTML = '<p class="onboard-install-note" style="margin:0">You’re set. Continue to pick how deep you want your runway.</p>';
+        }
+        if (next) {
+          next.disabled = false;
+          next.textContent = "Continue →";
+        }
+        installPlatform = "standalone";
+        return;
+      }
+      var choiceWrap = document.getElementById("onboardInstallChoices");
+      if (choiceWrap) choiceWrap.hidden = false;
+      var guessed = state.data.installPlatform || guessInstallPlatform();
+      selectInstallPlatform(guessed);
     }
   }
 
@@ -2501,7 +2637,7 @@
           : await window.FS.Cloud.signIn(email, name, password);
         onboardAuthMsg(res.message || "You’re signed in.");
         if (res.kind === "local" || res.kind === "signed_in") {
-          advanceToModeStep();
+          advanceToInstallStep();
         }
       } catch (err) {
         onboardAuthMsg((err && err.message) || (creating ? "Could not create account." : "Could not sign in."));
@@ -2530,6 +2666,26 @@
     if (createBtn) createBtn.addEventListener("click", function () { runOnboardAuth(true); });
     if (skipAuth) {
       skipAuth.addEventListener("click", function () {
+        advanceToInstallStep();
+      });
+    }
+
+    var installChoices = wrap.querySelectorAll("[data-install-platform]");
+    for (var ic = 0; ic < installChoices.length; ic++) {
+      installChoices[ic].addEventListener("click", function (ev) {
+        selectInstallPlatform(ev.currentTarget.getAttribute("data-install-platform"));
+      });
+    }
+    var installNext = document.getElementById("onboardingInstallNext");
+    if (installNext) {
+      installNext.addEventListener("click", function () {
+        if (!installPlatform && !isRunningAsInstalledApp()) return;
+        advanceToModeStep();
+      });
+    }
+    var installSkip = document.getElementById("onboardingInstallSkip");
+    if (installSkip) {
+      installSkip.addEventListener("click", function () {
         advanceToModeStep();
       });
     }
@@ -2543,8 +2699,117 @@
     }
   }
 
-  /* ── mini tour ───────────────────────────────────────── */
+  /* ── mini tour (coachmarks near the real UI) ─────────── */
   var tourIdx = 0;
+  var tourPlaceTimer = null;
+  var tourTargetEl = null;
+
+  function clearTourHighlight() {
+    if (tourTargetEl) {
+      tourTargetEl.classList.remove("tour-target-on");
+      tourTargetEl = null;
+    }
+    var spot = document.getElementById("tourSpotlight");
+    if (spot) {
+      spot.hidden = true;
+      spot.style.cssText = "";
+    }
+  }
+
+  function centerTourCard() {
+    var card = document.getElementById("tourCard");
+    var spot = document.getElementById("tourSpotlight");
+    if (spot) spot.hidden = true;
+    if (!card) return;
+    card.style.top = "50%";
+    card.style.left = "50%";
+    card.style.right = "auto";
+    card.style.bottom = "auto";
+    card.style.transform = "translate(-50%, -50%)";
+  }
+
+  function placeTourChrome(targetEl, placement) {
+    var card = document.getElementById("tourCard");
+    var spot = document.getElementById("tourSpotlight");
+    if (!card || !targetEl) {
+      centerTourCard();
+      return;
+    }
+
+    var pad = 8;
+    var gap = 12;
+    var rect = targetEl.getBoundingClientRect();
+    var vw = window.innerWidth;
+    var vh = window.innerHeight;
+
+    if (spot) {
+      var spotTop = Math.max(6, rect.top - pad);
+      var spotLeft = Math.max(6, rect.left - pad);
+      var spotRight = Math.min(vw - 6, rect.right + pad);
+      var spotBottom = Math.min(vh - 6, rect.bottom + pad);
+      spot.hidden = false;
+      spot.style.top = spotTop + "px";
+      spot.style.left = spotLeft + "px";
+      spot.style.width = Math.max(24, spotRight - spotLeft) + "px";
+      spot.style.height = Math.max(24, spotBottom - spotTop) + "px";
+      spot.style.borderRadius = targetEl.closest(".bottom-nav-btn") ? "16px" : "18px";
+    }
+
+    card.style.transform = "none";
+    var cardW = Math.min(360, vw - 24);
+    card.style.width = cardW + "px";
+    card.style.maxWidth = cardW + "px";
+    /* Measure after width is set */
+    var cardH = card.offsetHeight || 200;
+    var spaceBelow = vh - rect.bottom - gap;
+    var spaceAbove = rect.top - gap;
+    var place = placement || "auto";
+    if (place === "auto") {
+      place = (spaceBelow >= cardH + 8 || spaceBelow >= spaceAbove) ? "below" : "above";
+    }
+    if (place === "below" && spaceBelow < Math.min(cardH, 120) && spaceAbove > spaceBelow) place = "above";
+    if (place === "above" && spaceAbove < Math.min(cardH, 120) && spaceBelow > spaceAbove) place = "below";
+
+    var top;
+    if (place === "above") top = rect.top - gap - cardH;
+    else top = rect.bottom + gap;
+
+    var left = rect.left + (rect.width / 2) - (cardW / 2);
+    left = Math.min(Math.max(12, left), vw - cardW - 12);
+    top = Math.min(Math.max(12, top), vh - cardH - 12);
+
+    card.style.top = top + "px";
+    card.style.left = left + "px";
+    card.style.right = "auto";
+    card.style.bottom = "auto";
+  }
+
+  function scheduleTourPlacement(tip) {
+    clearTimeout(tourPlaceTimer);
+    clearTourHighlight();
+    var tryPlace = function () {
+      var el = tip && tip.target ? document.querySelector(tip.target) : null;
+      if (!el) {
+        centerTourCard();
+        return;
+      }
+      tourTargetEl = el;
+      el.classList.add("tour-target-on");
+      try {
+        el.scrollIntoView({ block: "nearest", inline: "nearest", behavior: "smooth" });
+      } catch (err) {
+        el.scrollIntoView(true);
+      }
+      placeTourChrome(el, tip.placement);
+      /* Second pass after scroll/layout settles */
+      tourPlaceTimer = setTimeout(function () {
+        if (tourTargetEl) placeTourChrome(tourTargetEl, tip.placement);
+      }, 320);
+    };
+    requestAnimationFrame(function () {
+      requestAnimationFrame(tryPlace);
+    });
+  }
 
   function startTour() {
     var wrap = document.getElementById("tour");
@@ -2556,9 +2821,10 @@
       return;
     }
     tourIdx = 0;
-    renderTourStep();
     wrap.classList.add("open");
     setOverlayOpen(true);
+    centerTourCard();
+    renderTourStep();
   }
 
   function renderTourStep() {
@@ -2578,11 +2844,26 @@
         dots.appendChild(iEl);
       }
     }
+
+    if (tip.panel && state.active !== tip.panel) {
+      state.active = tip.panel;
+      save();
+      renderNav();
+      renderPanels();
+    }
+
+    scheduleTourPlacement(tip);
   }
 
   function finishTour() {
+    clearTimeout(tourPlaceTimer);
+    clearTourHighlight();
     var wrap = document.getElementById("tour");
     if (wrap) wrap.classList.remove("open");
+    var card = document.getElementById("tourCard");
+    if (card) {
+      card.style.cssText = "";
+    }
     state.tourDone = true;
     save();
     setOverlayOpen(false);
@@ -2599,10 +2880,22 @@
       tourIdx++;
       renderTourStep();
     });
+    window.addEventListener("resize", function () {
+      var wrap = document.getElementById("tour");
+      if (!wrap || !wrap.classList.contains("open")) return;
+      var tips = CFG.tour || [];
+      var tip = tips[tourIdx];
+      if (tip && tourTargetEl) placeTourChrome(tourTargetEl, tip.placement);
+    });
   }
 
   document.addEventListener("keydown", function (e) {
     if (e.key === "Escape") {
+      var tourWrap = document.getElementById("tour");
+      if (tourWrap && tourWrap.classList.contains("open")) {
+        finishTour();
+        return;
+      }
       closeHubMenu();
       setRoadmapOpen(false);
       closeGrowthMoment();
@@ -2712,9 +3005,16 @@
         save(); renderNav(); renderPanels();
         return;
       }
+      if (goto === "curiosity-photos") {
+        hideLockToast();
+        closeHubMenu();
+        state.active = "curiosity-photos";
+        save(); renderNav(); renderPanels();
+        return;
+      }
       if (goto === "leads" && usesCustomLanding()) return;
-      if (goto !== "welcome" && goto !== "done" && goto !== "calendar" && goto !== "leader" && goto !== "know" && goto !== "tend" && goto !== "products" && goto !== "leads" && !sectionVisible(goto)) return;
-      if (goto !== "welcome" && goto !== "done" && goto !== "calendar" && goto !== "leader" && goto !== "know" && goto !== "tend" && goto !== "products" && goto !== "leads" && !isModuleUnlocked(goto)) {
+      if (goto !== "welcome" && goto !== "done" && goto !== "calendar" && goto !== "leader" && goto !== "know" && goto !== "tend" && goto !== "products" && goto !== "curiosity-photos" && goto !== "leads" && !sectionVisible(goto)) return;
+      if (goto !== "welcome" && goto !== "done" && goto !== "calendar" && goto !== "leader" && goto !== "know" && goto !== "tend" && goto !== "products" && goto !== "curiosity-photos" && goto !== "leads" && !isModuleUnlocked(goto)) {
         showLockToast(goto);
         return;
       }
@@ -2999,6 +3299,14 @@
       gotoPanel: function (id) {
         if (id === "leads" && usesCustomLanding()) {
           id = "ground";
+        }
+        if (id === "curiosity-photos" || id === "products" || id === "tend" || id === "know") {
+          hideLockToast();
+          state.active = id;
+          save();
+          renderNav();
+          renderPanels();
+          return;
         }
         if (id !== "welcome" && id !== "done" && id !== "calendar" && id !== "leader" && id !== "know" && id !== "leads" && !isModuleUnlocked(id)) {
           showLockToast(id);

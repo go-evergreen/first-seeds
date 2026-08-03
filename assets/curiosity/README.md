@@ -1,11 +1,11 @@
 # Curiosity photos
 
-Ready-to-use images for curiosity posts (Post ideas → Photos).
+Ready-to-use images for curiosity posts (**Grab a photo** under Content).
 
 | File | Role |
 |------|------|
 | `full/*.webp` | Full post image (~768px, WebP ~q84) |
-| `thumbs/*.webp` | Card previews (~420px wide) |
+| `thumbs/*.webp` | Circle previews (~420px → cropped in UI) |
 | `_source/` | Originals — local only, not shipped |
 
 Add a new photo:

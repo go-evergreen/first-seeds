@@ -20,7 +20,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,400;1,9..144,500&family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/styles.css?v=77">
+<link rel="stylesheet" href="css/styles.css?v=82">
 </head>
 <body>
 
@@ -55,9 +55,9 @@
       <span class="bottom-nav-ico" aria-hidden="true">🌱</span>
       <span>Sprout</span>
     </button>
-    <button type="button" class="bottom-nav-btn" data-goto="tend" data-tab="calendar">
-      <span class="bottom-nav-ico" aria-hidden="true">📅</span>
-      <span>Calendar</span>
+    <button type="button" class="bottom-nav-btn" data-goto="tend" data-tab="content">
+      <span class="bottom-nav-ico" aria-hidden="true">✦</span>
+      <span>Content</span>
     </button>
     <button type="button" class="bottom-nav-btn" data-goto="leads" data-tab="leads">
       <span class="bottom-nav-ico" aria-hidden="true">✉</span>
@@ -416,7 +416,7 @@
         </div>
 
         <div class="btn-row">
-          <button class="btn waiting" data-complete="grove" data-ready-starter="Grove mapped → Open your calendar" data-ready-full="Grove mapped → Grow your tree" data-ready="Grove mapped → Grow your tree" data-wait="Add 5+ customer names and tap your first chats">Add 5+ customer names and tap your first chats</button>
+          <button class="btn waiting" data-complete="grove" data-ready-starter="Grove mapped → Open Content" data-ready-full="Grove mapped → Grow your tree" data-ready="Grove mapped → Grow your tree" data-wait="Add 5+ customer names and tap your first chats">Add 5+ customer names and tap your first chats</button>
           <span class="save-flash" data-flash="grove">Saved ✓</span>
         </div>
       </section>
@@ -456,10 +456,10 @@
 
         <p class="body-p plant-trio-note">To continue: one <strong>curiosity post</strong>, one <strong>helpful share</strong> (behind the scenes, honest note, or values), and one <strong>soft invite</strong>.</p>
 
-        <p class="plant-footnote">Ready-made drafts live under <button type="button" class="inline-link" data-goto="tend">Calendar → Post ideas</button>. Facts in <button type="button" class="inline-link" data-goto="know">Know Ringana</button>.</p>
+        <p class="plant-footnote">Ready-made drafts live under <button type="button" class="inline-link" data-goto="tend">Content → Post ideas</button>. Facts in <button type="button" class="inline-link" data-goto="know">Know Ringana</button>.</p>
 
         <div class="btn-row">
-          <button class="btn waiting" data-complete="plant" data-ready="Trio drafted → Open your calendar" data-wait="Draft a curiosity post, a helpful share, and a soft invite to continue">Draft a curiosity post, a helpful share, and a soft invite to continue</button>
+          <button class="btn waiting" data-complete="plant" data-ready="Trio drafted → Open Content" data-wait="Draft a curiosity post, a helpful share, and a soft invite to continue">Draft a curiosity post, a helpful share, and a soft invite to continue</button>
           <span class="save-flash" data-flash="plant">Saved ✓</span>
         </div>
       </section>
@@ -467,30 +467,40 @@
       <!-- 06 TEND = CONTENT CALENDAR -->
       <section class="panel" id="panel-tend" data-modes="starter full">
         <div class="sec-num" id="tendNum">06</div>
-        <h1>Calendar</h1>
-        <p class="sec-sub">Plan posts, reach-outs, and follow-ups. Tap a card to edit — nothing auto-posts.</p>
+        <h1>Content</h1>
+        <p class="sec-sub">Your calendar, ready drafts, and photos — plan it here, post it yourself. Nothing auto-sends.</p>
 
         <div class="cal-board">
-          <div class="cal-board-top">
-            <div class="cal-toolbar">
-              <div class="cal-view-toggle" id="calendarViewToggle" role="tablist" aria-label="Calendar view">
-                <button type="button" class="cal-view-btn on" data-cal-view="week" role="tab" aria-selected="true">Week</button>
-                <button type="button" class="cal-view-btn" data-cal-view="month" role="tab" aria-selected="false">Month</button>
-              </div>
-              <div class="calendar-week-nav" id="calendarWeekNav"></div>
-            </div>
-            <p class="calendar-stats" id="calendarStats"></p>
-          </div>
-
           <div class="cal-setup" id="calendarSetup" hidden></div>
           <div class="cal-phase" id="calendarPhases"></div>
-          <div id="calendarGrid" class="cal-grid cal-grid-week"></div>
+
+          <div class="cal-board-head">
+            <h2 class="cal-board-title">Calendar</h2>
+            <div class="cal-board-meta">
+              <span class="cal-dated" id="calendarDated">0 dated</span>
+              <div class="cal-view-toggle" id="calendarViewToggle" role="tablist" aria-label="Calendar view">
+                <button type="button" class="cal-view-btn" data-cal-view="week" role="tab" aria-selected="false">Week</button>
+                <button type="button" class="cal-view-btn on" data-cal-view="month" role="tab" aria-selected="true">Month</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="calendar-week-nav" id="calendarWeekNav"></div>
+          <div id="calendarGrid" class="cal-grid cal-grid-month"></div>
+          <div class="cal-day-detail" id="calendarDayDetail"></div>
         </div>
+
+        <button type="button" class="curio-photos-cta" data-goto="curiosity-photos">
+          <span class="curio-photos-cta-eyebrow">Photos</span>
+          <span class="curio-photos-cta-title">Grab a photo</span>
+          <span class="curio-photos-cta-sub">Circle previews for curiosity posts — tap to open, press and hold to save.</span>
+          <span class="curio-photos-cta-go">Open photos →</span>
+        </button>
 
         <div class="cal-library" id="calendarLibrary">
           <div class="cal-library-head">
             <h2 class="cal-library-title">Post ideas</h2>
-            <p class="cal-library-intro">Ready-to-adapt drafts and curiosity photos. Tap a day above, open an idea or photo, rewrite it in your voice, then add it to that day. Nothing posts itself.</p>
+            <p class="cal-library-intro">Ready-to-adapt drafts. Tap a day on the calendar above, open an idea, rewrite it in your voice, then add it to that day.</p>
             <div class="cal-library-target" id="libraryTarget" hidden></div>
           </div>
           <div class="cal-library-tabs" id="libraryTabs"></div>
@@ -498,7 +508,7 @@
         </div>
 
         <div class="btn-row">
-          <button class="btn waiting" data-complete="tend" data-ready="Calendar humming → Finish runway" data-wait="Mark 3 cards done to continue">Mark 3 cards done to continue</button>
+          <button class="btn waiting" data-complete="tend" data-ready="Content humming → Finish runway" data-wait="Mark 3 cards done to continue">Mark 3 cards done to continue</button>
           <span class="save-flash" data-flash="tend">Saved ✓</span>
         </div>
       </section>
@@ -612,7 +622,7 @@
         <details class="know-acc" id="know-product" data-know-sec="product">
           <summary class="know-acc-sum">What makes the products different <span class="know-acc-chev" aria-hidden="true"></span></summary>
           <div class="know-acc-body">
-            <p class="body-p">It's not one slogan — it's a stack of intentional decisions. Ready-to-adapt posts live in Calendar → Post ideas (and Post Studio on Full runway).</p>
+            <p class="body-p">It's not one slogan — it's a stack of intentional decisions. Ready-to-adapt posts live in Content → Post ideas (and Post Studio on Full runway).</p>
             <div id="productKnowList" class="fact-grid"></div>
           </div>
         </details>
@@ -653,6 +663,26 @@
           <!-- rendered by app.js -->
         </div>
       </section>
+
+      <!-- CURIOSITY PHOTOS -->
+      <section class="panel" id="panel-curiosity-photos">
+        <div class="curio-photos" id="curiosityPhotosRoot">
+          <!-- rendered by bridge-ui.js -->
+        </div>
+      </section>
+
+      <div class="curio-lightbox" id="curiosityLightbox" hidden>
+        <button type="button" class="curio-lightbox-backdrop" id="curiosityLightboxClose" aria-label="Close photo"></button>
+        <div class="curio-lightbox-panel" role="dialog" aria-modal="true" aria-labelledby="curiosityLightboxTitle">
+          <div class="curio-lightbox-head">
+            <h2 id="curiosityLightboxTitle">Photo</h2>
+            <button type="button" class="curio-lightbox-x" id="curiosityLightboxX" aria-label="Close">×</button>
+          </div>
+          <p class="curio-lightbox-hint">Press and hold the photo to save it to your camera roll.</p>
+          <img class="curio-lightbox-img" id="curiosityLightboxImg" alt="">
+          <p class="curio-lightbox-pairs" id="curiosityLightboxPairs" hidden></p>
+        </div>
+      </div>
 
       <!-- CALENDAR stub (routes to panel-tend) -->
       <section class="panel" id="panel-calendar" hidden aria-hidden="true"></section>
@@ -832,6 +862,20 @@
     </div>
 
     <div class="onboarding-pane" data-onboard-step="4">
+      <p class="onboarding-eyebrow" id="obInstallEyebrow">Keep it handy</p>
+      <h3 id="obInstallTitle">Save First Seeds on your phone</h3>
+      <p class="lead" id="obInstallLead">It opens like an app from your home screen — no App Store needed. Which are you on?</p>
+      <div class="onboard-install-choices" id="onboardInstallChoices" role="group" aria-label="Your device">
+        <button type="button" class="onboard-install-choice" data-install-platform="ios">iPhone / iPad</button>
+        <button type="button" class="onboard-install-choice" data-install-platform="android">Android</button>
+        <button type="button" class="onboard-install-choice" data-install-platform="desktop">Computer</button>
+      </div>
+      <div class="onboard-install-guide" id="onboardInstallGuide" hidden></div>
+      <button type="button" class="btn overlay-btn" id="onboardingInstallNext" disabled>Got it — continue →</button>
+      <button type="button" class="btn-ghost overlay-btn" id="onboardingInstallSkip" style="margin-top:8px">Skip for now</button>
+    </div>
+
+    <div class="onboarding-pane" data-onboard-step="5">
       <p class="onboarding-eyebrow" id="obModeEyebrow">Your runway</p>
       <h3 id="obModeTitle">How deep do you want to go?</h3>
       <p class="lead" id="obModeLead"></p>
@@ -891,7 +935,8 @@
 
 <!-- ═══ MINI TOUR ═══ -->
 <div class="overlay tour" id="tour" role="dialog" aria-modal="true" aria-labelledby="tourTitle">
-  <div class="overlay-card tour-card">
+  <div class="tour-spotlight" id="tourSpotlight" hidden aria-hidden="true"></div>
+  <div class="overlay-card tour-card" id="tourCard">
     <div class="onboarding-dots" id="tourDots" aria-hidden="true"></div>
     <h3 id="tourTitle"></h3>
     <p class="lead" id="tourBody"></p>
@@ -900,17 +945,17 @@
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="js/config.js?v=77"></script>
-<script src="js/supabase-config.js?v=77"></script>
-<script src="js/data.js?v=77"></script>
-<script src="js/content.js?v=77"></script>
-<script src="js/products.js?v=77"></script>
-<script src="js/plant.js?v=77"></script>
-<script src="js/tree.js?v=77"></script>
-<script src="js/calendar.js?v=77"></script>
-<script src="js/cloud.js?v=77"></script>
-<script src="js/bridge-ui.js?v=77"></script>
-<script src="js/app.js?v=77"></script>
-<script src="js/pwa.js?v=77"></script>
+<script src="js/config.js?v=82"></script>
+<script src="js/supabase-config.js?v=82"></script>
+<script src="js/data.js?v=82"></script>
+<script src="js/content.js?v=82"></script>
+<script src="js/products.js?v=82"></script>
+<script src="js/plant.js?v=82"></script>
+<script src="js/tree.js?v=82"></script>
+<script src="js/calendar.js?v=82"></script>
+<script src="js/cloud.js?v=82"></script>
+<script src="js/bridge-ui.js?v=82"></script>
+<script src="js/app.js?v=82"></script>
+<script src="js/pwa.js?v=82"></script>
 </body>
 </html>

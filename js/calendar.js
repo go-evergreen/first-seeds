@@ -393,26 +393,6 @@ window.FS = window.FS || {};
     var C = window.FS.CONTENT || {};
     var buckets = [];
     buckets.push({
-      id: "photos",
-      title: "Photos",
-      hint: "Curiosity photos — tap to preview full size, tweak a caption, then add to a day. Thumbs stay light; full images load only when you open one.",
-      items: (C.curiosityImages || []).map(function (it) {
-        var resolved = resolveCuriosityImage(it.id);
-        return {
-          id: "photo-" + it.id,
-          type: "open_loop",
-          title: it.title,
-          body: it.body || "",
-          icon: "📷",
-          imageId: it.id,
-          image: resolved ? resolved.src : "",
-          thumb: resolved ? resolved.thumb : "",
-          alt: it.alt || it.title,
-          pairsWith: it.pairsWith || ""
-        };
-      })
-    });
-    buckets.push({
       id: "hooks",
       title: "Curiosity posts",
       hint: "Short unfinished stories that stop the scroll — drop one on a day, then rewrite it in your voice.",

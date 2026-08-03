@@ -109,6 +109,12 @@ window.FS.CONFIG = {
     authSkip: "Continue without signing in",
     authHint: "New here? Tap Create account. Already have one? Sign in with the same email.",
 
+    installEyebrow: "Keep it handy",
+    installTitle: "Save First Seeds on your phone",
+    installLead: "It opens like an app from your home screen — no App Store needed. Which are you on?",
+    installCta: "Got it — continue →",
+    installSkip: "Skip for now",
+
     modeEyebrow: "Your path",
     modeTitle: "How much do you want on your plate?",
     modeLead: "No wrong answer. Start light or go all in — you can switch anytime in Settings."
@@ -117,15 +123,24 @@ window.FS.CONFIG = {
   tour: [
     {
       title: "Sprout is your home base",
-      body: "You'll see a little plant and a Growth % here. Answer the three Roots questions and it starts growing — every real step you finish helps it along. No pressure to finish everything today."
+      body: "You'll see a little plant and a Growth % here. Answer the three Roots questions and it starts growing — every real step you finish helps it along. No pressure to finish everything today.",
+      panel: "welcome",
+      target: ".home-plant-zone",
+      placement: "below"
     },
     {
       title: "Checklists are your map",
-      body: "Each section has a short list of real prep steps. Clear a box, watch the plant catch up. Visiting a page doesn't count — finishing a step does."
+      body: "Each section has a short list of real prep steps. Clear a box, watch the plant catch up. Visiting a page doesn't count — finishing a step does.",
+      panel: "welcome",
+      target: ".home-runway",
+      placement: "above"
     },
     {
       title: "When someone asks, open Know",
-      body: "Launch dates, what makes Ringana different, and the U.S. snapshot live under Know in the bottom bar. Clear facts first — so you never have to bluff."
+      body: "Launch dates, what makes Ringana different, and the U.S. snapshot live under Know in the bottom bar. Clear facts first — so you never have to bluff.",
+      panel: "welcome",
+      target: '#bottomNav [data-tab="know"]',
+      placement: "above"
     }
   ],
 

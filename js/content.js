@@ -55,7 +55,7 @@ window.FS.CONTENT = {
   ],
 
   /* ── Curiosity posts — short unfinished stories / scroll-stoppers ── */
-  /* ── Curiosity photos (Post ideas → Photos) ──
+  /* ── Curiosity photos (Grab a photo CTA on Content) ──
      full/ + thumbs/ under assets/curiosity/. Lazy-loaded; not precached. */
   curiosityImages: [
     {
