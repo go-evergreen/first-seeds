@@ -1390,9 +1390,16 @@
       var Cal = window.FS.Calendar;
       var posted = Cal && Cal.countPosted ? Cal.countPosted(state.data.calendar || {}) : 0;
       var drafted = Cal && Cal.countDrafted ? Cal.countDrafted(state.data.calendar || {}) : 0;
+      var started = drafted + posted;
       return [
-        { done: drafted >= 1 || posted >= 1, label: "Draft or mark a card Done (" + (drafted + posted) + ")" },
-        { done: posted >= 3, label: "Mark 3 cards Done (" + posted + "/3)" }
+        {
+          done: started >= 1,
+          label: "Start one calendar card — add from the vault or ＋ Add, then save a draft"
+        },
+        {
+          done: posted >= 3,
+          label: "Mark 3 cards Done after you post them (" + posted + "/3)"
+        }
       ];
     }
     return [];
@@ -2942,6 +2949,21 @@
     card.style.bottom = "auto";
   }
 
+  function scrollTourTargetIntoView(el) {
+    if (!el) return;
+    /* Tour sets body.overlay-open { overflow:hidden }, which blocks scrollIntoView —
+       briefly lift the lock so cheer/note (and other below-fold targets) can move onscreen.
+       Use instant scroll — smooth can get cancelled when overflow locks again. */
+    var locked = document.body.classList.contains("overlay-open");
+    if (locked) document.body.classList.remove("overlay-open");
+    try {
+      el.scrollIntoView({ block: "center", inline: "nearest", behavior: "auto" });
+    } catch (err) {
+      try { el.scrollIntoView(true); } catch (err2) { /* ignore */ }
+    }
+    if (locked) document.body.classList.add("overlay-open");
+  }
+
   function scheduleTourPlacement(tip) {
     clearTimeout(tourPlaceTimer);
     clearTourHighlight();
@@ -2953,16 +2975,14 @@
       }
       tourTargetEl = el;
       el.classList.add("tour-target-on");
-      try {
-        el.scrollIntoView({ block: "nearest", inline: "nearest", behavior: "smooth" });
-      } catch (err) {
-        el.scrollIntoView(true);
-      }
+      scrollTourTargetIntoView(el);
       placeTourChrome(el, tip.placement);
-      /* Second pass after scroll/layout settles */
+      /* Second pass after layout settles (fonts, nested overflow, bottom nav) */
       tourPlaceTimer = setTimeout(function () {
-        if (tourTargetEl) placeTourChrome(tourTargetEl, tip.placement);
-      }, 320);
+        if (!tourTargetEl) return;
+        scrollTourTargetIntoView(tourTargetEl);
+        placeTourChrome(tourTargetEl, tip.placement);
+      }, 280);
     };
     requestAnimationFrame(function () {
       requestAnimationFrame(tryPlace);
@@ -3034,7 +3054,7 @@
     var next = document.getElementById("tourNext");
     if (next) {
       if (tourKind === "team") {
-        next.textContent = tourIdx >= tips.length - 1 ? "Got it — let's coach →" : "Next";
+        next.textContent = tourIdx >= tips.length - 1 ? "Got it — let's mentor →" : "Next";
       } else {
         next.textContent = tourIdx >= tips.length - 1 ? "Start planting →" : "Next";
       }

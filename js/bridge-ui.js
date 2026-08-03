@@ -221,7 +221,7 @@ window.FS = window.FS || {};
     }
     var now = new Date();
     var buckets = { nudge: [], motion: [], ready: [] };
-    var coachMarked = false;
+    var mentorMarked = false;
     rows.forEach(function (row) {
       var ctx = progressCtx(row, cfg);
       var under = underById[row.profile.id] || 0;
@@ -245,8 +245,8 @@ window.FS = window.FS || {};
         var ctx = item.ctx;
         var modeLabel = p.hub_mode === "starter" ? "Getting started" : (p.hub_mode === "full" ? "Full runway" : "—");
         var pct = Math.round((ctx.sectionsDone / Math.max(1, ctx.sectionTotal)) * 100);
-        var isCoachDemo = !coachMarked;
-        coachMarked = true;
+        var isMentorDemo = !mentorMarked;
+        mentorMarked = true;
         html += '<div class="leader-card" data-partner="' + esc(p.id) + '">';
         html += '<div class="leader-card-head">';
         html += '<div class="leader-card-name">' + esc(p.display_name || p.email) + '</div>';
@@ -258,7 +258,7 @@ window.FS = window.FS || {};
           (ctx.daysSinceActive === 0 ? "today" : ctx.daysSinceActive + "d ago") + '</div>';
         html += '<div class="leader-progress-row"><div class="leader-progress" aria-hidden="true"><span style="width:' +
           pct + '%"></span></div><span class="leader-progress-label">' + ctx.sectionsDone + '/' + ctx.sectionTotal + '</span></div>';
-        html += '<div class="leader-card-nudge"' + (isCoachDemo ? ' data-team-tour="nudge"' : "") + '>';
+        html += '<div class="leader-card-nudge"' + (isMentorDemo ? ' data-team-tour="nudge"' : "") + '>';
         html += '<em>' + esc(item.nudge.when) + '</em>';
         html += '<div id="nudge_' + esc(p.id) + '">' + esc(item.nudge.body) + '</div>';
         html += '<button type="button" class="leader-nudge-copy" data-copy-nudge="' + esc(p.id) + '">Copy nudge</button>';
@@ -269,11 +269,11 @@ window.FS = window.FS || {};
             html += '<div class="leader-ping">Pinged you ' + (pingAge === 0 ? "today" : pingAge + "d ago") + '</div>';
           }
         }
-        html += '<div class="leader-card-actions"' + (isCoachDemo ? ' data-team-tour="coach"' : "") + '>';
+        html += '<div class="leader-card-actions"' + (isMentorDemo ? ' data-team-tour="mentor"' : "") + '>';
         html += '<button type="button" class="btn-ghost leader-action-btn" data-cheer="' + esc(p.id) + '"' +
-          (isCoachDemo ? ' data-team-tour="cheer"' : "") + '>Send cheer</button>';
+          (isMentorDemo ? ' data-team-tour="cheer"' : "") + '>Send cheer</button>';
         html += '<button type="button" class="btn-ghost leader-action-btn" data-note="' + esc(p.id) + '"' +
-          (isCoachDemo ? ' data-team-tour="note"' : "") + '>Leave note</button>';
+          (isMentorDemo ? ' data-team-tour="note"' : "") + '>Leave note</button>';
         html += '</div></div>';
       });
       html += '</div>';
@@ -285,7 +285,7 @@ window.FS = window.FS || {};
       col("ready", "Ready / blooming", buckets.ready);
     var colCount = (buckets.nudge.length ? 1 : 0) + (buckets.motion.length ? 1 : 0) + (buckets.ready.length ? 1 : 0);
     root.className = "leader-board cols-" + Math.max(1, colCount);
-    root.innerHTML = '<div class="leader-board-kicker">COACHING</div>' + (colsHtml || '<p class="leader-empty">Everyone\'s settled for now.</p>');
+    root.innerHTML = '<div class="leader-board-kicker">MENTORING</div>' + (colsHtml || '<p class="leader-empty">Everyone\'s settled for now.</p>');
     await renderLiveTeamGraph(graph, rows);
     if (typeof window.FS.maybeStartTeamTour === "function") {
       window.FS.maybeStartTeamTour(rows.length);

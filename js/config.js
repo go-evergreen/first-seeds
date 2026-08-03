@@ -254,7 +254,7 @@ window.FS.CONFIG = {
   ],
 
   /* Coachmarks the first time someone appears on Team */
-  teamTourVersion: 2,
+  teamTourVersion: 3,
   teamTour: [
     {
       title: "Someone joined your team",
@@ -271,7 +271,7 @@ window.FS.CONFIG = {
       placement: "below"
     },
     {
-      title: "Coach by how they're moving",
+      title: "Mentor by how they're moving",
       body: "Needs a nudge · In motion · Ready — based on real First Seeds progress, not just that they downloaded the app.",
       panel: "leader",
       target: '[data-team-tour="board"]',
