@@ -420,8 +420,18 @@ window.FS = window.FS || {};
 
     function col(kind, title, items) {
       if (!items.length) return "";
-      var html = '<div class="leader-col is-' + kind + '"><div class="leader-col-title">' + esc(title) +
-        ' <span>' + items.length + '</span></div>';
+      var stCol = getState ? getState() : null;
+      if (stCol && !stCol.data.leaderColOpen) stCol.data.leaderColOpen = {};
+      if (stCol && !stCol.data.leaderCardOpen) stCol.data.leaderCardOpen = {};
+      /* Sections default open; remember if user collapses one */
+      var colOpen = !(stCol && stCol.data.leaderColOpen[kind] === false);
+      var html = '<details class="leader-col is-' + kind + '"' + (colOpen ? " open" : "") + ' data-leader-col="' + kind + '">';
+      html += '<summary class="leader-col-title">';
+      html += '<span class="leader-col-title-main">' + esc(title) + '</span>';
+      html += '<span class="leader-col-count">' + items.length + "</span>";
+      html += '<span class="leader-col-chev" aria-hidden="true"></span>';
+      html += "</summary>";
+      html += '<div class="leader-col-body">';
       items.forEach(function (item) {
         var p = item.row.profile;
         var ctx = item.ctx;
@@ -429,17 +439,23 @@ window.FS = window.FS || {};
         var pct = Math.round((ctx.sectionsDone / Math.max(1, ctx.sectionTotal)) * 100);
         var isMentorDemo = !mentorMarked;
         mentorMarked = true;
-        html += '<div class="leader-card" data-partner="' + esc(p.id) + '">';
+        var cardOpen = isMentorDemo || !!(stCol && stCol.data.leaderCardOpen[p.id]);
+        html += '<details class="leader-card" data-partner="' + esc(p.id) + '" data-leader-card="' + esc(p.id) + '"' +
+          (cardOpen ? " open" : "") + ">";
+        html += '<summary class="leader-card-sum">';
         html += '<div class="leader-card-head">';
         html += '<div class="leader-card-name">' + esc(p.display_name || p.email) + '</div>';
         if (item.under > 0) {
           html += '<span class="leader-under-chip">' + item.under + " under</span>";
         }
+        html += '<span class="leader-card-chev" aria-hidden="true"></span>';
         html += "</div>";
         html += '<div class="leader-card-meta">' + esc(modeLabel) + ' · last active ' +
           (ctx.daysSinceActive === 0 ? "today" : ctx.daysSinceActive + "d ago") + '</div>';
         html += '<div class="leader-progress-row"><div class="leader-progress" aria-hidden="true"><span style="width:' +
           pct + '%"></span></div><span class="leader-progress-label">' + ctx.sectionsDone + '/' + ctx.sectionTotal + '</span></div>';
+        html += "</summary>";
+        html += '<div class="leader-card-body">';
         var msg = item.nudge || {};
         var copyLabel = item.bucket === "nudge" ? "Copy nudge" : "Copy message";
         html += '<div class="leader-card-nudge' + (item.bucket === "nudge" ? " is-nudge-tone" : " is-support-tone") + '"' + (isMentorDemo ? ' data-team-tour="nudge"' : "") + '>';
@@ -459,9 +475,9 @@ window.FS = window.FS || {};
           (isMentorDemo ? ' data-team-tour="cheer"' : "") + '>Send cheer</button>';
         html += '<button type="button" class="btn-ghost leader-action-btn" data-note="' + esc(p.id) + '"' +
           (isMentorDemo ? ' data-team-tour="note"' : "") + '>Leave note</button>';
-        html += '</div></div>';
+        html += '</div></div></details>';
       });
-      html += '</div>';
+      html += "</div></details>";
       return html;
     }
     var colsHtml =
@@ -969,7 +985,7 @@ window.FS = window.FS || {};
     html += '<button type="button" class="live-team-sort-btn' + (sortMode === "legs" ? " on" : "") + '" data-team-sort="legs">Most legs</button>';
     html += '<button type="button" class="live-team-sort-btn' + (sortMode === "newest" ? " on" : "") + '" data-team-sort="newest">Newest</button>';
     html += "</div></div>";
-    html += '<p class="live-team-lead">Your people, growing together. Tap a person for details — expand a row to see who they’ve brought in.</p>';
+    html += '<p class="live-team-lead">Tap a name for their details. Expand a row to see who they’ve brought in.</p>';
     html += '<div class="live-team-stats is-compact">';
     html += '<div class="live-stat"><strong>' + l1 + '</strong><span>Level 1</span></div>';
     html += '<div class="live-stat"><strong>' + total + '</strong><span>on tree</span></div>';
@@ -1996,6 +2012,24 @@ window.FS = window.FS || {};
         if (sb) sb.click();
       }
     });
+    document.addEventListener("toggle", function (e) {
+      var t = e.target;
+      if (!t || t.tagName !== "DETAILS" || !getState) return;
+      var st = getState();
+      if (!st || !st.data) return;
+      if (t.hasAttribute("data-leader-col")) {
+        if (!st.data.leaderColOpen) st.data.leaderColOpen = {};
+        st.data.leaderColOpen[t.getAttribute("data-leader-col")] = !!t.open;
+        persist();
+        return;
+      }
+      if (t.hasAttribute("data-leader-card")) {
+        if (!st.data.leaderCardOpen) st.data.leaderCardOpen = {};
+        st.data.leaderCardOpen[t.getAttribute("data-leader-card")] = !!t.open;
+        persist();
+      }
+    }, true);
+
     document.addEventListener("input", function (e) {
       var t = e.target;
       if (!t) return;
