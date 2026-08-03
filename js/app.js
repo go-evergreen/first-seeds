@@ -1851,11 +1851,15 @@
     if (state.active === "curiosity-photos" && window.FS.BridgeUI && window.FS.BridgeUI.renderCuriosityPhotos) {
       window.FS.BridgeUI.renderCuriosityPhotos();
     }
+    if (state.active === "content-stories") {
+      if (!state.data.vaultBrowse) state.data.vaultBrowse = {};
+      if (!state.data.vaultBrowse.vault) state.data.vaultBrowse.vault = { q: "", format: "", promoting: "", lane: "all" };
+      state.data.vaultBrowse.vault.format = "story";
+      state.active = "content-vault";
+      save();
+    }
     if (state.active === "content-vault" && window.FS.BridgeUI && window.FS.BridgeUI.renderContentVault) {
       window.FS.BridgeUI.renderContentVault();
-    }
-    if (state.active === "content-stories" && window.FS.BridgeUI && window.FS.BridgeUI.renderContentStories) {
-      window.FS.BridgeUI.renderContentStories();
     }
     if (state.active === "content-week" && window.FS.BridgeUI && window.FS.BridgeUI.renderContentWeek) {
       window.FS.BridgeUI.renderContentWeek();
@@ -3152,7 +3156,17 @@
         save(); renderNav(); renderPanels();
         return;
       }
-      if (goto === "content-vault" || goto === "content-stories" || goto === "content-week") {
+      if (goto === "content-stories") {
+        hideLockToast();
+        closeHubMenu();
+        if (!state.data.vaultBrowse) state.data.vaultBrowse = {};
+        if (!state.data.vaultBrowse.vault) state.data.vaultBrowse.vault = { q: "", format: "", promoting: "", lane: "all" };
+        state.data.vaultBrowse.vault.format = "story";
+        state.active = "content-vault";
+        save(); renderNav(); renderPanels();
+        return;
+      }
+      if (goto === "content-vault" || goto === "content-week") {
         hideLockToast();
         closeHubMenu();
         state.active = goto;
@@ -3374,6 +3388,10 @@
   /* ── init ────────────────────────────────────────────── */
   window.FS.onCalendarChange = function () {
     var beforeSprout = lastSprout;
+    if (canComplete("tend") && !state.done.tend) {
+      state.done.tend = true;
+      save();
+    }
     refreshButtons();
     renderModuleChecklists();
     renderTodayCard();
@@ -3454,7 +3472,13 @@
         if (id === "leads" && usesCustomLanding()) {
           id = "ground";
         }
-        if (id === "curiosity-photos" || id === "products" || id === "talk" || id === "tend" || id === "know" || id === "content-vault" || id === "content-stories" || id === "content-week") {
+        if (id === "content-stories") {
+          if (!state.data.vaultBrowse) state.data.vaultBrowse = {};
+          if (!state.data.vaultBrowse.vault) state.data.vaultBrowse.vault = { q: "", format: "", promoting: "", lane: "all" };
+          state.data.vaultBrowse.vault.format = "story";
+          id = "content-vault";
+        }
+        if (id === "curiosity-photos" || id === "products" || id === "talk" || id === "tend" || id === "know" || id === "content-vault" || id === "content-week") {
           hideLockToast();
           state.active = id;
           save();

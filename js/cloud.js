@@ -428,6 +428,17 @@ window.FS = window.FS || {};
           });
         });
         out.sort(function (a, b) {
+          function under(n) {
+            var c = 0;
+            (n.children || []).forEach(function walk(x) {
+              c += 1;
+              (x.children || []).forEach(walk);
+            });
+            return c;
+          }
+          var ub = under(b);
+          var ua = under(a);
+          if (ub !== ua) return ub - ua;
           return String(b.last_active_at || "").localeCompare(String(a.last_active_at || ""));
         });
         return out;

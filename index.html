@@ -20,7 +20,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,400;1,9..144,500&family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/styles.css?v=89">
+<link rel="stylesheet" href="css/styles.css?v=91">
 </head>
 <body>
 
@@ -468,12 +468,9 @@
       <section class="panel" id="panel-tend" data-modes="full">
         <div class="sec-num" id="tendNum">06</div>
         <h1>Content</h1>
-        <p class="sec-sub">Your calendar plus suggested posts, stories, and photos — plan it here, post it yourself. Nothing auto-sends.</p>
+        <p class="sec-sub">Your calendar plus a post vault and photos — plan here, post yourself. Nothing auto-sends.</p>
 
         <div class="cal-board">
-          <div class="cal-setup" id="calendarSetup" hidden></div>
-          <div class="cal-phase" id="calendarPhases"></div>
-
           <div class="cal-board-head">
             <h2 class="cal-board-title">Calendar</h2>
             <div class="cal-board-meta">
@@ -493,22 +490,15 @@
         <button type="button" class="curio-photos-cta" data-goto="content-week">
           <span class="curio-photos-cta-eyebrow">Suggested</span>
           <span class="curio-photos-cta-title">This week's plan</span>
-          <span class="curio-photos-cta-sub">A calm rotation from the 8-week calendar — a few posts, not a fire hose.</span>
+          <span class="curio-photos-cta-sub">A calm rotation — tap any day to open the ready post.</span>
           <span class="curio-photos-cta-go">See this week →</span>
         </button>
 
         <button type="button" class="curio-photos-cta" data-goto="content-vault">
-          <span class="curio-photos-cta-eyebrow">Post vault</span>
-          <span class="curio-photos-cta-title">Feed posts &amp; captions</span>
-          <span class="curio-photos-cta-sub">Carousels, Reels, singles — browse by what you're promoting, then rewrite in your voice.</span>
+          <span class="curio-photos-cta-eyebrow">Content library</span>
+          <span class="curio-photos-cta-title">Post vault</span>
+          <span class="curio-photos-cta-sub">Reels, carousels, stories, and singles — browse by type, rewrite in your voice.</span>
           <span class="curio-photos-cta-go">Open vault →</span>
-        </button>
-
-        <button type="button" class="curio-photos-cta" data-goto="content-stories">
-          <span class="curio-photos-cta-eyebrow">Stories</span>
-          <span class="curio-photos-cta-title">Story sequences</span>
-          <span class="curio-photos-cta-sub">38 curiosity-first sequences — frame 1 is the whole hook.</span>
-          <span class="curio-photos-cta-go">Open stories →</span>
         </button>
 
         <button type="button" class="curio-photos-cta" data-goto="curiosity-photos">
@@ -517,11 +507,6 @@
           <span class="curio-photos-cta-sub">Circle previews — tap to open, press and hold to save.</span>
           <span class="curio-photos-cta-go">Open photos →</span>
         </button>
-
-        <div class="btn-row">
-          <button class="btn waiting" data-complete="tend" data-ready="Content humming → Finish runway" data-wait="Mark 3 cards done to continue">Mark 3 cards done to continue</button>
-          <span class="save-flash" data-flash="tend">Saved ✓</span>
-        </div>
       </section>
 
       <!-- CONTENT · THIS WEEK -->
@@ -529,14 +514,9 @@
         <div class="vault-panel" id="contentWeekRoot"></div>
       </section>
 
-      <!-- CONTENT · POST VAULT -->
+      <!-- CONTENT · POST VAULT (posts + stories) -->
       <section class="panel" id="panel-content-vault">
         <div class="vault-panel" id="contentVaultRoot"></div>
-      </section>
-
-      <!-- CONTENT · STORY SEQUENCES -->
-      <section class="panel" id="panel-content-stories">
-        <div class="vault-panel" id="contentStoriesRoot"></div>
       </section>
 
       <!-- Calendar card editor (slide-over) -->
@@ -807,7 +787,7 @@
       <section class="panel" id="panel-leader">
         <div class="eyebrow">GROWING WITH YOU</div>
         <h1>Your team</h1>
-        <p class="sec-sub">Who needs a check-in, who's moving, who's blooming — plus your join link and messages you can copy so you're not retyping the same thing forty times.</p>
+        <p class="sec-sub">See who's linked under you, their First Seeds progress (not just that they signed up), and who needs a check-in. Level 1 sorts by who has the most people beneath them.</p>
         <div class="invite-card">
           <div class="live-tag">TEAM JOIN LINK</div>
           <div class="invite-row">
@@ -992,18 +972,18 @@
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="js/config.js?v=89"></script>
-<script src="js/supabase-config.js?v=89"></script>
-<script src="js/data.js?v=89"></script>
-<script src="js/content.js?v=89"></script>
-<script src="js/content-vault.js?v=89"></script>
-<script src="js/products.js?v=89"></script>
-<script src="js/plant.js?v=89"></script>
-<script src="js/tree.js?v=89"></script>
-<script src="js/calendar.js?v=89"></script>
-<script src="js/cloud.js?v=89"></script>
-<script src="js/bridge-ui.js?v=89"></script>
-<script src="js/app.js?v=89"></script>
-<script src="js/pwa.js?v=89"></script>
+<script src="js/config.js?v=91"></script>
+<script src="js/supabase-config.js?v=91"></script>
+<script src="js/data.js?v=91"></script>
+<script src="js/content.js?v=91"></script>
+<script src="js/content-vault.js?v=91"></script>
+<script src="js/products.js?v=91"></script>
+<script src="js/plant.js?v=91"></script>
+<script src="js/tree.js?v=91"></script>
+<script src="js/calendar.js?v=91"></script>
+<script src="js/cloud.js?v=91"></script>
+<script src="js/bridge-ui.js?v=91"></script>
+<script src="js/app.js?v=91"></script>
+<script src="js/pwa.js?v=91"></script>
 </body>
 </html>

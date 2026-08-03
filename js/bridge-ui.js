@@ -197,22 +197,44 @@ window.FS = window.FS || {};
     var root = $("leaderLists");
     if (!root) return;
     if (!Cloud.isSignedIn()) {
-      root.innerHTML = '<p class="body-p">Sign in to see people who joined with your link.</p>';
+      root.innerHTML = '<p class="body-p">Sign in to see people who joined with your link — and their real First Seeds progress.</p>';
       return;
     }
     var cfg = window.FS.CONFIG;
     var rows = await Cloud.listDownline();
+    var graph = await Cloud.listTeamGraph();
+    var underById = {};
+    function countDesc(nodes) {
+      var n = 0;
+      (nodes || []).forEach(function (p) {
+        n += 1 + countDesc(p.children);
+      });
+      return n;
+    }
+    (graph.roots || []).forEach(function (p) {
+      underById[p.id] = countDesc(p.children);
+    });
     if (!rows.length) {
-      root.innerHTML = '<p class="body-p">Nobody\'s linked yet. Share your join link — when they sign in, they show up here.</p>';
+      root.innerHTML = '<p class="body-p">Nobody\'s linked yet. Share your join link — when they sign in, they show up here with live progress.</p>';
+      await renderLiveTeamGraph(graph, rows);
       return;
     }
     var now = new Date();
     var buckets = { nudge: [], motion: [], ready: [] };
     rows.forEach(function (row) {
       var ctx = progressCtx(row, cfg);
+      var under = underById[row.profile.id] || 0;
       var b = bucketFor(ctx);
-      buckets[b].push({ row: row, ctx: ctx, nudge: pickNudge(ctx) });
+      buckets[b].push({ row: row, ctx: ctx, nudge: pickNudge(ctx), under: under });
     });
+    function sortByUnder(a, b) {
+      if (b.under !== a.under) return b.under - a.under;
+      return String(b.row.profile.last_active_at || "").localeCompare(String(a.row.profile.last_active_at || ""));
+    }
+    buckets.nudge.sort(sortByUnder);
+    buckets.motion.sort(sortByUnder);
+    buckets.ready.sort(sortByUnder);
+
     function col(title, items, empty) {
       var html = '<div class="leader-col"><div class="leader-col-title">' + esc(title) +
         ' <span>' + items.length + '</span></div>';
@@ -223,11 +245,19 @@ window.FS = window.FS || {};
       items.forEach(function (item) {
         var p = item.row.profile;
         var ctx = item.ctx;
+        var modeLabel = p.hub_mode === "starter" ? "Getting started" : (p.hub_mode === "full" ? "Full runway" : "—");
         html += '<div class="leader-card" data-partner="' + esc(p.id) + '">';
+        html += '<div class="leader-card-head">';
         html += '<div class="leader-card-name">' + esc(p.display_name || p.email) + '</div>';
-        html += '<div class="leader-card-meta">' + esc(p.hub_mode || "—") + ' · ' +
-          ctx.sectionsDone + '/' + ctx.sectionTotal + ' sections · last active ' +
+        if (item.under > 0) {
+          html += '<span class="leader-under-chip">' + item.under + " under</span>";
+        }
+        html += "</div>";
+        html += '<div class="leader-card-meta">' + esc(modeLabel) + ' · ' +
+          ctx.sectionsDone + '/' + ctx.sectionTotal + ' sections done · last active ' +
           (ctx.daysSinceActive === 0 ? "today" : ctx.daysSinceActive + "d ago") + '</div>';
+        html += '<div class="leader-progress" aria-hidden="true"><span style="width:' +
+          Math.round((ctx.sectionsDone / Math.max(1, ctx.sectionTotal)) * 100) + '%"></span></div>';
         html += '<div class="leader-card-nudge"><em>' + esc(item.nudge.when) + '</em><div id="nudge_' +
           esc(p.id) + '">' + esc(item.nudge.body) + '</div></div>';
         if (item.row.progress && item.row.progress.notified_at) {
@@ -249,22 +279,48 @@ window.FS = window.FS || {};
       col("Needs a nudge", buckets.nudge, "Nobody stuck — nice.") +
       col("In motion", buckets.motion, "No active partners this week.") +
       col("Ready / blooming", buckets.ready, "No one finished yet — they're coming.");
-    await renderLiveTeamGraph();
+    await renderLiveTeamGraph(graph, rows);
   }
 
-  async function renderLiveTeamGraph() {
+  function sortNodesByUnder(nodes) {
+    function countDesc(list) {
+      var n = 0;
+      (list || []).forEach(function (p) { n += 1 + countDesc(p.children); });
+      return n;
+    }
+    function sortLevel(list) {
+      (list || []).forEach(function (p) {
+        if (p.children && p.children.length) sortLevel(p.children);
+      });
+      (list || []).sort(function (a, b) {
+        var ub = countDesc(b.children);
+        var ua = countDesc(a.children);
+        if (ub !== ua) return ub - ua;
+        return String(b.last_active_at || "").localeCompare(String(a.last_active_at || ""));
+      });
+    }
+    sortLevel(nodes);
+    return nodes;
+  }
+
+  async function renderLiveTeamGraph(graphPrefetch, downlineRows) {
     var el = $("liveTeamGraph");
     if (!el) return;
     if (!Cloud.isSignedIn()) {
       el.hidden = true;
       return;
     }
-    var graph = await Cloud.listTeamGraph();
-    var roots = graph.roots || [];
+    var graph = graphPrefetch || await Cloud.listTeamGraph();
+    var roots = sortNodesByUnder((graph.roots || []).slice());
     if (!roots.length) {
       el.hidden = true;
       return;
     }
+    var progressById = {};
+    (downlineRows || []).forEach(function (row) {
+      progressById[row.profile.id] = progressCtx(row, window.FS.CONFIG);
+    });
+
     function countAll(nodes) {
       var n = 0;
       (nodes || []).forEach(function (p) {
@@ -272,29 +328,65 @@ window.FS = window.FS || {};
       });
       return n;
     }
-    function renderBranch(nodes, depth) {
+    function renderKids(nodes, depth) {
       if (!nodes || !nodes.length) return "";
       var html = '<ul class="live-team-kids depth-' + depth + '">';
       nodes.forEach(function (p) {
         var under = countAll(p.children);
-        var icon = depth === 1 ? "🌳" : "🌱";
-        html += '<li>';
-        html += '<span class="live-team-name">' + icon + " " + esc(p.display_name || p.email) + "</span>";
-        if (under) html += ' <span class="live-team-count">' + under + " linked with them</span>";
-        html += renderBranch(p.children, depth + 1);
+        html += '<li class="live-team-node">';
+        html += '<div class="live-team-row">';
+        html += '<span class="live-team-dot" aria-hidden="true"></span>';
+        html += '<span class="live-team-name">' + esc(p.display_name || p.email) + "</span>";
+        if (under) html += '<span class="live-team-count">' + under + " under</span>";
+        html += "</div>";
+        html += renderKids(p.children, depth + 1);
         html += "</li>";
       });
       html += "</ul>";
       return html;
     }
-    el.hidden = false;
+
     var total = countAll(roots);
+    var l1 = roots.length;
+    el.hidden = false;
     var html = '<div class="live-tag">YOUR GROWING TEAM</div>';
-    html += '<p class="body-p" style="margin-top:6px">Up to four levels — the people who joined with your link, and the people <em>they</em> brought in. You still coach your front line day to day. This just lets you see the family forming.</p>';
-    html += '<div class="live-team">';
-    html += '<div class="live-team-you">🌿 You <span class="live-team-count">' + total + " on your tree</span></div>";
-    html += renderBranch(roots, 1);
+    html += '<p class="live-team-lead">Level 1 sorted by who has the most people under them. Tap a name to expand their branch — you still coach your front line day to day; this shows the family forming.</p>';
+    html += '<div class="live-team-stats">';
+    html += '<div class="live-stat"><strong>' + l1 + '</strong><span>Level 1</span></div>';
+    html += '<div class="live-stat"><strong>' + total + '</strong><span>on your tree</span></div>';
+    html += '<div class="live-stat"><strong>' + Math.min(4, graph.depth || 4) + '</strong><span>levels deep</span></div>';
     html += "</div>";
+    html += '<div class="live-team">';
+    html += '<div class="live-team-you"><span class="live-team-you-mark" aria-hidden="true">🌿</span> You</div>';
+    html += '<div class="live-l1-list">';
+      roots.forEach(function (p, idx) {
+      var under = countAll(p.children);
+      var ctx = progressById[p.id];
+      /* Keep top growers open so the layout reads immediately */
+      var shouldOpen = idx < 5;
+      html += '<details class="live-l1' + (under ? " has-kids" : "") + '"' + (shouldOpen ? " open" : "") + '>';
+      html += '<summary class="live-l1-sum">';
+      html += '<span class="live-l1-rank">' + (idx + 1) + "</span>";
+      html += '<span class="live-l1-main">';
+      html += '<span class="live-l1-name">' + esc(p.display_name || p.email) + "</span>";
+      if (ctx) {
+        html += '<span class="live-l1-meta">' + ctx.sectionsDone + "/" + ctx.sectionTotal + " sections · " +
+          (ctx.daysSinceActive === 0 ? "active today" : ctx.daysSinceActive + "d ago") + "</span>";
+      } else {
+        html += '<span class="live-l1-meta">Joined your link</span>';
+      }
+      html += "</span>";
+      html += '<span class="live-l1-under' + (under ? " on" : "") + '">' +
+        (under ? (under + " under") : "building") + "</span>";
+      html += "</summary>";
+      if (p.children && p.children.length) {
+        html += renderKids(p.children, 2);
+      } else {
+        html += '<p class="live-l1-empty">No one linked under them yet.</p>';
+      }
+      html += "</details>";
+    });
+    html += "</div></div>";
     el.innerHTML = html;
   }
 
@@ -435,8 +527,12 @@ window.FS = window.FS || {};
   }
 
   function chipClass(it) {
-    var cat = it.category || "content";
+    var fmt = (it.format || "").toLowerCase();
     var st = it.status || "todo";
+    if (fmt === "reel" || fmt === "carousel" || fmt === "story" || fmt === "single" || fmt === "facebook") {
+      return "cal-chip fmt-" + fmt + (st !== "todo" ? " is-" + st : "");
+    }
+    var cat = it.category || "content";
     return "cal-chip cat-" + cat + (st !== "todo" ? " is-" + st : "");
   }
 
@@ -446,7 +542,11 @@ window.FS = window.FS || {};
     (day.items || []).forEach(function (it) {
       if (shown >= 3) return;
       if (it.kind === "rest" || it.type === "reactive") return;
-      html += '<span class="cal-bar cat-' + esc(it.category || "content") +
+      var fmt = (it.format || "").toLowerCase();
+      var barClass = (fmt === "reel" || fmt === "carousel" || fmt === "story" || fmt === "single" || fmt === "facebook")
+        ? ("fmt-" + fmt)
+        : ("cat-" + (it.category || "content"));
+      html += '<span class="cal-bar ' + esc(barClass) +
         (it.status === "posted" ? " is-posted" : "") +
         (it.status === "skipped" ? " is-skipped" : "") + '"></span>';
       shown++;
@@ -466,11 +566,12 @@ window.FS = window.FS || {};
     var html = "";
     (day.items || []).forEach(function (it) {
       html += '<button type="button" class="' + chipClass(it) + '" data-cal-edit="' + day.date + '" data-cal-item="' + it.id + '">';
-      html += '<span class="cal-chip-ico">' + (it.icon || "·") + "</span>";
-      html += '<span class="cal-chip-txt">' + esc(it.person ? it.person : it.label) + "</span>";
+      if (it.format) html += '<span class="cal-chip-fmt">' + esc(formatLabel(it.format) || it.format) + "</span>";
+      else html += '<span class="cal-chip-ico">' + (it.icon || "·") + "</span>";
+      html += '<span class="cal-chip-txt">' + esc(it.person ? it.person : (it.title || it.label)) + "</span>";
       html += "</button>";
     });
-    if (!day.items.length && day.suggested) {
+    if (!(day.items || []).length && day.suggested) {
       html += '<button type="button" class="cal-chip ghost" data-cal-accept="' + day.date + '">';
       html += '<span class="cal-chip-ico">' + day.suggested.icon + "</span>";
       html += '<span class="cal-chip-txt">' + esc(day.suggested.label) + "</span>";
@@ -516,9 +617,7 @@ window.FS = window.FS || {};
 
   function renderCalendar() {
     var grid = $("calendarGrid");
-    var phaseEl = $("calendarPhases");
     var navEl = $("calendarWeekNav");
-    var setupEl = $("calendarSetup");
     var toggleEl = $("calendarViewToggle");
     var datedEl = $("calendarDated");
     if (!grid || !getState) return;
@@ -529,54 +628,9 @@ window.FS = window.FS || {};
     if (typeof state.data.calendarMonthOffset !== "number") state.data.calendarMonthOffset = 0;
     if (!state.data.calendarView) state.data.calendarView = "month";
     if (!state.data.libraryTab) state.data.libraryTab = "hooks";
-
-    var cadenceChosen = state.data.calendarCadence === true || state.data.calendarCadence === false;
-    if (typeof state.data.calendarSetupOpen !== "boolean") {
-      state.data.calendarSetupOpen = !cadenceChosen;
-    }
-    if (setupEl) {
-      var setupOpen = !!state.data.calendarSetupOpen;
-      var modeLabel = !cadenceChosen
-        ? "Not chosen yet"
-        : (cadenceEnabled(state) ? "Suggested month of post ideas" : "Building it yourself");
-      setupEl.hidden = false;
-      setupEl.innerHTML =
-        '<div class="cal-setup-bubble' + (setupOpen ? " is-open" : "") + '">' +
-        '<button type="button" class="cal-setup-toggle" data-cal-setup-toggle aria-expanded="' + (setupOpen ? "true" : "false") + '">' +
-        '<span><span class="cal-setup-toggle-label">How do you want to plan?</span>' +
-        '<span class="cal-setup-toggle-meta">' + esc(modeLabel) + "</span></span>" +
-        '<span class="cal-setup-chevron" aria-hidden="true">▼</span>' +
-        "</button>" +
-        (setupOpen
-          ? ('<div class="cal-setup-body">' +
-            (!cadenceChosen
-              ? ('<div class="cal-setup-actions">' +
-                '<button type="button" class="btn" data-cal-cadence="fill">Fill my month with post ideas</button>' +
-                '<button type="button" class="btn-ghost" data-cal-cadence="blank">Start blank — I\'ll build it</button>' +
-                "</div>" +
-                '<div class="cal-setup-hint">' +
-                "<p><strong>Suggested month</strong> lays out ~4 weeks of ideas on the calendar. Nothing posts itself — you edit, skip, or swap anytime.</p>" +
-                "<ol class=\"cal-setup-weeks\">" +
-                "<li><strong>Week 1</strong> — Curiosity posts + a soft invite</li>" +
-                "<li><strong>Week 2</strong> — Product moments + honest notes</li>" +
-                "<li><strong>Week 3</strong> — Values + reach out to people you listed</li>" +
-                "<li><strong>Week 4</strong> — Soft invite + follow-ups (with rest days mixed in)</li>" +
-                "</ol>" +
-                "<p>Or start blank and pull ready drafts from the <em>Post vault</em>.</p>" +
-                "</div>")
-              : ('<div class="cal-setup-bar">' +
-                '<span class="cal-setup-mode">' + (cadenceEnabled(state) ? "Suggested month is on" : "Blank calendar") + "</span>" +
-                '<button type="button" class="cal-setup-switch" data-cal-cadence="' + (cadenceEnabled(state) ? "blank" : "fill") + '">' +
-                (cadenceEnabled(state) ? "Switch to blank" : "Fill with post ideas") + "</button>" +
-                "</div>" +
-                '<p class="cal-setup-hint" style="margin-top:8px">' +
-                (cadenceEnabled(state)
-                  ? "Soft bars on empty days are suggestions — tap the day, then the chip below to keep it."
-                  : "Tap a day, then ＋ Add — or open This week / Post vault.") +
-                "</p>")) +
-            "</div>")
-          : "") +
-        "</div>";
+    /* Blank by default — no setup chrome; fill cadence only if they already opted in. */
+    if (state.data.calendarCadence !== true && state.data.calendarCadence !== false) {
+      state.data.calendarCadence = false;
     }
 
     var view = state.data.calendarView === "week" ? "week" : "month";
@@ -615,18 +669,6 @@ window.FS = window.FS || {};
         '<span class="cal-nav-label">' + esc(slice.label || "") + "</span>" +
         '<button type="button" class="cal-nav-btn" data-cal-nav="1" aria-label="Next">›</button>' +
         (off ? '<button type="button" class="cal-nav-today" data-cal-nav="0">Today</button>' : "");
-    }
-
-    if (phaseEl) {
-      var phaseDay = Cal.findDay(plan, selectedKey) || Cal.findDay(plan, todayKey) || visibleDays[0];
-      var ph = (phaseDay && phaseDay.phase) || { label: "", tip: "" };
-      phaseEl.innerHTML = ph.label
-        ? ('<div class="cal-phase-card">' +
-          '<div class="cal-phase-card-title"><span class="cal-phase-dot" aria-hidden="true"></span>' +
-          esc(ph.label) + "</div>" +
-          (ph.tip ? '<p class="cal-phase-card-tip">' + esc(ph.tip) + "</p>" : "") +
-          "</div>")
-        : "";
     }
 
     grid.className = "cal-grid " + (view === "month" ? "cal-grid-month" : "cal-grid-week");
@@ -1232,6 +1274,9 @@ window.FS = window.FS || {};
         if (t.hasAttribute("data-vault-promoting")) cur.promoting = t.value;
         st.data.vaultOverrides[id] = cur;
         persist();
+        var src = t.getAttribute("data-vault-source") || "vault";
+        if (src === "week") renderContentWeek();
+        else renderContentVault();
       }
     });
 
@@ -1242,7 +1287,7 @@ window.FS = window.FS || {};
         "[data-cal-day],[data-cal-select],[data-cal-status],[data-cal-swap],[data-cal-week],[data-cal-nav],[data-cal-view],[data-cal-add],[data-cal-clear]," +
         "[data-cal-new],[data-cal-edit],[data-cal-item],[data-cal-accept],[data-cal-cadence],[data-cal-setup-toggle],[data-cal-save],[data-cal-delete]," +
         "[data-lib-tab],[data-lib-open],[data-lib-commit],[data-lib-add],[data-curio-open]," +
-        "[data-vault-open],[data-vault-lane],[data-vault-week]," +
+        "[data-vault-open],[data-vault-lane],[data-vault-week],[data-vault-format-tab]," +
         "#curiosityLightboxClose,#curiosityLightboxX,#calSheetClose,#calSheetX," +
         "#leadsSignInBtn,#leadsCopyLink,#leadsPageSettingsBtn,#leadsPageSettingsSave,[data-leads-filter],[data-lead-status]"
       );
@@ -1250,6 +1295,13 @@ window.FS = window.FS || {};
 
       if (t.hasAttribute("data-vault-open")) {
         openVaultIdea(t.getAttribute("data-vault-open"));
+        return;
+      }
+      if (t.hasAttribute("data-vault-format-tab")) {
+        var vbFmt = ensureVaultBrowse("vault");
+        vbFmt.format = t.getAttribute("data-vault-format-tab") || "";
+        persist();
+        renderContentVault();
         return;
       }
       if (t.hasAttribute("data-vault-lane")) {
@@ -1719,7 +1771,7 @@ window.FS = window.FS || {};
     var st = getState();
     if (!st.data.vaultBrowse) st.data.vaultBrowse = {};
     if (!st.data.vaultBrowse[kind]) {
-      st.data.vaultBrowse[kind] = { q: "", format: "", promoting: "", lane: kind === "stories" ? "stories" : "all" };
+      st.data.vaultBrowse[kind] = { q: "", format: "", promoting: "", lane: "all" };
     }
     return st.data.vaultBrowse[kind];
   }
@@ -1732,12 +1784,34 @@ window.FS = window.FS || {};
     return null;
   }
 
+  function allVaultItems() {
+    var V = vaultMeta();
+    return (V.posts || []).concat(V.stories || []);
+  }
+
+  function formatChipHtml(formatId) {
+    var id = (formatId || "").toLowerCase() || "single";
+    var label = formatLabel(id) || id;
+    return '<span class="fmt-chip fmt-' + esc(id) + '">' + esc(label) + "</span>";
+  }
+
+  function promotingChipHtml(promotingId) {
+    if (!promotingId) return "";
+    var label = promotingLabel(promotingId) || promotingId;
+    return '<span class="promo-chip promo-' + esc(promotingId) + '">' + esc(label) + "</span>";
+  }
+
   function vaultCardHtml(post, source) {
+    var st = getState();
+    var ov = (st && st.data.vaultOverrides && st.data.vaultOverrides[post.id]) || {};
+    var format = ov.format || post.format || "";
+    var promoting = ov.promoting || post.promoting || "";
     var needs = (post.verify || []).some(function (v) { return v.status === "needs_check"; });
-    var html = '<article class="vault-card">';
+    var fmtClass = "fmt-" + (format || "single");
+    var html = '<article class="vault-card ' + fmtClass + '">';
     html += '<button type="button" class="vault-card-main" data-vault-open="' + esc(post.id) + '" data-vault-source="' + esc(source) + '">';
     html += '<div class="vault-card-top">';
-    html += '<span class="vault-card-id">' + esc(post.id) + "</span>";
+    html += '<div class="vault-card-chips">' + formatChipHtml(format) + promotingChipHtml(promoting) + "</div>";
     if (needs) html += '<span class="vault-verify-chip">Check facts</span>';
     html += "</div>";
     html += '<h3 class="vault-card-title">' + esc(post.title) + "</h3>";
@@ -1746,9 +1820,9 @@ window.FS = window.FS || {};
     html += "</button>";
     html += '<div class="vault-card-meta">';
     html += '<label class="vault-mini-field"><span>Type</span><select class="cal-select vault-inline-select" data-vault-format="' + esc(post.id) + '" data-vault-source="' + esc(source) + '">' +
-      renderFormatOptions(post.format || "") + "</select></label>";
+      renderFormatOptions(format) + "</select></label>";
     html += '<label class="vault-mini-field"><span>Promoting</span><select class="cal-select vault-inline-select" data-vault-promoting="' + esc(post.id) + '" data-vault-source="' + esc(source) + '">' +
-      renderPromotingOptions(post.promoting || "") + "</select></label>";
+      renderPromotingOptions(promoting) + "</select></label>";
     html += "</div></article>";
     return html;
   }
@@ -1758,8 +1832,12 @@ window.FS = window.FS || {};
     return (list || []).filter(function (p) {
       if (browse.format && p.format !== browse.format) return false;
       if (browse.promoting && p.promoting !== browse.promoting) return false;
-      if (browse.lane && browse.lane !== "all" && browse.lane !== "stories") {
-        if (p.lane !== browse.lane) return false;
+      if (browse.lane && browse.lane !== "all") {
+        if (browse.lane === "stories") {
+          if (p.format !== "story" && p.kind !== "story" && p.lane !== "stories") return false;
+        } else if (p.lane !== browse.lane) {
+          return false;
+        }
       }
       if (!q) return true;
       var blob = [p.id, p.title, p.hook, p.preview, p.caption, p.topic, (p.keywords || []).join(" ")].join(" ").toLowerCase();
@@ -1767,20 +1845,28 @@ window.FS = window.FS || {};
     });
   }
 
-  function renderVaultFilters(browse, showLanes) {
-    var V = vaultMeta();
+  function renderVaultFilters(browse) {
     var html = '<div class="vault-filters">';
     html += '<label class="vault-filter"><span class="sr-only">Search</span><input type="search" class="prod-search" id="vaultSearch" placeholder="Search hooks, products, topics…" value="' + esc(browse.q || "") + '" autocomplete="off"></label>';
-    html += '<label class="vault-filter"><span>Type</span><select id="vaultFormatFilter" class="cal-select">' + renderFormatOptions(browse.format || "") + "</select></label>";
-    html += '<label class="vault-filter"><span>Promoting</span><select id="vaultPromotingFilter" class="cal-select">' + renderPromotingOptions(browse.promoting || "") + "</select></label>";
-    if (showLanes) {
-      html += '<div class="vault-lane-row" role="tablist">';
-      [{ id: "all", label: "All" }, { id: "product", label: "Product" }, { id: "mission", label: "Mission" }, { id: "business", label: "Business" }, { id: "lifestyle", label: "Lifestyle" }, { id: "seasonal", label: "Seasonal" }].forEach(function (l) {
-        html += '<button type="button" class="vault-lane' + (browse.lane === l.id ? " on" : "") + '" data-vault-lane="' + l.id + '">' + esc(l.label) + "</button>";
-      });
-      html += "</div>";
-    }
+    html += '<div class="vault-format-row" role="tablist" aria-label="Content type">';
+    [
+      { id: "", label: "All" },
+      { id: "reel", label: "Reels" },
+      { id: "carousel", label: "Carousels" },
+      { id: "story", label: "Stories" },
+      { id: "single", label: "Singles" },
+      { id: "facebook", label: "Facebook" }
+    ].forEach(function (f) {
+      var on = (browse.format || "") === f.id;
+      html += '<button type="button" class="vault-format-tab fmt-tab' + (f.id ? " fmt-" + f.id : "") + (on ? " on" : "") + '" data-vault-format-tab="' + esc(f.id) + '" role="tab" aria-selected="' + (on ? "true" : "false") + '">' + esc(f.label) + "</button>";
+    });
     html += "</div>";
+    html += '<label class="vault-filter"><span>Promoting</span><select id="vaultPromotingFilter" class="cal-select">' + renderPromotingOptions(browse.promoting || "") + "</select></label>";
+    html += '<div class="vault-lane-row" role="tablist" aria-label="Lane">';
+    [{ id: "all", label: "All lanes" }, { id: "product", label: "Product" }, { id: "mission", label: "Mission" }, { id: "business", label: "Business" }, { id: "lifestyle", label: "Lifestyle" }, { id: "seasonal", label: "Seasonal" }].forEach(function (l) {
+      html += '<button type="button" class="vault-lane' + (browse.lane === l.id ? " on" : "") + '" data-vault-lane="' + l.id + '">' + esc(l.label) + "</button>";
+    });
+    html += "</div></div>";
     return html;
   }
 
@@ -1791,15 +1877,6 @@ window.FS = window.FS || {};
       search.dataset.bound = "1";
       search.addEventListener("input", function () {
         browse.q = search.value;
-        persist();
-        rerender();
-      });
-    }
-    var ff = $("vaultFormatFilter");
-    if (ff && !ff.dataset.bound) {
-      ff.dataset.bound = "1";
-      ff.addEventListener("change", function () {
-        browse.format = ff.value;
         persist();
         rerender();
       });
@@ -1819,15 +1896,15 @@ window.FS = window.FS || {};
     var root = $("contentVaultRoot");
     if (!root || !getState) return;
     var browse = ensureVaultBrowse("vault");
-    var list = filterVaultList(vaultMeta().posts, browse);
+    var list = filterVaultList(allVaultItems(), browse);
     var html =
       '<div class="talk-guide-nav"><button type="button" class="prod-pill on" data-goto="tend">← Back to Content</button></div>' +
       '<p class="eyebrow">POST VAULT</p>' +
-      '<h1 class="prod-head-title">Feed posts &amp; captions</h1>' +
-      '<p class="prod-head-sub">Full assets with hooks, slides, and captions. Set Type + what you\'re Promoting on each card — then open, rewrite in your voice, and add to a day.</p>' +
+      '<h1 class="prod-head-title">Posts, Reels &amp; Stories</h1>' +
+      '<p class="prod-head-sub">One library — filter by type, open a card, rewrite in your voice, then add it to a day.</p>' +
       '<p class="vault-target-line">Adding to <strong>' + esc(selectedDayLabel(getState())) + "</strong> · tap a calendar day first to change</p>" +
-      renderVaultFilters(browse, true) +
-      '<p class="vault-count">' + list.length + " post" + (list.length === 1 ? "" : "s") + "</p>" +
+      renderVaultFilters(browse) +
+      '<p class="vault-count">' + list.length + " idea" + (list.length === 1 ? "" : "s") + "</p>" +
       '<div class="vault-card-list">';
     list.forEach(function (p) { html += vaultCardHtml(p, "vault"); });
     if (!list.length) html += '<p class="cal-lib-hint">Nothing matches those filters.</p>';
@@ -1837,25 +1914,15 @@ window.FS = window.FS || {};
   }
 
   function renderContentStories() {
-    var root = $("contentStoriesRoot");
-    if (!root || !getState) return;
-    var browse = ensureVaultBrowse("stories");
-    browse.lane = "stories";
-    var list = filterVaultList(vaultMeta().stories, browse);
-    var html =
-      '<div class="talk-guide-nav"><button type="button" class="prod-pill on" data-goto="tend">← Back to Content</button></div>' +
-      '<p class="eyebrow">STORY SEQUENCES</p>' +
-      '<h1 class="prod-head-title">Curiosity-first Stories</h1>' +
-      '<p class="prod-head-sub">Every sequence opens frame 1 with a question or curiosity gap — never a title card. Keep them to 3–5 frames.</p>' +
-      '<p class="vault-target-line">Adding to <strong>' + esc(selectedDayLabel(getState())) + "</strong></p>" +
-      renderVaultFilters(browse, false) +
-      '<p class="vault-count">' + list.length + " sequence" + (list.length === 1 ? "" : "s") + "</p>" +
-      '<div class="vault-card-list">';
-    list.forEach(function (p) { html += vaultCardHtml(p, "stories"); });
-    if (!list.length) html += '<p class="cal-lib-hint">Nothing matches those filters.</p>';
-    html += "</div>";
-    root.innerHTML = html;
-    wireVaultFilters("stories", renderContentStories);
+    /* Stories live in the Post vault now — keep for old deep-links. */
+    var st = getState();
+    if (st && st.data) {
+      var browse = ensureVaultBrowse("vault");
+      browse.format = "story";
+      persist();
+    }
+    if (gotoPanel) gotoPanel("content-vault");
+    else renderContentVault();
   }
 
   function currentWeekIndex() {
@@ -1863,6 +1930,40 @@ window.FS = window.FS || {};
     var saved = st.data.vaultWeekIndex;
     if (saved >= 1 && saved <= 8) return saved;
     return 1;
+  }
+
+  function parseWeekDayNote(note) {
+    var text = note || "";
+    var idMatch = text.match(/\b([PMBLS]\d+[a-z]?)\b/);
+    var goal = "";
+    var parts = text.split("·");
+    if (parts.length > 1) goal = parts[parts.length - 1].trim().replace(/\[.*?\]/g, "").trim();
+    return { vaultId: idMatch ? idMatch[1] : null, goal: goal, isRest: /^\s*rest\b/i.test(text) };
+  }
+
+  function weekDayCardHtml(d) {
+    var parsed = parseWeekDayNote(d.note);
+    var post = parsed.vaultId ? findVaultPost(parsed.vaultId) : null;
+    if (parsed.isRest && !post) {
+      return '<div class="vault-week-day is-rest">' +
+        '<div class="vault-week-dow">' + esc(d.dow) + "</div>" +
+        '<div class="vault-week-body"><span class="fmt-chip fmt-rest">Rest</span>' +
+        '<p class="vault-week-title">Soft day</p>' +
+        '<p class="vault-week-goal">' + esc((d.note || "").replace(/^\s*rest\s*\/?\s*/i, "") || "Repost what worked, or skip.") + "</p></div></div>";
+    }
+    if (post) {
+      var goal = parsed.goal || "";
+      return '<button type="button" class="vault-week-day is-openable fmt-' + esc(post.format || "single") + '" data-vault-open="' + esc(post.id) + '">' +
+        '<div class="vault-week-dow">' + esc(d.dow) + "</div>" +
+        '<div class="vault-week-body">' +
+        '<div class="vault-card-chips">' + formatChipHtml(post.format) + (goal ? '<span class="vault-week-goal-chip">' + esc(goal) + "</span>" : "") + "</div>" +
+        '<p class="vault-week-title">' + esc(post.title) + "</p>" +
+        '<p class="vault-week-hook">' + esc(post.hook || "") + "</p>" +
+        '<span class="vault-card-open">Open →</span></div></button>';
+    }
+    return '<div class="vault-week-day">' +
+      '<div class="vault-week-dow">' + esc(d.dow) + "</div>" +
+      '<div class="vault-week-body"><p class="vault-week-title">' + esc(d.note || "") + "</p></div></div>";
   }
 
   function renderContentWeek() {
@@ -1875,7 +1976,7 @@ window.FS = window.FS || {};
       '<div class="talk-guide-nav"><button type="button" class="prod-pill on" data-goto="tend">← Back to Content</button></div>' +
       '<p class="eyebrow">8-WEEK ROTATION</p>' +
       '<h1 class="prod-head-title">This week\'s plan</h1>' +
-      '<p class="prod-head-sub">A suggested rhythm — not a cage. Reorder freely based on what\'s performing.</p>' +
+      '<p class="prod-head-sub">A suggested rhythm — not a cage. Tap any day to open the ready post.</p>' +
       '<div class="vault-week-nav">';
     for (var w = 1; w <= 8; w++) {
       html += '<button type="button" class="vault-lane' + (w === weekIdx ? " on" : "") + '" data-vault-week="' + w + '">W' + w + "</button>";
@@ -1888,12 +1989,8 @@ window.FS = window.FS || {};
     }
     html += '<div class="vault-week-theme"><div class="fact-label">Week ' + weekIdx + '</div><p>' + esc(plan.theme) + "</p></div>";
     html += '<div class="vault-week-days">';
-    (plan.days || []).forEach(function (d) {
-      html += '<div class="vault-week-day"><div class="vault-week-dow">' + esc(d.dow) + '</div><p>' + esc(d.note) + "</p></div>";
-    });
+    (plan.days || []).forEach(function (d) { html += weekDayCardHtml(d); });
     html += "</div>";
-    /* Suggest a few matching vault posts for this week theme */
-    var themeQ = (plan.theme || "").toLowerCase();
     var picks = (V.posts || []).filter(function (p) {
       var blob = (p.title + " " + p.hook + " " + p.lane + " " + p.promoting).toLowerCase();
       if (weekIdx <= 2) return p.promoting === "freshness" || p.lane === "product" || /label|fresh|mission|origin/.test(blob);
@@ -1943,7 +2040,7 @@ window.FS = window.FS || {};
     var st = getState();
     if (!detail || !st || !st.data.libraryEditing) return;
     var ed = st.data.libraryEditing;
-    setSheetKicker(ed.vaultId ? ("Vault · " + ed.vaultId) : "Post idea");
+    setSheetKicker(ed.format ? formatLabel(ed.format) : (ed.vaultId ? "Vault" : "Post idea"));
     if (titleEl) titleEl.textContent = ed.title || "Post idea";
 
     var html = "";
