@@ -350,7 +350,7 @@ window.FS = window.FS || {};
     var l1 = roots.length;
     el.hidden = false;
     var html = '<div class="live-tag">YOUR GROWING TEAM</div>';
-    html += '<p class="live-team-lead">Level 1 sorted by who has the most people under them. Tap a name to expand their branch — you still coach your front line day to day; this shows the family forming.</p>';
+    html += '<p class="live-team-lead">Your people, growing together. Tap a name to see who’s linked under them.</p>';
     html += '<div class="live-team-stats">';
     html += '<div class="live-stat"><strong>' + l1 + '</strong><span>Level 1</span></div>';
     html += '<div class="live-stat"><strong>' + total + '</strong><span>on your tree</span></div>';
@@ -1274,6 +1274,20 @@ window.FS = window.FS || {};
         if (t.hasAttribute("data-vault-promoting")) cur.promoting = t.value;
         st.data.vaultOverrides[id] = cur;
         persist();
+        paintVaultBubble(t);
+        var card = t.closest(".vault-card");
+        if (card && cur.format) {
+          card.className = "vault-card fmt-" + (cur.format || "single");
+        }
+        if (card) {
+          var chips = card.querySelector(".vault-card-chips");
+          if (chips) {
+            var fmtSel = card.querySelector("[data-vault-format]");
+            var promoSel = card.querySelector("[data-vault-promoting]");
+            chips.innerHTML = formatChipHtml(fmtSel ? fmtSel.value : cur.format) +
+              promotingChipHtml(promoSel ? promoSel.value : cur.promoting);
+          }
+        }
         var src = t.getAttribute("data-vault-source") || "vault";
         if (src === "week") renderContentWeek();
         else renderContentVault();
@@ -1283,7 +1297,7 @@ window.FS = window.FS || {};
     document.addEventListener("click", async function (e) {
       var t = e.target.closest(
         "#authOpenBtn,#authCloseBtn,#authSubmitBtn,#authCreateBtn,#authSignOutBtn,#railCopyInvite,#leaderCopyInvite,#authCopyInvite," +
-        "#exportBridgeBtn,#importLiveTreeBtn,#cheerDismiss,#notifySponsorBtn,[data-goto-bridge],[data-copy-nudge],[data-cheer],[data-note]," +
+        "#teamInviteOpen,#teamInviteClose,#teamInviteX,#exportBridgeBtn,#importLiveTreeBtn,#cheerDismiss,#notifySponsorBtn,[data-goto-bridge],[data-copy-nudge],[data-cheer],[data-note]," +
         "[data-cal-day],[data-cal-select],[data-cal-status],[data-cal-swap],[data-cal-week],[data-cal-nav],[data-cal-view],[data-cal-add],[data-cal-clear]," +
         "[data-cal-new],[data-cal-edit],[data-cal-item],[data-cal-accept],[data-cal-cadence],[data-cal-setup-toggle],[data-cal-save],[data-cal-delete]," +
         "[data-lib-tab],[data-lib-open],[data-lib-commit],[data-lib-add],[data-curio-open]," +
@@ -1407,6 +1421,27 @@ window.FS = window.FS || {};
         await Cloud.signOut();
         closeAuth();
         await afterAuth();
+        return;
+      }
+      if (t.id === "teamInviteOpen") {
+        var pop = $("teamInvitePop");
+        var openBtn = $("teamInviteOpen");
+        if (pop) {
+          pop.hidden = false;
+          if (openBtn) openBtn.setAttribute("aria-expanded", "true");
+          var copyFocus = $("leaderCopyInvite");
+          if (copyFocus) setTimeout(function () { try { copyFocus.focus(); } catch (e) {} }, 40);
+        }
+        return;
+      }
+      if (t.id === "teamInviteClose" || t.id === "teamInviteX") {
+        var popClose = $("teamInvitePop");
+        var openBtn2 = $("teamInviteOpen");
+        if (popClose) popClose.hidden = true;
+        if (openBtn2) {
+          openBtn2.setAttribute("aria-expanded", "false");
+          openBtn2.focus();
+        }
         return;
       }
       if (t.id === "railCopyInvite" || t.id === "leaderCopyInvite" || t.id === "authCopyInvite") {
@@ -1801,6 +1836,28 @@ window.FS = window.FS || {};
     return '<span class="promo-chip promo-' + esc(promotingId) + '">' + esc(label) + "</span>";
   }
 
+  function formatSelectClass(formatId) {
+    var id = (formatId || "").toLowerCase();
+    return "cal-select vault-inline-select vault-bubble" + (id ? " fmt-" + id + " is-set" : "");
+  }
+
+  function promotingSelectClass(promotingId) {
+    var id = (promotingId || "").toLowerCase();
+    return "cal-select vault-inline-select vault-bubble promo-bubble" + (id ? " promo-" + id + " is-set" : "");
+  }
+
+  function paintVaultBubble(el) {
+    if (!el) return;
+    var isFmt = el.hasAttribute("data-vault-format") || el.id === "libFormat";
+    var isPromo = el.hasAttribute("data-vault-promoting") || el.id === "libPromoting";
+    if (!isFmt && !isPromo) return;
+    var val = (el.value || "").toLowerCase();
+    el.className = isFmt ? formatSelectClass(val) : promotingSelectClass(val);
+    if (el.id === "libFormat" || el.id === "libPromoting") {
+      el.className = el.className.replace("vault-inline-select", "vault-sheet-select");
+    }
+  }
+
   function vaultCardHtml(post, source) {
     var st = getState();
     var ov = (st && st.data.vaultOverrides && st.data.vaultOverrides[post.id]) || {};
@@ -1819,9 +1876,9 @@ window.FS = window.FS || {};
     html += '<span class="vault-card-open">Open →</span>';
     html += "</button>";
     html += '<div class="vault-card-meta">';
-    html += '<label class="vault-mini-field"><span>Type</span><select class="cal-select vault-inline-select" data-vault-format="' + esc(post.id) + '" data-vault-source="' + esc(source) + '">' +
+    html += '<label class="vault-mini-field"><span>Type</span><select class="' + formatSelectClass(format) + '" data-vault-format="' + esc(post.id) + '" data-vault-source="' + esc(source) + '">' +
       renderFormatOptions(format) + "</select></label>";
-    html += '<label class="vault-mini-field"><span>Promoting</span><select class="cal-select vault-inline-select" data-vault-promoting="' + esc(post.id) + '" data-vault-source="' + esc(source) + '">' +
+    html += '<label class="vault-mini-field"><span>Promoting</span><select class="' + promotingSelectClass(promoting) + '" data-vault-promoting="' + esc(post.id) + '" data-vault-source="' + esc(source) + '">' +
       renderPromotingOptions(promoting) + "</select></label>";
     html += "</div></article>";
     return html;
@@ -1991,17 +2048,6 @@ window.FS = window.FS || {};
     html += '<div class="vault-week-days">';
     (plan.days || []).forEach(function (d) { html += weekDayCardHtml(d); });
     html += "</div>";
-    var picks = (V.posts || []).filter(function (p) {
-      var blob = (p.title + " " + p.hook + " " + p.lane + " " + p.promoting).toLowerCase();
-      if (weekIdx <= 2) return p.promoting === "freshness" || p.lane === "product" || /label|fresh|mission|origin/.test(blob);
-      if (weekIdx === 3) return p.lane === "product";
-      if (weekIdx === 4) return p.lane === "mission";
-      if (weekIdx >= 5 && weekIdx <= 7) return p.lane === "business" || p.lane === "lifestyle";
-      return true;
-    }).slice(0, 6);
-    html += '<p class="talk-sec-label">Suggested from the vault</p><div class="vault-card-list">';
-    picks.forEach(function (p) { html += vaultCardHtml(p, "week"); });
-    html += "</div>";
     root.innerHTML = html;
   }
 
@@ -2043,23 +2089,12 @@ window.FS = window.FS || {};
     setSheetKicker(ed.format ? formatLabel(ed.format) : (ed.vaultId ? "Vault" : "Post idea"));
     if (titleEl) titleEl.textContent = ed.title || "Post idea";
 
-    var html = "";
-    if (ed.verify && ed.verify.length) {
-      html += '<div class="vault-verify-box">';
-      ed.verify.forEach(function (v) {
-        html += '<div class="vault-verify-row' + (v.status === "verified" ? " is-ok" : "") + '">' +
-          '<strong>' + (v.status === "verified" ? "Verified" : "Check before posting") + "</strong> " +
-          esc(v.claim) + (v.sourceNote ? ' <em>(' + esc(v.sourceNote) + ")</em>" : "") +
-          "</div>";
-      });
-      html += "</div>";
-    }
-    html +=
+    var html =
       '<div class="vault-field-row">' +
         '<label class="field"><span class="field-label">Type</span>' +
-          '<select id="libFormat" class="cal-select">' + renderFormatOptions(ed.format || "") + "</select></label>" +
+          '<select id="libFormat" class="' + formatSelectClass(ed.format || "").replace("vault-inline-select", "vault-sheet-select") + '">' + renderFormatOptions(ed.format || "") + "</select></label>" +
         '<label class="field"><span class="field-label">Promoting</span>' +
-          '<select id="libPromoting" class="cal-select">' + renderPromotingOptions(ed.promoting || "") + "</select></label>" +
+          '<select id="libPromoting" class="' + promotingSelectClass(ed.promoting || "").replace("vault-inline-select", "vault-sheet-select") + '">' + renderPromotingOptions(ed.promoting || "") + "</select></label>" +
       "</div>" +
       '<label class="field"><span class="field-label">Title</span>' +
         '<input type="text" id="libTitle" class="cal-input" placeholder="Optional short label" value="' + esc(ed.title || "") + '"></label>' +
@@ -2084,6 +2119,8 @@ window.FS = window.FS || {};
       if (draftIn) cur.data.libraryEditing.body = draftIn.value;
       if (fmt) cur.data.libraryEditing.format = fmt.value;
       if (prom) cur.data.libraryEditing.promoting = prom.value;
+      paintVaultBubble(fmt);
+      paintVaultBubble(prom);
       if (cur.data.libraryEditing.vaultId) {
         if (!cur.data.vaultOverrides) cur.data.vaultOverrides = {};
         cur.data.vaultOverrides[cur.data.libraryEditing.vaultId] = {

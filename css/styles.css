@@ -125,7 +125,19 @@ button{font-family:inherit;cursor:pointer}
 .invite-block{margin:12px 0}
 .invite-input{width:100%;border:1px solid var(--rail-deep);border-radius:8px;background:rgba(245,246,242,.7);color:var(--green);padding:8px 10px;font-size:11px;font-family:inherit}
 .invite-input.light{background:var(--white);color:var(--green);border-color:var(--sand);font-size:13px;padding:10px 12px}
-.invite-card{background:var(--paper-warm);border:1.5px solid var(--sand);border-radius:14px;padding:16px 18px;margin:0 0 22px}
+.team-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:0 0 8px}
+.team-head h1{margin:0}
+.team-add-btn{flex-shrink:0;width:42px;height:42px;border-radius:50%;border:1.5px solid var(--sand);background:var(--white);color:var(--green);font-size:22px;font-weight:500;line-height:1;display:grid;place-items:center;cursor:pointer;box-shadow:var(--shadow);transition:border-color .15s,background .15s,transform .15s;font-family:inherit;padding:0}
+.team-add-btn:hover,.team-add-btn[aria-expanded="true"]{border-color:var(--moss);background:#eef2ec;transform:scale(1.04)}
+.team-invite-pop{position:fixed;inset:0;z-index:80;display:flex;align-items:flex-end;justify-content:center;padding:16px}
+.team-invite-pop[hidden]{display:none!important}
+.team-invite-backdrop{position:absolute;inset:0;border:none;background:rgba(61,69,60,.28);cursor:pointer;padding:0}
+.team-invite-card{position:relative;z-index:1;width:min(440px,100%);background:var(--paper);border:1.5px solid var(--sand);border-radius:18px 18px 14px 14px;padding:18px 18px 16px;box-shadow:0 18px 48px rgba(61,69,60,.22);animation:teamInviteIn .22s var(--ease)}
+@keyframes teamInviteIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+.team-invite-card-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:12px}
+.team-invite-lead{margin:6px 0 0;font-size:14px;line-height:1.45;color:var(--green-mid)}
+.team-invite-x{flex-shrink:0;width:32px;height:32px;border:none;border-radius:50%;background:var(--sand);color:var(--green);font-size:20px;line-height:1;cursor:pointer;font-family:inherit}
+.team-invite-card .invite-explain{margin-top:10px}
 .invite-row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
 .invite-row .invite-input{flex:1;min-width:180px}
 
@@ -904,6 +916,8 @@ button.vault-week-day:hover{border-color:var(--moss);box-shadow:0 6px 18px rgba(
 .promo-chip.promo-mission{background:#ebe8f0;color:#5a4f6e}
 .promo-chip.promo-business{background:#e8eef1;color:#3d4a51}
 .promo-chip.promo-lifestyle{background:#f3ebe4;color:#6e4f3a}
+.promo-chip.promo-seasonal{background:#f0ece4;color:#7a6a4a}
+.promo-chip.promo-community{background:#e8efe9;color:#3d5a4a}
 .vault-card-id{font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--moss)}
 .vault-verify-chip{font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#8a5a2b;background:#f6eee4;border-radius:999px;padding:3px 8px;flex-shrink:0}
 .vault-card-title{margin:0 0 6px;font-family:'Fraunces',serif;font-size:20px;font-weight:500;color:var(--green);line-height:1.2}
@@ -911,7 +925,36 @@ button.vault-week-day:hover{border-color:var(--moss);box-shadow:0 6px 18px rgba(
 .vault-card-open{font-size:12.5px;font-weight:700;color:var(--moss)}
 .vault-card-meta{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:0 14px 14px;border-top:1px solid var(--sand);padding-top:12px}
 .vault-mini-field span{display:block;font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--moss);margin-bottom:4px}
-.vault-inline-select{width:100%}
+.vault-inline-select,.vault-sheet-select{width:100%}
+.vault-bubble{
+  border-radius:999px!important;
+  border:1.5px solid var(--sand)!important;
+  background:var(--white)!important;
+  color:var(--green-soft)!important;
+  font-size:12px!important;
+  font-weight:700!important;
+  letter-spacing:.04em;
+  padding:9px 12px!important;
+  appearance:none;
+  -webkit-appearance:none;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%238a9284' d='M1 1l5 5 5-5'/%3E%3C/svg%3E")!important;
+  background-repeat:no-repeat!important;
+  background-position:right 12px center!important;
+  padding-right:28px!important;
+  transition:background .15s,border-color .15s,color .15s;
+}
+.vault-bubble.is-set.fmt-reel{background:#3d5a4a!important;border-color:#3d5a4a!important;color:#fff!important;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%23ffffff' d='M1 1l5 5 5-5'/%3E%3C/svg%3E")!important;background-repeat:no-repeat!important;background-position:right 12px center!important}
+.vault-bubble.is-set.fmt-carousel{background:#a67c5d!important;border-color:#a67c5d!important;color:#fff!important;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%23ffffff' d='M1 1l5 5 5-5'/%3E%3C/svg%3E")!important;background-repeat:no-repeat!important;background-position:right 12px center!important}
+.vault-bubble.is-set.fmt-story{background:#9a6b73!important;border-color:#9a6b73!important;color:#fff!important;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%23ffffff' d='M1 1l5 5 5-5'/%3E%3C/svg%3E")!important;background-repeat:no-repeat!important;background-position:right 12px center!important}
+.vault-bubble.is-set.fmt-single{background:#7a8468!important;border-color:#7a8468!important;color:#fff!important;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%23ffffff' d='M1 1l5 5 5-5'/%3E%3C/svg%3E")!important;background-repeat:no-repeat!important;background-position:right 12px center!important}
+.vault-bubble.is-set.fmt-facebook{background:#5c6b73!important;border-color:#5c6b73!important;color:#fff!important;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%23ffffff' d='M1 1l5 5 5-5'/%3E%3C/svg%3E")!important;background-repeat:no-repeat!important;background-position:right 12px center!important}
+.vault-bubble.is-set.promo-product{background:#eef2ec!important;border-color:#3d5a4a!important;color:#3d5a4a!important}
+.vault-bubble.is-set.promo-freshness{background:#f3f0e4!important;border-color:#6e6540!important;color:#6e6540!important}
+.vault-bubble.is-set.promo-mission{background:#ebe8f0!important;border-color:#5a4f6e!important;color:#5a4f6e!important}
+.vault-bubble.is-set.promo-business{background:#e8eef1!important;border-color:#3d4a51!important;color:#3d4a51!important}
+.vault-bubble.is-set.promo-lifestyle{background:#f3ebe4!important;border-color:#6e4f3a!important;color:#6e4f3a!important}
+.vault-bubble.is-set.promo-seasonal{background:#f0ece4!important;border-color:#7a6a4a!important;color:#7a6a4a!important}
+.vault-bubble.is-set.promo-community{background:#e8efe9!important;border-color:#3d5a4a!important;color:#3d5a4a!important}
 .vault-field-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 .vault-verify-box{background:#f7f1e8;border:1.5px solid #e5d3bf;border-radius:12px;padding:12px 14px;margin:0 0 14px}
 .vault-verify-row{font-size:13px;line-height:1.45;color:var(--green);margin:0 0 8px}
