@@ -159,12 +159,12 @@ window.FS.CONFIG = {
 
   pageOptions: {
     generic: {
-      title: "First Seeds lead page",
-      desc: "A ready-made personal page with a signup form. You’ll claim a short link, share it, and leads land only in your inbox."
+      title: "First Seeds lead page (in-app)",
+      desc: "Built into this app — claim your short link, share it, and leads land in your inbox. No extra tools needed."
     },
     custom: {
-      title: "My own landing page",
-      desc: "You’re using Carrd, your site, or something else. We’ll hide the Leads tab — share your own link instead. Ask your Fresh Grove leader if you need help."
+      title: "A custom-built landing page",
+      desc: "Connect with your Fresh Grove leader for more info."
     }
   },
 

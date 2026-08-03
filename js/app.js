@@ -663,11 +663,11 @@
     if (custom) custom.classList.toggle("on", usesCustomLanding());
     if (note) {
       if (usesBuiltInLeadPage()) {
-        note.textContent = "Leads tab is on. Share your First Seeds link — submissions land in your inbox.";
+        note.textContent = "Leads tab is on. You’re using the in-app First Seeds lead page.";
       } else if (usesCustomLanding()) {
-        note.textContent = "Leads tab is hidden while you use your own page. Switch to First Seeds leads anytime to turn it back on.";
+        note.textContent = "Leads tab is hidden while you use a custom-built page. Switch to In-app lead page anytime to turn it back on.";
       } else {
-        note.textContent = "Choose whether curious people use your First Seeds lead form, or a page you built elsewhere.";
+        note.textContent = "Choose the in-app First Seeds lead page, or a custom-built page (ask your Fresh Grove leader).";
       }
     }
   }
