@@ -158,7 +158,15 @@ window.FS = window.FS || {};
       var emailEl = $("authEmailLine");
       if (emailEl) emailEl.textContent = user.email || "";
       var modeEl = $("authModeLine");
-      if (modeEl) modeEl.textContent = Cloud.mode() === "supabase" ? "Cloud (Supabase)" : "Local bridge mode";
+      if (modeEl) {
+        if (Cloud.mode() === "local") {
+          modeEl.hidden = false;
+          modeEl.textContent = "Local demo mode (this device only)";
+        } else {
+          modeEl.textContent = "";
+          modeEl.hidden = true;
+        }
+      }
       var inv = $("authInviteInput");
       if (inv) inv.value = Cloud.joinUrl(user.invite_code);
     } else {
