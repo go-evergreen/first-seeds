@@ -1279,7 +1279,7 @@ button.vault-week-day:hover{border-color:var(--moss);box-shadow:0 6px 18px rgba(
 .finish-shortlist,.finish-next{text-align:left;max-width:480px;margin:0 auto 16px}
 .finish-next-body{margin:0;font-size:14.5px;line-height:1.55;color:var(--bark)}
 .finish-actions{flex-wrap:wrap;gap:10px;margin-top:4px}
-.focus-shortlist-card{margin:0 0 22px}
+.focus-shortlist-card{margin:22px 0}
 .focus-shortlist-ul{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:8px}
 .focus-shortlist-ul li{margin:0}
 .focus-shortlist-item{appearance:none;-webkit-appearance:none;width:100%;text-align:left;border:0;background:transparent;padding:8px 0;font-family:'Fraunces',serif;font-size:18px;font-weight:500;color:var(--ink);cursor:pointer;line-height:1.3;-webkit-tap-highlight-color:transparent;touch-action:manipulation}
