@@ -291,7 +291,7 @@ window.FS.CONFIG = {
     },
     {
       title: "Your growing team",
-      body: "This is your live tree. Tap a name for their card. A + means they have people under them — big branches (more than 5) start closed. Sort by Most legs or Newest.",
+      body: "This is your live tree. Tap a name for their card. A + means they have people under them. Sort by Most legs or Newest.",
       panel: "leader",
       target: '[data-team-tour="tree"]',
       placement: "above",

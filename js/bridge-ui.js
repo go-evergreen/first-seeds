@@ -997,7 +997,7 @@ window.FS = window.FS || {};
     if (Cloud.isOrgAdmin() && rearrangeOn) {
       html += '<p class="team-admin-hint">Tap a person → Move under… Mentoring follows the new Level 1. Invited-by stays the same.</p>';
     }
-    html += '<p class="live-team-lead">Tap a name for their details. A <strong>+</strong> means they have people under them — branches with more than 5 start closed.</p>';
+    html += '<p class="live-team-lead">Tap a name for their details. A <strong>+</strong> means they have people under them.</p>';
     html += '<div class="live-team-stats is-compact">';
     html += '<div class="live-stat"><strong>' + l1 + '</strong><span>Level 1</span></div>';
     html += '<div class="live-stat"><strong>' + total + '</strong><span>on tree</span></div>';
