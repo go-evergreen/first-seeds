@@ -2357,7 +2357,14 @@ window.FS = window.FS || {};
             await afterAuth();
           }
         } catch (err) {
-          if (msg) msg.textContent = (err && err.message) || (creating ? "Could not create account." : "Could not sign in.");
+          var friendly = (err && err.message) || "";
+          var low = friendly.toLowerCase();
+          if (low.indexOf("already registered") >= 0 || low.indexOf("already been registered") >= 0) {
+            friendly = "That email already has an account — tap Sign in instead.";
+          } else if (low.indexOf("invalid login") >= 0 || low.indexOf("invalid credentials") >= 0) {
+            friendly = "Email or password didn’t match. Try again, or Create account if you’re new.";
+          }
+          if (msg) msg.textContent = friendly || (creating ? "Could not create account." : "Could not sign in.");
         } finally {
           t.disabled = false;
         }
@@ -3193,6 +3200,7 @@ window.FS = window.FS || {};
       });
       window.addEventListener("focus", function () { refreshIncomingMessages(); });
     },
+    mergeProgress: mergeCloudProgress,
     syncNow: async function () {
       if (!Cloud.isSignedIn()) return;
       var s = getState();

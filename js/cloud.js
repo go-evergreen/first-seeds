@@ -364,7 +364,7 @@ window.FS = window.FS || {};
         if (error) throw error;
         if (!data.session) {
           throw new Error(
-            "Account created, but email confirmation is still on in Supabase. Turn off Authentication → Providers → Email → Confirm email, then sign in."
+            "Account created — try Sign in with that same email and password. (If that fails, ask your leader: email confirmation may still be on.)"
           );
         }
         if (data.user) {

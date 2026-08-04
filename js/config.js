@@ -120,7 +120,7 @@ window.FS.CONFIG = {
 
     authEyebrow: "Save your spot",
     authTitle: "Keep your progress with you",
-    authBody: "Create a quick email + password so your story, calendar, and share link don't vanish if you switch phones or clear your browser. You can skip for now and sign in anytime from the top bar.",
+    authBody: "Already started? Sign in with the same email so your Roots answers come back. New here? Create an account so your story doesn’t vanish if the app closes. You can skip for now and sign in anytime from the top bar.",
     authCta: "Sign in →",
     authSkip: "Continue without signing in",
     authHint: "New here? Tap Create account. Already have one? Sign in with the same email.",

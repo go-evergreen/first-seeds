@@ -97,13 +97,28 @@
   }
 
   var cloudSyncTimer;
-  function save() {
+  function save(opts) {
+    opts = opts || {};
     try { localStorage.setItem(CFG.storeKey, JSON.stringify(state)); } catch (e) {}
     clearTimeout(cloudSyncTimer);
-    cloudSyncTimer = setTimeout(function () {
+    var push = function () {
       if (window.FS.BridgeUI) window.FS.BridgeUI.syncNow();
-    }, 800);
+    };
+    if (opts.immediate) push();
+    else {
+      cloudSyncTimer = setTimeout(push, 800);
+    }
   }
+
+  function flushSave() {
+    save({ immediate: true });
+  }
+
+  /* Don’t lose the last Roots keystrokes if the tab/app closes mid-debounce. */
+  document.addEventListener("visibilitychange", function () {
+    if (document.visibilityState === "hidden") flushSave();
+  });
+  window.addEventListener("pagehide", flushSave);
 
   loadState();
 
@@ -817,6 +832,8 @@
           }, 500);
         });
         f.addEventListener("blur", function () {
+          clearTimeout(flashTimers._seedDraft);
+          flushSave();
           if (pendingGrowth) flushPendingGrowth();
         });
       })(fields[i]);
@@ -2764,11 +2781,12 @@
           flash(sectionOf(f));
         }, 500);
       });
-      if (isLongWrite) {
-        f.addEventListener("blur", function () {
-          if (pendingGrowth) flushPendingGrowth();
-        });
-      }
+      f.addEventListener("blur", function () {
+        clearTimeout(t);
+        if (k === "warm" || k === "customers") syncGroveCalendar();
+        flushSave();
+        if (isLongWrite && pendingGrowth) flushPendingGrowth();
+      });
     })(fields[fi]);
   }
 
@@ -2995,12 +3013,24 @@
     }
     if (onboardingStep === 3) {
       var emailIn = document.getElementById("onboardingEmail");
+      var passIn = document.getElementById("onboardingPassword");
       var msg = document.getElementById("onboardingAuthMsg");
+      var title = document.getElementById("obAuthTitle");
+      var eyebrow = document.getElementById("obAuthEyebrow");
+      var body = document.getElementById("obAuthBody");
       if (msg) msg.textContent = "";
       if (cloudSignedIn()) {
         advanceToInstallStep();
         return;
       }
+      if (hasLocalRootsProgress()) {
+        if (eyebrow) eyebrow.textContent = "Welcome back";
+        if (title) title.textContent = "Sign in to keep going";
+        if (body) {
+          body.textContent = "Your Roots answers stay on this device — sign in so they also save to your account if the app closes.";
+        }
+      }
+      if (passIn) passIn.setAttribute("autocomplete", "current-password");
       if (emailIn) setTimeout(function () { emailIn.focus(); }, 50);
     }
     if (onboardingStep === 4) {
@@ -3041,6 +3071,25 @@
 
   var onboardingReplay = false;
 
+  function hasLocalRootsProgress() {
+    return !!(
+      filledText("why") ||
+      filledText("moment") ||
+      filledText("said_yes") ||
+      partnerName()
+    );
+  }
+
+  function dismissOnboardingIfModeChosen() {
+    if (!modeChosen()) return false;
+    var wrap = document.getElementById("onboarding");
+    if (wrap && wrap.classList.contains("open")) {
+      wrap.classList.remove("open");
+      setOverlayOpen(false);
+    }
+    return true;
+  }
+
   function startOnboarding(opts) {
     opts = opts || {};
     var wrap = document.getElementById("onboarding");
@@ -3056,8 +3105,9 @@
       if (confirmWrap) confirmWrap.hidden = true;
     } else if (partnerName() && cloudSignedIn()) {
       onboardingStep = 4;
-    } else if (partnerName()) {
-      onboardingStep = 3;
+    } else if (partnerName() || hasLocalRootsProgress()) {
+      /* Welcome-back: skip intro fluff; land on name or sign-in so Roots text isn’t “restarted”. */
+      onboardingStep = partnerName() ? 3 : 2;
     } else {
       onboardingStep = 0;
     }
@@ -3138,6 +3188,25 @@
       if (msg) msg.textContent = text || "";
     }
 
+    function friendlyAuthError(err, creating) {
+      var raw = ((err && err.message) || "") + "";
+      var low = raw.toLowerCase();
+      if (
+        low.indexOf("already registered") >= 0 ||
+        low.indexOf("already been registered") >= 0 ||
+        low.indexOf("user already exists") >= 0
+      ) {
+        return "That email already has an account — tap Sign in instead.";
+      }
+      if (low.indexOf("invalid login") >= 0 || low.indexOf("invalid credentials") >= 0) {
+        return "Email or password didn’t match. Try Sign in again, or Create account if you’re new here.";
+      }
+      if (low.indexOf("email confirmation") >= 0 || low.indexOf("confirm email") >= 0) {
+        return "Account created — try Sign in with that email and password.";
+      }
+      return raw || (creating ? "Could not create account." : "Could not sign in.");
+    }
+
     async function runOnboardAuth(creating) {
       var email = emailInput ? emailInput.value.trim() : "";
       var password = passwordInput ? passwordInput.value : "";
@@ -3145,6 +3214,9 @@
       if (!window.FS.Cloud) {
         onboardAuthMsg("Sign-in isn’t available right now — continue and try from the top bar later.");
         return;
+      }
+      if (passwordInput) {
+        passwordInput.setAttribute("autocomplete", creating ? "new-password" : "current-password");
       }
       var btn = creating ? createBtn : signInBtn;
       try {
@@ -3154,10 +3226,15 @@
           : await window.FS.Cloud.signIn(email, name, password);
         onboardAuthMsg(res.message || "You’re signed in.");
         if (res.kind === "local" || res.kind === "signed_in") {
+          flushSave();
+          if (window.FS.BridgeUI && window.FS.BridgeUI.mergeProgress) {
+            try { await window.FS.BridgeUI.mergeProgress(); } catch (e) {}
+          }
+          if (dismissOnboardingIfModeChosen()) return;
           advanceToInstallStep();
         }
       } catch (err) {
-        onboardAuthMsg((err && err.message) || (creating ? "Could not create account." : "Could not sign in."));
+        onboardAuthMsg(friendlyAuthError(err, creating));
       } finally {
         if (btn) btn.disabled = false;
       }
@@ -3490,6 +3567,7 @@
 
   function startTour() {
     var wrap = document.getElementById("tour");
+    if (wrap && wrap.classList.contains("open")) return;
     tourKind = "main";
     var tips = currentTourTips();
     if (!wrap || !tips.length) {
@@ -4108,18 +4186,32 @@
   window.FS.onAuthReady = function () {
     liveRefresh({ silent: true });
     syncPageStoryToLeadBlurb();
+    if (dismissOnboardingIfModeChosen()) {
+      if (!state.tourDone) startTour();
+      return;
+    }
     var wrap = document.getElementById("onboarding");
-    if (!wrap || !wrap.classList.contains("open") || modeChosen()) return;
+    if (!wrap || !wrap.classList.contains("open")) return;
     if (partnerName() && cloudSignedIn()) {
       onboardingStep = 4;
       renderOnboardingStep();
-    } else if (partnerName()) {
-      onboardingStep = 3;
+    } else if (partnerName() || hasLocalRootsProgress()) {
+      onboardingStep = partnerName() ? 3 : 2;
       renderOnboardingStep();
     }
   };
 
+  function finishBootGate() {
+    if (dismissOnboardingIfModeChosen()) {
+      if (!state.tourDone) startTour();
+      return;
+    }
+    if (!modeChosen()) startOnboarding();
+  }
+
   if (window.FS.BridgeUI) {
+    /* Open the gate from local state right away; cloud merge may dismiss it. */
+    if (!modeChosen()) startOnboarding();
     window.FS.BridgeUI.init({
       getState: function () { return state; },
       setStateFromCloud: function (next) {
@@ -4147,6 +4239,8 @@
         Tree.render(state);
         liveRefresh({ silent: true });
         renderGreetings();
+        /* Cloud may restore hubMode after onboarding already opened — drop the gate. */
+        dismissOnboardingIfModeChosen();
       },
       persist: function () { save(); },
       gotoPanel: function (id) {
@@ -4177,7 +4271,9 @@
         renderNav();
         renderPanels();
       }
-    });
+    }).then(finishBootGate).catch(finishBootGate);
+  } else {
+    finishBootGate();
   }
 
   /* Deep link back from lead-page preview */
@@ -4202,11 +4298,5 @@
   if (state.active && !isModuleUnlocked(state.active)) {
     state.active = "welcome";
     save();
-  }
-
-  if (!modeChosen()) {
-    startOnboarding();
-  } else if (!state.tourDone) {
-    startTour();
   }
 })();
