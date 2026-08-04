@@ -371,6 +371,7 @@ window.FS = window.FS || {};
       graph = { roots: [], depth: 6 };
     }
     var underById = {};
+    suggestedNotesByPartner = {};
     function countDesc(nodes) {
       var n = 0;
       (nodes || []).forEach(function (p) {
@@ -466,6 +467,10 @@ window.FS = window.FS || {};
         html += '<div id="nudge_' + esc(p.id) + '">' + esc(msg.body || "") + '</div>';
         html += '<button type="button" class="leader-nudge-copy" data-copy-nudge="' + esc(p.id) + '" data-copy-label="' + esc(copyLabel) + '">' + esc(copyLabel) + "</button>";
         html += '</div>';
+        suggestedNotesByPartner[p.id] = {
+          body: msg.body || "",
+          name: p.display_name || p.email || "Partner"
+        };
         if (item.row.progress && item.row.progress.notified_at) {
           var pingAge = daysBetween(new Date(item.row.progress.notified_at), now);
           if (pingAge <= 3) {
@@ -657,6 +662,7 @@ window.FS = window.FS || {};
   }
 
   var teamPersonCache = {};
+  var suggestedNotesByPartner = {};
   var teamMovePartnerId = null;
   var adminProfileCache = [];
 
@@ -1230,6 +1236,7 @@ window.FS = window.FS || {};
   function openCheerSheet(partnerId) {
     closeTeamPersonSheet();
     closeTeamMoveSheet();
+    closeNoteSheet();
     cheerPendingPartnerId = partnerId;
     var sheet = $("cheerSheet");
     if (sheet) sheet.hidden = false;
@@ -1269,6 +1276,119 @@ window.FS = window.FS || {};
     } catch (err) {
       if (btn) btn.textContent = "Send this →";
       alert(err.message || "Could not send cheer");
+    }
+  }
+
+  var notePendingPartnerId = null;
+
+  function noteDraftFor(partnerId) {
+    var cached = suggestedNotesByPartner[partnerId];
+    if (cached && cached.body) return cached;
+    var person = teamPersonCache[partnerId];
+    var name = (person && (person.display_name || person.email)) || "Partner";
+    var nudgeEl = $("nudge_" + partnerId);
+    var body = nudgeEl ? String(nudgeEl.textContent || "").trim() : "";
+    return { body: body, name: name };
+  }
+
+  function openNoteSheet(partnerId) {
+    closeTeamPersonSheet();
+    closeTeamMoveSheet();
+    closeCheerSheet();
+    notePendingPartnerId = partnerId;
+    var draft = noteDraftFor(partnerId);
+    var sheet = $("noteSheet");
+    var meta = $("noteSheetMeta");
+    var input = $("noteSheetBody");
+    var copyBtn = $("noteSheetCopy");
+    var sendBtn = $("noteConfirmSend");
+    if (meta) meta.textContent = "For " + (draft.name || "Partner");
+    if (input) {
+      input.value = draft.body || "";
+      setTimeout(function () {
+        try {
+          input.focus();
+          input.setSelectionRange(input.value.length, input.value.length);
+        } catch (err) {}
+      }, 40);
+    }
+    if (copyBtn) copyBtn.textContent = "Copy";
+    if (sendBtn) sendBtn.textContent = "Send note →";
+    if (sheet) sheet.hidden = false;
+  }
+
+  function openNoteSheetForTour() {
+    var btn = document.querySelector("#leaderLists [data-note]");
+    var pid = btn && btn.getAttribute("data-note");
+    if (!pid) {
+      var keys = Object.keys(suggestedNotesByPartner || {});
+      pid = keys.length ? keys[0] : null;
+    }
+    if (!pid) return;
+    openNoteSheet(pid);
+  }
+
+  function closeNoteSheet() {
+    notePendingPartnerId = null;
+    var sheet = $("noteSheet");
+    if (sheet) sheet.hidden = true;
+  }
+
+  function copyNoteSheetBody() {
+    var input = $("noteSheetBody");
+    var btn = $("noteSheetCopy");
+    var text = input ? String(input.value || "").trim() : "";
+    if (!text) {
+      if (btn) {
+        btn.textContent = "Write something first";
+        setTimeout(function () { btn.textContent = "Copy"; }, 1400);
+      }
+      return;
+    }
+    if (!navigator.clipboard || !navigator.clipboard.writeText) {
+      alert("Copy isn’t available here — select the note and copy manually.");
+      return;
+    }
+    navigator.clipboard.writeText(text).then(function () {
+      if (btn) {
+        btn.textContent = "Copied ✓";
+        setTimeout(function () { btn.textContent = "Copy"; }, 1400);
+      }
+    }).catch(function () {
+      alert("Couldn’t copy — try selecting the note manually.");
+    });
+  }
+
+  async function confirmSendNote() {
+    if (!notePendingPartnerId) return;
+    var input = $("noteSheetBody");
+    var btn = $("noteConfirmSend");
+    var noteBody = input ? String(input.value || "").trim() : "";
+    if (!noteBody) {
+      if (btn) {
+        btn.textContent = "Write a note first";
+        setTimeout(function () { btn.textContent = "Send note →"; }, 1400);
+      }
+      if (input) input.focus();
+      return;
+    }
+    try {
+      if (btn) btn.textContent = "Sending…";
+      var sectionId = "welcome";
+      var partnerRow = (await Cloud.listDownline()).filter(function (r) {
+        return r.profile.id === notePendingPartnerId;
+      })[0];
+      if (partnerRow && partnerRow.progress && partnerRow.progress.active) {
+        sectionId = partnerRow.progress.active;
+      }
+      await Cloud.saveLeaderNote(notePendingPartnerId, sectionId, noteBody);
+      appendOutreachLog(notePendingPartnerId, "note", noteBody);
+      closeNoteSheet();
+      if (btn) btn.textContent = "Send note →";
+      await renderLeader();
+    } catch (err) {
+      if (btn) btn.textContent = "Send note →";
+      alert(err.message || "Could not save note");
     }
   }
 
@@ -2092,6 +2212,7 @@ window.FS = window.FS || {};
         "#authOpenBtn,#authCloseBtn,#authSubmitBtn,#authCreateBtn,#authSignOutBtn,#railCopyInvite,#leaderCopyInvite,#authCopyInvite," +
         "#teamInviteOpen,#teamInviteClose,#teamInviteX,#exportBridgeBtn,#importLiveTreeBtn,#cheerDismiss,#notifySponsorBtn,[data-goto-bridge],[data-copy-nudge],[data-cheer],[data-note],[data-leader-log]," +
         "#cheerSheetClose,#cheerSheetCancel,#cheerChooseAnother,#cheerConfirmSend," +
+        "#noteSheetClose,#noteSheetCancel,#noteSheetCopy,#noteConfirmSend," +
         "#teamPersonClose,#teamPersonX,#teamPersonCancel,[data-team-sort],[data-team-person]," +
         "#teamRearrangeToggle,#teamMoveClose,#teamMoveX,#teamMoveCancel,[data-team-move],[data-team-move-to],[data-team-admin]," +
         "[data-cal-day],[data-cal-select],[data-cal-status],[data-cal-swap],[data-cal-week],[data-cal-nav],[data-cal-view],[data-cal-add],[data-cal-clear]," +
@@ -2432,27 +2553,20 @@ window.FS = window.FS || {};
         await confirmSendCheer();
         return;
       }
+      if (t.id === "noteSheetClose" || t.id === "noteSheetCancel") {
+        closeNoteSheet();
+        return;
+      }
+      if (t.id === "noteSheetCopy") {
+        copyNoteSheetBody();
+        return;
+      }
+      if (t.id === "noteConfirmSend") {
+        await confirmSendNote();
+        return;
+      }
       if (t.hasAttribute("data-note")) {
-        closeTeamPersonSheet();
-        var notePid = t.getAttribute("data-note");
-        var noteBody = window.prompt("Short note for this partner (shown at the top of their runway):", "");
-        if (noteBody == null) return;
-        noteBody = noteBody.trim();
-        if (!noteBody) return;
-        try {
-          var sectionId = "welcome";
-          var partnerRow = (await Cloud.listDownline()).filter(function (r) { return r.profile.id === notePid; })[0];
-          if (partnerRow && partnerRow.progress && partnerRow.progress.active) {
-            sectionId = partnerRow.progress.active;
-          }
-          await Cloud.saveLeaderNote(notePid, sectionId, noteBody);
-          appendOutreachLog(notePid, "note", noteBody);
-          t.textContent = "Saved ✓";
-          setTimeout(function () { t.textContent = "Leave note"; }, 1400);
-          await renderLeader();
-        } catch (err) {
-          alert(err.message || "Could not save note");
-        }
+        openNoteSheet(t.getAttribute("data-note"));
         return;
       }
       if (t.id === "calSheetClose" || t.id === "calSheetX" || t.hasAttribute("data-cal-save")) {
@@ -3083,6 +3197,8 @@ window.FS = window.FS || {};
     renderLeaderNoteBanner: renderLeaderNoteBanner,
     refreshIncomingMessages: refreshIncomingMessages,
     renderLeads: renderLeads,
-    openAuth: openAuth
+    openAuth: openAuth,
+    openNoteSheetForTour: openNoteSheetForTour,
+    closeNoteSheet: closeNoteSheet
   };
 })();

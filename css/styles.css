@@ -190,6 +190,20 @@ button{font-family:inherit;cursor:pointer}
 .cheer-sheet-actions{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 8px}
 .cheer-sheet-actions .btn,.cheer-sheet-actions .btn-ghost{flex:1;min-width:140px;text-align:center}
 .cheer-sheet-cancel{display:block;width:100%;border:none;background:transparent;color:var(--green-soft);font-size:13px;font-weight:600;padding:8px;cursor:pointer;font-family:inherit}
+.note-sheet-field{display:block;margin:0 0 12px}
+.note-sheet-input{
+  display:block;width:100%;min-height:110px;resize:vertical;
+  border:1.5px solid var(--sand);border-radius:12px;background:var(--white);
+  padding:12px 14px;font:inherit;font-size:15px;line-height:1.45;color:var(--green);
+  box-sizing:border-box;
+}
+.note-sheet-input:focus{outline:none;border-color:var(--moss);box-shadow:0 0 0 3px rgba(171,176,154,.35)}
+.note-sheet-actions{align-items:flex-start}
+.note-sheet-copy-wrap{flex:1;min-width:140px;display:flex;flex-direction:column;gap:6px}
+.note-sheet-copy-wrap .btn-ghost{width:100%;text-align:center}
+.note-sheet-copy-hint{margin:0;font-size:11.5px;line-height:1.4;color:var(--bark-soft);text-align:center}
+.note-sheet-actions #noteConfirmSend{flex:1;min-width:140px;align-self:stretch}
+body.overlay-open #noteSheet .cheer-sheet-backdrop{pointer-events:none}
 
 .today-card{background:linear-gradient(165deg,#fff 0%,#eef2ec 55%,#fbf6e6 100%);border:1.5px solid var(--moss);border-radius:18px;padding:22px 22px 18px;margin:0 0 24px;box-shadow:var(--shadow);position:relative;overflow:hidden}
 .today-card::before{content:"";position:absolute;right:-20px;top:-30px;width:120px;height:120px;border-radius:50%;background:rgba(232,200,106,.18);pointer-events:none}
@@ -1361,7 +1375,7 @@ button.vault-week-day:hover{border-color:var(--moss);box-shadow:0 6px 18px rgba(
 
 /* Tour coachmarks — dim everything except the spotlight hole */
 .overlay.tour{background:transparent;backdrop-filter:none;-webkit-backdrop-filter:none;align-items:stretch;justify-content:stretch;padding:0;overflow:hidden;pointer-events:none}
-.overlay.tour.open{display:block;animation:none}
+.overlay.tour.open{display:block;animation:none;z-index:100}
 .tour-spotlight{position:fixed;z-index:1;pointer-events:none;box-shadow:0 0 0 9999px rgba(40,52,44,.62);border:2.5px solid rgba(200,162,74,.85);background:transparent;transition:top .28s var(--ease),left .28s var(--ease),width .28s var(--ease),height .28s var(--ease),border-radius .28s}
 .tour-spotlight[hidden]{display:none!important}
 .overlay.tour .tour-card{position:fixed;z-index:2;margin:0;width:min(360px,calc(100vw - 24px));max-width:min(360px,calc(100vw - 24px));padding:20px 18px 18px;animation:tourCardIn .3s var(--ease);box-shadow:0 14px 40px rgba(10,20,14,.4);pointer-events:auto}

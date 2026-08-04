@@ -3268,8 +3268,14 @@
     if (tourKind !== "team") return;
     var sel = tip && tip.target;
     if (!sel) return;
+    var Bridge = window.FS.BridgeUI;
+    if (tip.openNoteSheet && Bridge && typeof Bridge.openNoteSheetForTour === "function") {
+      Bridge.openNoteSheetForTour();
+    } else if (Bridge && typeof Bridge.closeNoteSheet === "function") {
+      Bridge.closeNoteSheet();
+    }
     var needsMentorOpen = /nudge|cheer|note|mentor|leader-col|leaderLists/.test(sel);
-    if (needsMentorOpen) {
+    if (needsMentorOpen || tip.openNoteSheet) {
       var cols = document.querySelectorAll("#leaderLists details.leader-col");
       for (var i = 0; i < cols.length; i++) cols[i].open = true;
       var firstCard = document.querySelector("#leaderLists details.leader-card");
@@ -3571,6 +3577,9 @@
   function finishTour() {
     clearTimeout(tourPlaceTimer);
     clearTourHighlight();
+    if (window.FS.BridgeUI && typeof window.FS.BridgeUI.closeNoteSheet === "function") {
+      window.FS.BridgeUI.closeNoteSheet();
+    }
     var wrap = document.getElementById("tour");
     if (wrap) wrap.classList.remove("open");
     var card = document.getElementById("tourCard");

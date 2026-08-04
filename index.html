@@ -20,7 +20,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,400;1,9..144,500&family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/styles.css?v=146">
+<link rel="stylesheet" href="css/styles.css?v=148">
 </head>
 <body>
 
@@ -1069,6 +1069,28 @@
   </div>
 </div>
 
+<!-- ═══ LEAVE NOTE ═══ -->
+<div class="cheer-sheet" id="noteSheet" hidden>
+  <button type="button" class="cheer-sheet-backdrop" id="noteSheetClose" aria-label="Close"></button>
+  <div class="cheer-sheet-card" role="dialog" aria-modal="true" aria-labelledby="noteSheetTitle">
+    <div class="live-tag" id="noteSheetTitle">LEAVE A NOTE</div>
+    <p class="cheer-sheet-meta" id="noteSheetMeta"></p>
+    <label class="field note-sheet-field">
+      <span class="field-label">Your note</span>
+      <textarea class="note-sheet-input" id="noteSheetBody" rows="5" maxlength="500" placeholder="A short personal note…"></textarea>
+    </label>
+    <p class="cheer-sheet-hint">They’ll see this at the top of their runway — even if they open First Seeds later.</p>
+    <div class="cheer-sheet-actions note-sheet-actions">
+      <div class="note-sheet-copy-wrap">
+        <button type="button" class="btn-ghost" id="noteSheetCopy">Copy</button>
+        <p class="note-sheet-copy-hint">Paste it wherever you usually chat.</p>
+      </div>
+      <button type="button" class="btn" id="noteConfirmSend">Send note →</button>
+    </div>
+    <button type="button" class="cheer-sheet-cancel" id="noteSheetCancel">Cancel</button>
+  </div>
+</div>
+
 <!-- ═══ TEAM PERSON DETAIL ═══ -->
 <div class="cheer-sheet" id="teamPersonSheet" hidden>
   <button type="button" class="cheer-sheet-backdrop" id="teamPersonClose" aria-label="Close"></button>
@@ -1116,18 +1138,18 @@
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="js/config.js?v=146"></script>
-<script src="js/supabase-config.js?v=146"></script>
-<script src="js/data.js?v=146"></script>
-<script src="js/content.js?v=146"></script>
-<script src="js/content-vault.js?v=146"></script>
-<script src="js/products.js?v=146"></script>
-<script src="js/plant.js?v=146"></script>
-<script src="js/tree.js?v=146"></script>
-<script src="js/calendar.js?v=146"></script>
-<script src="js/cloud.js?v=146"></script>
-<script src="js/bridge-ui.js?v=146"></script>
-<script src="js/app.js?v=146"></script>
-<script src="js/pwa.js?v=146"></script>
+<script src="js/config.js?v=148"></script>
+<script src="js/supabase-config.js?v=148"></script>
+<script src="js/data.js?v=148"></script>
+<script src="js/content.js?v=148"></script>
+<script src="js/content-vault.js?v=148"></script>
+<script src="js/products.js?v=148"></script>
+<script src="js/plant.js?v=148"></script>
+<script src="js/tree.js?v=148"></script>
+<script src="js/calendar.js?v=148"></script>
+<script src="js/cloud.js?v=148"></script>
+<script src="js/bridge-ui.js?v=148"></script>
+<script src="js/app.js?v=148"></script>
+<script src="js/pwa.js?v=148"></script>
 </body>
 </html>
