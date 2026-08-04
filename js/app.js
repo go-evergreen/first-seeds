@@ -3236,7 +3236,8 @@
     return CFG.tour || [];
   }
 
-  function clearTourHighlight() {
+  function clearTourHighlight(opts) {
+    opts = opts || {};
     if (tourTargetEl) {
       tourTargetEl.classList.remove("tour-target-on");
       tourTargetEl = null;
@@ -3244,10 +3245,13 @@
     /* Sweep any leftovers (e.g. Learn in bottom nav after the home tour) */
     var leftovers = document.querySelectorAll(".tour-target-on");
     for (var i = 0; i < leftovers.length; i++) leftovers[i].classList.remove("tour-target-on");
-    var spot = document.getElementById("tourSpotlight");
-    if (spot) {
-      spot.hidden = true;
-      spot.style.cssText = "";
+    /* Between steps: keep the spotlight hole so the dim layer doesn't flash/stutter */
+    if (opts.hideSpot) {
+      var spot = document.getElementById("tourSpotlight");
+      if (spot) {
+        spot.hidden = true;
+        spot.style.cssText = "";
+      }
     }
   }
 
@@ -3335,21 +3339,12 @@
     }
 
     if (spot) {
-      var prevTop = parseFloat(spot.style.top) || spotTop;
-      var jump = Math.abs(spotTop - prevTop) > 100;
-      if (jump) spot.style.transition = "none";
       spot.hidden = false;
       spot.style.top = spotTop + "px";
       spot.style.left = spotLeft + "px";
       spot.style.width = Math.max(24, spotRight - spotLeft) + "px";
       spot.style.height = Math.max(24, spotBottom - spotTop) + "px";
       spot.style.borderRadius = targetEl.closest(".bottom-nav-btn") ? "16px" : "14px";
-      if (jump) {
-        /* Re-enable transition on next frame so later steps still ease gently */
-        requestAnimationFrame(function () {
-          if (spot) spot.style.transition = "";
-        });
-      }
     }
 
     card.style.transform = "none";
@@ -3407,46 +3402,45 @@
       var rect = el.getBoundingClientRect();
       var vh = window.innerHeight;
       var fullSpot = !!(tip && tip.fullSpot);
-      /* Prefer center for small targets; nearest for tall ones so we don't overshoot */
-      var block = fullSpot || rect.height > vh * 0.4 ? "nearest" : "center";
-      el.scrollIntoView({ block: block, inline: "nearest", behavior: "auto" });
-      rect = el.getBoundingClientRect();
-      if (fullSpot) {
-        /* Leave room above for the tip; do not pull tall trees back up afterward */
-        var tipRoom = 190;
-        var bottomSafe = vh - 80;
-        if (rect.top < tipRoom) window.scrollBy(0, rect.top - tipRoom);
-        rect = el.getBoundingClientRect();
-        /* Only nudge if the TOP of the target is below the fold — keep tip room */
-        if (rect.top > bottomSafe - 40) window.scrollBy(0, rect.top - tipRoom);
-      } else if (rect.top < 70) {
-        window.scrollBy(0, rect.top - 80);
-      } else if (rect.bottom > vh - 80) {
-        window.scrollBy(0, rect.bottom - (vh - 90));
+      var tipRoom = 200;
+      var bottomSafe = vh - 96;
+      var needsScroll = fullSpot
+        ? (rect.top < tipRoom - 24 || rect.top > bottomSafe - 80)
+        : (rect.top < 64 || rect.bottom > vh - 88);
+      if (needsScroll) {
+        /* One instant scroll — multiple smooth/adjust passes feel stop-motion */
+        if (fullSpot) {
+          window.scrollBy(0, rect.top - tipRoom);
+        } else if (rect.top < 64) {
+          window.scrollBy(0, rect.top - 80);
+        } else {
+          window.scrollBy(0, rect.bottom - (vh - 100));
+        }
       }
     } catch (err) {
-      try { el.scrollIntoView(true); } catch (err2) { /* ignore */ }
+      try { el.scrollIntoView({ block: "nearest", behavior: "auto" }); } catch (err2) { /* ignore */ }
     }
     if (locked) document.body.classList.add("overlay-open");
   }
 
   function scheduleTourPlacement(tip) {
     clearTimeout(tourPlaceTimer);
-    clearTourHighlight();
+    clearTourHighlight(); /* keep spotlight visible between steps */
     var attempts = 0;
+    var settleMs = (tip && (tip.openCheerSheet || tip.openNoteSheet || tip.fullSpot)) ? 140 : 60;
+
     var tryPlace = function () {
       prepareTeamTourTarget(tip);
       var el = tip && tip.target ? document.querySelector(tip.target) : null;
-      /* Prefer a visible tree; skip hidden #liveTeamGraph when graph didn't paint */
       if (el && el.hidden) el = null;
       if (el && el.closest && el.closest("[hidden]")) el = null;
       var rectOk = el && (function () {
         var r = el.getBoundingClientRect();
         return r.width >= 2 && r.height >= 2;
       })();
-      if ((!el || !rectOk) && attempts < 10) {
+      if ((!el || !rectOk) && attempts < 12) {
         attempts++;
-        tourPlaceTimer = setTimeout(tryPlace, 120);
+        tourPlaceTimer = setTimeout(tryPlace, 80);
         return;
       }
       if (!el || !rectOk) {
@@ -3456,15 +3450,13 @@
       tourTargetEl = el;
       el.classList.add("tour-target-on");
       scrollTourTargetIntoView(el, tip);
-      placeTourChrome(el, tip);
-      /* Second pass after layout settles */
+      /* One place after scroll/layout — avoid the old double-pass stutter */
       tourPlaceTimer = setTimeout(function () {
         if (!tourTargetEl) return;
-        prepareTeamTourTarget(tip);
-        scrollTourTargetIntoView(tourTargetEl, tip);
         placeTourChrome(tourTargetEl, tip);
-      }, 320);
+      }, settleMs);
     };
+
     requestAnimationFrame(function () {
       requestAnimationFrame(tryPlace);
     });
@@ -3579,7 +3571,7 @@
 
   function finishTour() {
     clearTimeout(tourPlaceTimer);
-    clearTourHighlight();
+    clearTourHighlight({ hideSpot: true });
     if (window.FS.BridgeUI) {
       if (typeof window.FS.BridgeUI.closeCheerSheet === "function") window.FS.BridgeUI.closeCheerSheet();
       if (typeof window.FS.BridgeUI.closeNoteSheet === "function") window.FS.BridgeUI.closeNoteSheet();
