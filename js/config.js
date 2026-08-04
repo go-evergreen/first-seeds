@@ -127,9 +127,12 @@ window.FS.CONFIG = {
 
     installEyebrow: "One important step",
     installTitle: "Add First Seeds to your Home Screen",
-    installLead: "This isn’t an App Store download — you’ll save it once so it opens like an app. Pick your device, follow the taps, then confirm below.",
-    installCta: "I've added it →",
+    installLead: "This isn’t an App Store download — save it once, then open it from the icon. Don’t keep filling things out in the browser after that.",
+    installCta: "Continue in the app →",
+    installOpenCta: "I'll open it from Home Screen →",
     installSkip: "I'll add it later",
+    installConfirm: "Yes — it’s on my Home Screen. I’ll open it from there next.",
+    installSwitchNote: "Close this browser tab, tap the First Seeds icon on your Home Screen, and finish setup there. If you keep going here, your answers may not show up in the app.",
 
     modeEyebrow: "Your path",
     modeTitle: "How much do you want on your plate?",

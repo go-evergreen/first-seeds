@@ -381,6 +381,8 @@
     if (installNext && OB.installCta) installNext.textContent = OB.installCta;
     var installSkip = document.getElementById("onboardingInstallSkip");
     if (installSkip && OB.installSkip) installSkip.textContent = OB.installSkip;
+    var installConfirmLabel = document.querySelector("#onboardInstallConfirmWrap span");
+    if (installConfirmLabel && OB.installConfirm) installConfirmLabel.textContent = OB.installConfirm;
     setText("obModeEyebrow", OB.modeEyebrow);
     setText("obModeTitle", OB.modeTitle);
     setText("obModeLead", OB.modeLead);
@@ -2892,6 +2894,11 @@
 
   function installGuideHtml(platform) {
     var head = '<p class="onboard-install-do">Do this now — before you continue</p>';
+    var switchNote =
+      '<p class="onboard-install-switch">' +
+      "<strong>Then leave this browser.</strong> Close this tab, open First Seeds from your Home Screen icon, and keep going there. " +
+      "If you fill things out here and later open the icon, it can look like you’re starting over — and your Roots answers may be missing." +
+      "</p>";
     if (platform === "ios") {
       return head +
         '<ol class="onboard-install-steps">' +
@@ -2901,8 +2908,10 @@
         "at the bottom of Safari (or top on iPad).</li>" +
         '<li class="onboard-install-key">Scroll and tap <strong>Add to Home Screen</strong>.</li>' +
         "<li>Tap <strong>Add</strong> in the top right — you should see a First Seeds icon on your Home Screen.</li>" +
+        '<li class="onboard-install-key">Close Safari. Open First Seeds from that new icon and finish setup there.</li>' +
         "</ol>" +
-        '<p class="onboard-install-note">If you don’t see “Add to Home Screen,” scroll the share sheet all the way down. Then come back here and check the box below.</p>';
+        switchNote +
+        '<p class="onboard-install-note">If you don’t see “Add to Home Screen,” scroll the share sheet all the way down. Already signed in? Use the same email in the app if it asks again.</p>';
     }
     if (platform === "android") {
       var installBtn = deferredInstallPrompt
@@ -2914,8 +2923,10 @@
         "<li>Tap the <strong>⋮</strong> menu (top right).</li>" +
         '<li class="onboard-install-key">Tap <strong>Install app</strong> or <strong>Add to Home screen</strong>.</li>' +
         "<li>Confirm — then look for the First Seeds icon on your Home Screen.</li>" +
+        '<li class="onboard-install-key">Close Chrome. Open First Seeds from that icon and finish setup there.</li>' +
         "</ol>" +
-        '<p class="onboard-install-note">On some Androids it says “Install” in the address bar instead of the menu. After it’s added, check the box below.</p>';
+        switchNote +
+        '<p class="onboard-install-note">On some Androids it says “Install” in the address bar instead of the menu. Already signed in? Use the same email in the app if it asks again.</p>';
     }
     /* desktop */
     var deskBtn = deferredInstallPrompt
@@ -2925,8 +2936,10 @@
       '<ol class="onboard-install-steps">' +
       '<li class="onboard-install-key">In <strong>Chrome</strong> or <strong>Edge</strong>, click the install icon in the address bar (a screen / ⊕), or menu → <strong>Install First Seeds</strong>.</li>' +
       "<li>On a Mac with Safari: <strong>File → Add to Dock</strong> (or Share → Add to Dock).</li>" +
+      "<li>After it’s installed, open First Seeds from the app / Dock icon — don’t keep going only in this browser tab.</li>" +
       "<li>Phone is usually better day-to-day — you can install there later from the same link.</li>" +
       "</ol>" +
+      switchNote +
       '<p class="onboard-install-note">Once it’s installed (or you’ve decided to do it on your phone later), use the buttons below.</p>';
   }
 
@@ -2978,7 +2991,13 @@
     }
     if (confirmWrap) confirmWrap.hidden = !installPlatform;
     if (confirm && !installPlatform) confirm.checked = false;
-    if (next && OB && OB.installCta) next.textContent = OB.installCta;
+    if (next && OB) {
+      next.textContent = isRunningAsInstalledApp()
+        ? (OB.installCta || "Continue →")
+        : (OB.installOpenCta || OB.installCta || "I'll open it from Home Screen →");
+    }
+    var installMsg = document.getElementById("onboardingInstallMsg");
+    if (installMsg) installMsg.textContent = "";
     syncInstallNextEnabled();
   }
 
@@ -3282,6 +3301,12 @@
         if (!isRunningAsInstalledApp() && installPlatform !== "standalone") {
           var conf = document.getElementById("onboardInstallConfirm");
           if (!conf || !conf.checked) return;
+          /* Still in the browser — steer them onto the Home Screen icon so storage doesn’t fork. */
+          var msg = document.getElementById("onboardingInstallMsg");
+          var note = (OB && OB.installSwitchNote) ||
+            "Close this browser and open First Seeds from your Home Screen icon to finish setup there.";
+          if (msg) msg.textContent = note;
+          return;
         }
         advanceToModeStep();
       });
