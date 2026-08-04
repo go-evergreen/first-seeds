@@ -20,7 +20,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,400;1,9..144,500&family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/styles.css?v=138">
+<link rel="stylesheet" href="css/styles.css?v=142">
 </head>
 <body>
 
@@ -490,7 +490,7 @@
       <!-- 06 PLANT / POST STUDIO (full only) -->
       <section class="panel" id="panel-plant" data-modes="full">
         <div class="sec-num" id="plantNum">06</div>
-        <h1>Start Planting</h1>
+        <h1>Post Studio</h1>
         <p class="sec-sub">Learn the five post types that earn attention — draft right inside each one.</p>
 
         <div class="plant-cadence">
@@ -517,6 +517,11 @@
         <div class="sec-num" id="tendNum">07</div>
         <h1>Content</h1>
         <p class="sec-sub">Your calendar plus a post vault and photos — plan here, post yourself. Nothing auto-sends.</p>
+
+        <div class="live-card focus-shortlist-card" id="contentShortlist">
+          <div class="live-tag">YOUR FOCUS PRODUCTS</div>
+          <div class="share-fav-list" id="contentFavList"><span class="dim">Heart a few products in Learn — they’ll show up here when you plan posts.</span></div>
+        </div>
 
         <div class="cal-board">
           <div class="cal-board-head">
@@ -585,15 +590,28 @@
       <!-- FINISH -->
       <section class="panel finish" id="panel-done">
         <div class="plantbox" id="finishPlant" aria-hidden="true"></div>
-        <div class="eyebrow" style="margin-bottom:10px" id="finishEyebrow">IN FULL BLOOM</div>
-        <h1 id="finishHeadline">Look what you grew.</h1>
-        <p class="body-p" style="max-width:540px;margin-left:auto;margin-right:auto" id="finishBody">You've got your story, your grove, drafts in Post Studio, and a Content habit you can keep. Grow Your Grove is where live partners show up when they join — Grow Your Tree stays your practice sketch. Keep showing up, keep flipping 🌱 to 🌳, and let launch feel like opening a door you already helped build.</p>
+        <div class="eyebrow" style="margin-bottom:10px" id="finishEyebrow">SOLID FOUNDATION</div>
+        <h1 id="finishHeadline">You grew a solid foundation.</h1>
+        <p class="body-p" style="max-width:540px;margin-left:auto;margin-right:auto" id="finishBody">Amazing job. You’ve built a real base for your business. Now lean on the other resources in First Seeds.</p>
+
+        <div class="live-card finish-shortlist" id="finishShortlist">
+          <div class="live-tag">YOUR FOCUS PRODUCTS</div>
+          <div class="share-fav-list" id="finishFavList"><span class="dim">Heart a few products in Learn — they’ll show up here.</span></div>
+        </div>
+
+        <div class="live-card finish-next" id="finishNext">
+          <div class="live-tag">WHAT'S NEXT</div>
+          <p class="finish-next-body" id="finishNextBody">Open Learn for clear facts. Use Leads when you’re ready to share a link. Content, Post Studio, and Grow Your Grove are ready when you are.</p>
+        </div>
+
         <div class="finish-sign" id="signoff"></div>
-        <div class="btn-row" style="justify-content:center">
-          <button class="btn-ghost" data-goto="roots">Revisit any section</button>
+        <div class="btn-row finish-actions" style="justify-content:center">
           <button class="btn" id="levelUpBtn" hidden>Unlock All in →</button>
-          <button class="btn" id="notifySponsorBtn">Notify my leader</button>
-          <button class="btn" id="exportBtn2">Download my answers</button>
+          <button class="btn" data-goto="tend" id="finishContentBtn" hidden>Open Content →</button>
+          <button class="btn" data-goto="know" id="finishLearnBtn">Open Learn →</button>
+          <button class="btn-ghost" data-goto="welcome">Back to Sprout</button>
+          <button class="btn-ghost" id="notifySponsorBtn">Notify my leader</button>
+          <button class="btn-ghost" id="exportBtn2">Download my answers</button>
         </div>
       </section>
 
@@ -1093,18 +1111,18 @@
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="js/config.js?v=138"></script>
-<script src="js/supabase-config.js?v=138"></script>
-<script src="js/data.js?v=138"></script>
-<script src="js/content.js?v=138"></script>
-<script src="js/content-vault.js?v=138"></script>
-<script src="js/products.js?v=138"></script>
-<script src="js/plant.js?v=138"></script>
-<script src="js/tree.js?v=138"></script>
-<script src="js/calendar.js?v=138"></script>
-<script src="js/cloud.js?v=138"></script>
-<script src="js/bridge-ui.js?v=138"></script>
-<script src="js/app.js?v=138"></script>
-<script src="js/pwa.js?v=138"></script>
+<script src="js/config.js?v=142"></script>
+<script src="js/supabase-config.js?v=142"></script>
+<script src="js/data.js?v=142"></script>
+<script src="js/content.js?v=142"></script>
+<script src="js/content-vault.js?v=142"></script>
+<script src="js/products.js?v=142"></script>
+<script src="js/plant.js?v=142"></script>
+<script src="js/tree.js?v=142"></script>
+<script src="js/calendar.js?v=142"></script>
+<script src="js/cloud.js?v=142"></script>
+<script src="js/bridge-ui.js?v=142"></script>
+<script src="js/app.js?v=142"></script>
+<script src="js/pwa.js?v=142"></script>
 </body>
 </html>

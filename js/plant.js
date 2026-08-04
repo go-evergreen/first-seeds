@@ -132,21 +132,25 @@ window.FS = window.FS || {};
         s += '<ellipse cx="60" cy="' + (stemTop + 3) + '" rx="5.5" ry="8.5" fill="#d9a93f" opacity=".7"/>';
         s += '<ellipse cx="60" cy="' + (stemTop + 1.5) + '" rx="3.2" ry="5.5" fill="#f5e08a" opacity=".85"/>';
       }
-      if (g >= 5) {
+      if (g === 5) {
+        /* Opening bud — full bloom reserved for stage 6 */
+        s += '<ellipse cx="60" cy="' + stemTop + '" rx="8" ry="11" fill="url(#' + bloom + ')" opacity=".88"/>';
+        s += '<ellipse cx="60" cy="' + (stemTop - 2) + '" rx="4.5" ry="6" fill="#fff4c8" opacity=".55"/>';
+        s += '<circle cx="60" cy="' + stemTop + '" r="3.5" fill="#5a4a37" opacity=".75"/>';
+      }
+      if (g >= 6) {
         var degs = [0, 72, 144, 216, 288];
         for (var d = 0; d < degs.length; d++) {
           s += '<ellipse cx="60" cy="' + stemTop + '" rx="7" ry="13.5" fill="url(#' + bloom + ')" transform="rotate(' +
             degs[d] + ' 60 ' + stemTop + ')" opacity=".94"/>';
         }
-        s += '<circle cx="60" cy="' + stemTop + '" r="5.8" fill="#5a4a37"/>';
-        s += '<circle cx="60" cy="' + stemTop + '" r="3.2" fill="#e8c45a" opacity=".9"/>';
-      }
-      if (g >= 6) {
         var outer = [36, 108, 180, 252, 324];
         for (var o = 0; o < outer.length; o++) {
           s += '<ellipse cx="60" cy="' + stemTop + '" rx="6" ry="16" fill="#f8e28a" opacity=".62" transform="rotate(' +
             outer[o] + ' 60 ' + stemTop + ')"/>';
         }
+        s += '<circle cx="60" cy="' + stemTop + '" r="5.8" fill="#5a4a37"/>';
+        s += '<circle cx="60" cy="' + stemTop + '" r="3.2" fill="#e8c45a" opacity=".9"/>';
         s += '<circle cx="60" cy="' + stemTop + '" r="4" fill="#fff4c8" opacity=".55"/>';
       }
       s += '</g>';

@@ -13,7 +13,7 @@ window.FS.SECTIONS = [
   { id: "ground", label: "Your Patch of Ground", sub: "your page",        modes: ["starter", "full"] },
   { id: "grove",  label: "Map Your Grove",       sub: "customers · partners optional", modes: ["starter", "full"] },
   { id: "tree",   label: "Grow Your Tree",       sub: "your future team", modes: ["full"] },
-  { id: "plant",  label: "Start Planting",       sub: "your first seeds", modes: ["full"] },
+  { id: "plant",  label: "Post Studio",          sub: "your first drafts", modes: ["full"] },
   { id: "tend",   label: "Content",              sub: "calendar, drafts & photos", modes: ["full"] }
 ];
 
