@@ -17,8 +17,9 @@
   --ease:cubic-bezier(.22,1,.36,1);
 }
 *{margin:0;padding:0;box-sizing:border-box;-webkit-font-smoothing:antialiased}
-html{max-width:100%;overflow-x:hidden}
-body{font-family:'DM Sans',sans-serif;background:var(--paper);color:var(--ink);min-height:100vh;max-width:100%;overflow-x:hidden}
+/* overflow-x:hidden on html/body can break position:fixed bottom bars on mobile WebKit */
+html{max-width:100%;overflow-x:clip}
+body{font-family:'DM Sans',sans-serif;background:var(--paper);color:var(--ink);min-height:100vh;max-width:100%;overflow-x:clip}
 button{font-family:inherit;cursor:pointer}
 :focus-visible{outline:3px solid var(--gold);outline-offset:2px;border-radius:4px}
 ::selection{background:var(--gold-soft);color:var(--green)}
@@ -111,7 +112,8 @@ button{font-family:inherit;cursor:pointer}
 .live-team-you-row{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:0 0 10px}
 .live-team-you{font-family:'Fraunces',serif;font-weight:600;font-size:16px;color:var(--green);margin:0;display:flex;align-items:center;gap:8px}
 .live-team-you-mark{font-size:15px}
-.live-l1-list{display:flex;flex-direction:column;gap:8px;max-height:min(70vh,720px);overflow:auto;padding-right:4px;-webkit-overflow-scrolling:touch}
+/* Page scroll only — nested overflow here fights the fixed bottom nav on mobile */
+.live-l1-list{display:flex;flex-direction:column;gap:8px}
 .live-l1{border:1.5px solid var(--sand);border-radius:14px;background:var(--paper);overflow:hidden}
 .live-l1.has-kids{border-left:3.5px solid var(--moss)}
 .live-l1.is-new{border-color:rgba(196,122,74,.45);box-shadow:inset 3px 0 0 #c47a4a}
@@ -436,7 +438,25 @@ button{font-family:inherit;cursor:pointer}
 .inline-link{border:none;background:none;padding:0;font:inherit;color:var(--moss);font-weight:700;text-decoration:underline;cursor:pointer}
 
 /* Persistent bottom nav */
-.bottom-nav{position:fixed;left:0;right:0;bottom:0;z-index:50;display:flex;align-items:stretch;justify-content:space-around;gap:2px;background:rgba(245,246,242,.96);backdrop-filter:blur(12px);border-top:1px solid var(--sand);padding:6px 6px calc(6px + env(safe-area-inset-bottom));box-shadow:0 -8px 28px rgba(61,69,60,.1)}
+.bottom-nav{
+  position:fixed;
+  left:0;right:0;bottom:0;
+  width:100%;
+  max-width:100%;
+  z-index:50;
+  display:flex;
+  align-items:stretch;
+  justify-content:space-around;
+  gap:2px;
+  background:var(--paper);
+  border-top:1px solid var(--sand);
+  padding:6px 6px calc(6px + env(safe-area-inset-bottom));
+  box-shadow:0 -8px 28px rgba(61,69,60,.1);
+  /* Own compositor layer — avoids mid-scroll “stuck” bars on iOS/Safari */
+  transform:translateZ(0);
+  -webkit-backface-visibility:hidden;
+  backface-visibility:hidden;
+}
 .bottom-nav-btn{flex:1;max-width:140px;min-height:56px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;border:none;background:transparent;color:var(--green-soft);border-radius:14px;padding:10px 8px;font-family:inherit;font-size:11px;font-weight:600;letter-spacing:.02em;cursor:pointer;transition:color .2s,background .2s;-webkit-tap-highlight-color:transparent;touch-action:manipulation}
 @media (hover:hover) and (pointer:fine){
   .bottom-nav-btn:hover{color:var(--green);background:rgba(171,176,154,.28)}
@@ -1515,6 +1535,10 @@ body.overlay-open{overflow:hidden}
   .bottom-nav{
     padding-left:max(4px, env(safe-area-inset-left));
     padding-right:max(4px, env(safe-area-inset-right));
+    /* Solid paint — backdrop-filter on fixed bars glitches during momentum scroll */
+    background:var(--paper);
+    backdrop-filter:none;
+    -webkit-backdrop-filter:none;
   }
   .bottom-nav-btn{max-width:none;min-width:0;min-height:58px;padding:12px 4px;font-size:11px}
 }
