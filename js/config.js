@@ -280,7 +280,7 @@ window.FS.CONFIG = {
   ],
 
   /* Coachmarks the first time someone appears on Team */
-  teamTourVersion: 8,
+  teamTourVersion: 9,
   teamTour: [
     {
       title: "Your unique team link",
@@ -305,13 +305,6 @@ window.FS.CONFIG = {
       placement: "auto"
     },
     {
-      title: "Suggested check-in",
-      body: "Each person gets a suggested message based on how they’re moving. That’s your starting point — you can copy it from the card, or open Leave note to send it in the app.",
-      panel: "leader",
-      target: '[data-team-tour="nudge"]',
-      placement: "auto"
-    },
-    {
       title: "Send a cheer in the app",
       body: "Send cheer shows a preview first. Pick a line, then send — it appears in their First Seeds as a banner from you, even if they open the app later.",
       panel: "leader",
@@ -320,7 +313,7 @@ window.FS.CONFIG = {
     },
     {
       title: "Leave a personal note",
-      body: "Leave note opens this sheet, usually prefilled with the suggested check-in. Edit it, then Send note so it shows at the top of their runway. Or tap Copy and paste it wherever you usually chat.",
+      body: "Tap Leave note to open a short message — usually prefilled from how they’re moving (like “just getting started”). Edit it, then Send so it shows on their runway — or Copy and paste it wherever you usually chat.",
       panel: "leader",
       target: "#noteSheet .cheer-sheet-card",
       openNoteSheet: true,

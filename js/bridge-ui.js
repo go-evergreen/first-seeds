@@ -468,15 +468,10 @@ window.FS = window.FS || {};
         html += "</summary>";
         html += '<div class="leader-card-body">';
         var msg = item.nudge || {};
-        var copyLabel = item.bucket === "nudge" ? "Copy nudge" : "Copy message";
-        html += '<div class="leader-card-nudge' + (item.bucket === "nudge" ? " is-nudge-tone" : " is-support-tone") + '"' + (isMentorDemo ? ' data-team-tour="nudge"' : "") + '>';
-        html += '<em>' + esc(msg.when || "Check-in") + '</em>';
-        html += '<div id="nudge_' + esc(p.id) + '">' + esc(msg.body || "") + '</div>';
-        html += '<button type="button" class="leader-nudge-copy" data-copy-nudge="' + esc(p.id) + '" data-copy-label="' + esc(copyLabel) + '">' + esc(copyLabel) + "</button>";
-        html += '</div>';
         suggestedNotesByPartner[p.id] = {
           body: msg.body || "",
-          name: p.display_name || p.email || "Partner"
+          name: p.display_name || p.email || "Partner",
+          when: msg.when || "Check-in"
         };
         if (item.row.progress && item.row.progress.notified_at) {
           var pingAge = daysBetween(new Date(item.row.progress.notified_at), now);
@@ -1291,12 +1286,10 @@ window.FS = window.FS || {};
 
   function noteDraftFor(partnerId) {
     var cached = suggestedNotesByPartner[partnerId];
-    if (cached && cached.body) return cached;
+    if (cached) return cached;
     var person = teamPersonCache[partnerId];
     var name = (person && (person.display_name || person.email)) || "Partner";
-    var nudgeEl = $("nudge_" + partnerId);
-    var body = nudgeEl ? String(nudgeEl.textContent || "").trim() : "";
-    return { body: body, name: name };
+    return { body: "", name: name, when: "Check-in" };
   }
 
   function openNoteSheet(partnerId) {
@@ -1308,9 +1301,15 @@ window.FS = window.FS || {};
     var sheet = $("noteSheet");
     var meta = $("noteSheetMeta");
     var input = $("noteSheetBody");
+    var label = document.querySelector("#noteSheet .field-label");
     var copyBtn = $("noteSheetCopy");
     var sendBtn = $("noteConfirmSend");
-    if (meta) meta.textContent = "For " + (draft.name || "Partner");
+    if (meta) {
+      meta.textContent = draft.when
+        ? ("For " + (draft.name || "Partner") + " · " + draft.when)
+        : ("For " + (draft.name || "Partner"));
+    }
+    if (label) label.textContent = draft.body ? "Suggested note (edit freely)" : "Your note";
     if (input) {
       input.value = draft.body || "";
       setTimeout(function () {
