@@ -948,19 +948,35 @@ window.FS = window.FS || {};
 
     function renderKids(nodes, depth) {
       if (!nodes || !nodes.length) return "";
-      var html = '<ul class="live-team-kids depth-' + depth + '">';
+      var COLLAPSE_AT = 5; /* big branches start closed — tap + to open */
+      var html = '<ul class="live-team-kids depth-' + Math.min(depth, 6) + '">';
       nodes.forEach(function (p) {
         var under = typeof p._under === "number" ? p._under : countTreeDesc(p.children);
+        var kids = p.children || [];
+        var hasKids = kids.length > 0;
         cachePerson(p, under, null, false);
+        var startOpen = hasKids && under <= COLLAPSE_AT;
+        var tag = hasKids ? "details" : "div";
         html += '<li class="live-team-node">';
-        html += '<button type="button" class="live-team-row" data-team-person="' + esc(p.id) + '">';
-        html += '<span class="live-team-dot" aria-hidden="true"></span>';
-        html += '<span class="live-team-name">' + esc(p.display_name || p.email) + "</span>";
+        html += "<" + tag + ' class="live-team-branch' + (hasKids ? " has-kids" : "") + '"' +
+          (hasKids && startOpen ? " open" : "") + ">";
+        html += "<" + (hasKids ? "summary" : "div") + ' class="live-team-sum' +
+          (hasKids ? "" : " is-static") + '">';
+        html += '<span class="live-team-sprout" aria-hidden="true">🌱</span>';
+        html += '<span class="live-team-main">';
+        html += '<button type="button" class="live-team-name" data-team-person="' + esc(p.id) + '">' +
+          esc(p.display_name || p.email) + "</button>";
         html += hubModeChipHtml(p.hub_mode);
-        if (under) html += '<span class="live-team-count">' + under + " under</span>";
-        html += "</button>";
-        html += renderKids(p.children, depth + 1);
-        html += "</li>";
+        if (hasKids) {
+          html += '<span class="live-team-under-n">' + under + " under</span>";
+        }
+        html += "</span>";
+        if (hasKids) {
+          html += '<span class="live-team-expand" aria-hidden="true" title="Show or hide ' + under + ' under"></span>';
+        }
+        html += hasKids ? "</summary>" : "</div>";
+        if (hasKids) html += renderKids(kids, depth + 1);
+        html += "</" + tag + "></li>";
       });
       html += "</ul>";
       return html;
@@ -981,7 +997,7 @@ window.FS = window.FS || {};
     if (Cloud.isOrgAdmin() && rearrangeOn) {
       html += '<p class="team-admin-hint">Tap a person → Move under… Mentoring follows the new Level 1. Invited-by stays the same.</p>';
     }
-    html += '<p class="live-team-lead">Tap a name for their details. A <strong>+</strong> means they have people under them — tap to expand.</p>';
+    html += '<p class="live-team-lead">Tap a name for their details. A <strong>+</strong> means they have people under them — branches with more than 5 start closed.</p>';
     html += '<div class="live-team-stats is-compact">';
     html += '<div class="live-stat"><strong>' + l1 + '</strong><span>Level 1</span></div>';
     html += '<div class="live-stat"><strong>' + total + '</strong><span>on tree</span></div>';
