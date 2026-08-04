@@ -686,6 +686,8 @@ body.hub-menu-open{overflow:hidden}
 
 /* Mode-gated content */
 body.mode-starter .full-only{display:none!important}
+/* Main tour: briefly reveal Grove so Soft start can still highlight the team tab */
+body.tour-reveal-grove .bottom-nav-btn[data-tab="team"]{display:flex!important}
 body.mode-full .starter-only{display:none!important}
 
 /* ── panels ── */

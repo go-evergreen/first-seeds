@@ -3252,6 +3252,7 @@
         spot.hidden = true;
         spot.style.cssText = "";
       }
+      document.body.classList.remove("tour-reveal-grove");
     }
   }
 
@@ -3426,6 +3427,7 @@
   function scheduleTourPlacement(tip) {
     clearTimeout(tourPlaceTimer);
     clearTourHighlight(); /* keep spotlight visible between steps */
+    document.body.classList.toggle("tour-reveal-grove", !!(tip && tip.revealGroveTab));
     var attempts = 0;
     var settleMs = (tip && (tip.openCheerSheet || tip.openNoteSheet || tip.fullSpot)) ? 140 : 60;
 

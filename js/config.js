@@ -157,6 +157,14 @@ window.FS.CONFIG = {
       panel: "welcome",
       target: '#bottomNav [data-tab="know"]',
       placement: "above"
+    },
+    {
+      title: "This is where you grow your own grove",
+      body: "Grove is your live team home — and this is where you get your unique join link to share with people who want to build a business with you. When they sign in with your link, they’re on your team. You’ll also see who’s moving and can cheer them on. (Soft start unlocks Grove on All in anytime in Settings.)",
+      panel: "welcome",
+      target: '#bottomNav [data-tab="team"]',
+      placement: "above",
+      revealGroveTab: true
     }
   ],
 
