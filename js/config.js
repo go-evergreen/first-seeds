@@ -280,7 +280,7 @@ window.FS.CONFIG = {
   ],
 
   /* Coachmarks the first time someone appears on Team */
-  teamTourVersion: 9,
+  teamTourVersion: 10,
   teamTour: [
     {
       title: "Your unique team link",
@@ -299,7 +299,7 @@ window.FS.CONFIG = {
     },
     {
       title: "Mentoring — by how they’re moving",
-      body: "Needs a nudge · In motion · Ready. Tap a section to open or close it. Based on real First Seeds progress — not just that they signed up.",
+      body: "Needs a nudge · In motion · Ready. Tap a name to expand their card — you’ll see progress, Send cheer, and Leave note. No draft message sits on the card itself.",
       panel: "leader",
       target: "#leaderLists .leader-col",
       placement: "auto"
@@ -312,8 +312,15 @@ window.FS.CONFIG = {
       placement: "auto"
     },
     {
-      title: "Leave a personal note",
-      body: "Tap Leave note to open a short message — usually prefilled from how they’re moving (like “just getting started”). Edit it, then Send so it shows on their runway — or Copy and paste it wherever you usually chat.",
+      title: "Leave note — tap here first",
+      body: "When you want to coach someone, tap Leave note on their card. Their card stays clean until you do.",
+      panel: "leader",
+      target: '[data-team-tour="note"]',
+      placement: "auto"
+    },
+    {
+      title: "Write, send, or copy",
+      body: "This sheet opens with a suggested note based on how they’re moving. Edit it, then Send so it shows on their runway — or Copy and paste it wherever you usually chat.",
       panel: "leader",
       target: "#noteSheet .cheer-sheet-card",
       openNoteSheet: true,
