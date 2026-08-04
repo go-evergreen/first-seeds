@@ -139,8 +139,8 @@
     return false;
   }
 
-  /* Starter path: roots → ground → grove → done
-     Full path:    roots → ground → grove → tree → plant → tend → done */
+  /* Soft start: roots → share → ground → grove → done
+     Full path:    roots → share → ground → grove → tree → plant → tend → done */
   function nextAfter(id) {
     if (isStarter()) {
       return { roots: "share", share: "ground", ground: "grove", grove: "done" }[id];
@@ -1178,7 +1178,16 @@
 
   function cleanForWhoList(list) {
     return (list || []).map(function (s) {
-      return cleanProdSquares(s).replace(/\s*\(site category\)\s*/gi, "").trim();
+      return cleanProdSquares(s);
+    }).filter(function (t) {
+      if (!t) return false;
+      /* Drop invented / inferred audience tags — keep Ringana site categories only */
+      if (/per product story|per product copy/i.test(t)) return false;
+      return true;
+    }).map(function (t) {
+      return t
+        .replace(/\s*\((site category|site tag)\)\s*/gi, "")
+        .trim();
     }).filter(Boolean);
   }
 
@@ -2375,6 +2384,11 @@
         if (favoriteCount() < 2) b.textContent = "Heart at least 2 products in Learn";
         else if (!talkOpened()) b.textContent = "Open Talking fresh once";
         else b.textContent = b.getAttribute("data-wait");
+      } else if (id === "tend") {
+        var CalWait = window.FS.Calendar;
+        var postedWait = CalWait && CalWait.countPosted ? CalWait.countPosted(state.data.calendar || {}) : 0;
+        if (postedWait < 3) b.textContent = "Mark 3 cards Done after you post (" + postedWait + "/3)";
+        else b.textContent = b.getAttribute("data-wait");
       } else {
         b.textContent = b.getAttribute("data-wait");
       }
@@ -2495,13 +2509,21 @@
     list.innerHTML = html;
     if (meta) {
       if (lane === "customers") {
-        meta.textContent = picks.length
-          ? picks.length + " of 5 first chats selected · landing on your calendar"
-          : "Tap the easiest people to share a product story with first.";
+        if (picks.length) {
+          meta.textContent = isFull()
+            ? picks.length + " of 5 first chats selected · landing on your Content calendar"
+            : picks.length + " of 5 first chats selected · your first outreach list";
+        } else {
+          meta.textContent = "Tap the easiest people to share a product story with first.";
+        }
       } else {
-        meta.textContent = picks.length
-          ? picks.length + " partner chats selected · also on your calendar"
-          : "Optional — tap anyone you'd start a mission chat with.";
+        if (picks.length) {
+          meta.textContent = isFull()
+            ? picks.length + " partner chats selected · also on your Content calendar"
+            : picks.length + " partner chats selected · optional outreach list";
+        } else {
+          meta.textContent = "Optional — tap anyone you'd start a mission chat with.";
+        }
       }
     }
   }
@@ -2539,7 +2561,9 @@
       suffix: " who might grow with you",
       hints: {
         low: "Nice start. Add more only if you're building with people.",
-        mid: "Solid optional list — tap first chats if you want them on the calendar.",
+        mid: isFull()
+          ? "Solid optional list — tap first chats if you want them on the calendar."
+          : "Solid optional list — tap first chats if you want a short outreach list.",
         full: "That's a full partner list. Quality over quantity from here.",
         over: "Focus on the warmest handful — partners are optional."
       },
@@ -3521,7 +3545,7 @@
       if (tourKind === "team") {
         next.textContent = tourIdx >= tips.length - 1 ? "Got it — let's mentor →" : "Next";
       } else {
-        next.textContent = tourIdx >= tips.length - 1 ? "Start planting →" : "Next";
+        next.textContent = tourIdx >= tips.length - 1 ? "Let's grow →" : "Next";
       }
     }
     var dots = document.getElementById("tourDots");
