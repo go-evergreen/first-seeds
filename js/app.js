@@ -3269,13 +3269,18 @@
     var sel = tip && tip.target;
     if (!sel) return;
     var Bridge = window.FS.BridgeUI;
-    if (tip.openNoteSheet && Bridge && typeof Bridge.openNoteSheetForTour === "function") {
+    if (tip.openCheerSheet && Bridge && typeof Bridge.openCheerSheetForTour === "function") {
+      if (Bridge.closeNoteSheet) Bridge.closeNoteSheet();
+      Bridge.openCheerSheetForTour();
+    } else if (tip.openNoteSheet && Bridge && typeof Bridge.openNoteSheetForTour === "function") {
+      if (Bridge.closeCheerSheet) Bridge.closeCheerSheet();
       Bridge.openNoteSheetForTour();
-    } else if (Bridge && typeof Bridge.closeNoteSheet === "function") {
-      Bridge.closeNoteSheet();
+    } else {
+      if (Bridge && typeof Bridge.closeCheerSheet === "function") Bridge.closeCheerSheet();
+      if (Bridge && typeof Bridge.closeNoteSheet === "function") Bridge.closeNoteSheet();
     }
     var needsMentorOpen = /nudge|cheer|note|mentor|leader-col|leaderLists/.test(sel);
-    if (needsMentorOpen || tip.openNoteSheet) {
+    if (needsMentorOpen || tip.openCheerSheet || tip.openNoteSheet) {
       var cols = document.querySelectorAll("#leaderLists details.leader-col");
       for (var i = 0; i < cols.length; i++) cols[i].open = true;
       var firstCard = document.querySelector("#leaderLists details.leader-card");
@@ -3521,11 +3526,9 @@
   }
 
   function maybeStartTeamTour(count) {
+    /* Auto-show once: first time someone is on their live team — never again unless Settings → Replay Grove tour.
+       Do NOT reset on teamTourVersion bumps (that was re-showing the tour for everyone). */
     if (!count || count < 1) return;
-    var ver = (CFG.teamTourVersion || 1);
-    if (state.data.teamTourVer !== ver) {
-      state.data.teamTourDone = false;
-    }
     if (state.data.teamTourDone) return;
     if (!state.tourDone) return; /* finish home tour first */
     var wrap = document.getElementById("tour");
@@ -3577,8 +3580,9 @@
   function finishTour() {
     clearTimeout(tourPlaceTimer);
     clearTourHighlight();
-    if (window.FS.BridgeUI && typeof window.FS.BridgeUI.closeNoteSheet === "function") {
-      window.FS.BridgeUI.closeNoteSheet();
+    if (window.FS.BridgeUI) {
+      if (typeof window.FS.BridgeUI.closeCheerSheet === "function") window.FS.BridgeUI.closeCheerSheet();
+      if (typeof window.FS.BridgeUI.closeNoteSheet === "function") window.FS.BridgeUI.closeNoteSheet();
     }
     var wrap = document.getElementById("tour");
     if (wrap) wrap.classList.remove("open");

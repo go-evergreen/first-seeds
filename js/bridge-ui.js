@@ -1236,6 +1236,17 @@ window.FS = window.FS || {};
 
   var cheerPendingPartnerId = null;
 
+  function openCheerSheetForTour() {
+    var btn = document.querySelector("#leaderLists [data-cheer]");
+    var pid = btn && btn.getAttribute("data-cheer");
+    if (!pid) {
+      var keys = Object.keys(suggestedNotesByPartner || {});
+      pid = keys.length ? keys[0] : null;
+    }
+    if (!pid) return;
+    openCheerSheet(pid);
+  }
+
   function openCheerSheet(partnerId) {
     closeTeamPersonSheet();
     closeTeamMoveSheet();
@@ -3208,6 +3219,8 @@ window.FS = window.FS || {};
     refreshIncomingMessages: refreshIncomingMessages,
     renderLeads: renderLeads,
     openAuth: openAuth,
+    openCheerSheetForTour: openCheerSheetForTour,
+    closeCheerSheet: closeCheerSheet,
     openNoteSheetForTour: openNoteSheetForTour,
     closeNoteSheet: closeNoteSheet
   };

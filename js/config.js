@@ -280,7 +280,7 @@ window.FS.CONFIG = {
   ],
 
   /* Coachmarks the first time someone appears on Team */
-  teamTourVersion: 10,
+  teamTourVersion: 11,
   teamTour: [
     {
       title: "Your unique team link",
@@ -299,28 +299,22 @@ window.FS.CONFIG = {
     },
     {
       title: "Mentoring — by how they’re moving",
-      body: "Needs a nudge · In motion · Ready. Tap a name to expand their card — you’ll see progress, Send cheer, and Leave note. No draft message sits on the card itself.",
+      body: "Needs a nudge · In motion · Ready. Tap a name to expand — progress, Send cheer, and Leave note. Cards stay clean; drafts only open when you tap those buttons.",
       panel: "leader",
       target: "#leaderLists .leader-col",
       placement: "auto"
     },
     {
-      title: "Send a cheer in the app",
-      body: "Send cheer shows a preview first. Pick a line, then send — it appears in their First Seeds as a banner from you, even if they open the app later.",
+      title: "Send a cheer",
+      body: "Cheer is a warm preset line you send inside First Seeds. Preview it here, tap Choose another to cycle lines, then Send — they get a banner from you at the top of their app.",
       panel: "leader",
-      target: '[data-team-tour="cheer"]',
+      target: "#cheerSheet .cheer-sheet-card",
+      openCheerSheet: true,
       placement: "auto"
     },
     {
-      title: "Leave note — tap here first",
-      body: "When you want to coach someone, tap Leave note on their card. Their card stays clean until you do.",
-      panel: "leader",
-      target: '[data-team-tour="note"]',
-      placement: "auto"
-    },
-    {
-      title: "Write, send, or copy",
-      body: "This sheet opens with a suggested note based on how they’re moving. Edit it, then Send so it shows on their runway — or Copy and paste it wherever you usually chat.",
+      title: "Leave a note",
+      body: "Leave note is your own message (often prefilled from how they’re moving). Edit it, then Send so it shows on their runway — or Copy and paste it wherever you usually chat. Nothing sits on their card until you open this.",
       panel: "leader",
       target: "#noteSheet .cheer-sheet-card",
       openNoteSheet: true,
