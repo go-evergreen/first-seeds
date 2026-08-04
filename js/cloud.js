@@ -27,6 +27,41 @@ window.FS = window.FS || {};
     return typeof window.FS.supabaseConfigured === "function" && window.FS.supabaseConfigured();
   }
 
+  /* Same local calendar day? Used so "active today" isn't a rolling 24h window. */
+  function sameLocalCalendarDay(aIso, bDate) {
+    if (!aIso) return false;
+    var a = new Date(aIso);
+    if (isNaN(a.getTime())) return false;
+    var b = bDate || new Date();
+    return a.getFullYear() === b.getFullYear() &&
+      a.getMonth() === b.getMonth() &&
+      a.getDate() === b.getDate();
+  }
+
+  /* Mark presence at most once per local calendar day (open / sync), not on every auth refresh. */
+  async function touchLastActive(force) {
+    if (!sessionUser) return false;
+    var now = new Date();
+    if (!force && sameLocalCalendarDay(sessionUser.last_active_at, now)) return false;
+    var iso = now.toISOString();
+    if (configured() && client) {
+      try {
+        await client.from("profiles").update({ last_active_at: iso }).eq("id", sessionUser.id);
+      } catch (e) {
+        return false;
+      }
+    } else {
+      var store = localStore();
+      var u = store.users[sessionUser.id];
+      if (!u) return false;
+      u.last_active_at = iso;
+      store.users[sessionUser.id] = u;
+      localSave(store);
+    }
+    sessionUser.last_active_at = iso;
+    return true;
+  }
+
   /* ── local bridge store (demo / offline) ─────────────── */
   function localStore() {
     try {
@@ -66,6 +101,7 @@ window.FS = window.FS || {};
     onChange: onChange,
     user: function () { return sessionUser; },
     isSignedIn: function () { return !!sessionUser; },
+    touchActive: function () { return touchLastActive(false); },
 
     captureJoinFromUrl: function () {
       try {
@@ -231,9 +267,8 @@ window.FS = window.FS || {};
           if (refreshed.data) profile = refreshed.data;
         } catch (e) {}
       }
-      try {
-        await client.from("profiles").update({ last_active_at: new Date().toISOString() }).eq("id", authUser.id);
-      } catch (e) {}
+      /* Do not bump last_active_at here — auth token refresh would fake "active today".
+         Presence is touched on real app open (visibility) and progress sync. */
       return Cloud._publicUser(profile);
     },
 
@@ -402,12 +437,17 @@ window.FS = window.FS || {};
       };
       if (configured() && client) {
         await client.from("runway_progress").upsert(payload);
-        await client.from("profiles").update({
+        var profilePatch = {
           hub_mode: (stateSlice.settings && stateSlice.settings.hubMode) || sessionUser.hub_mode || "",
           display_name: (stateSlice.settings && stateSlice.settings.partnerName) || sessionUser.display_name,
-          tour_done: !!stateSlice.tourDone,
-          last_active_at: new Date().toISOString()
-        }).eq("id", sessionUser.id);
+          tour_done: !!stateSlice.tourDone
+        };
+        /* Presence: at most once per local day, so background syncs don't fake "active today" */
+        if (!sameLocalCalendarDay(sessionUser.last_active_at, new Date())) {
+          profilePatch.last_active_at = new Date().toISOString();
+        }
+        await client.from("profiles").update(profilePatch).eq("id", sessionUser.id);
+        if (profilePatch.last_active_at) sessionUser.last_active_at = profilePatch.last_active_at;
       } else {
         var store = localStore();
         var u = store.users[sessionUser.id];
@@ -418,7 +458,9 @@ window.FS = window.FS || {};
           if (stateSlice.settings.partnerName) u.display_name = stateSlice.settings.partnerName;
         }
         u.tour_done = !!stateSlice.tourDone;
-        u.last_active_at = new Date().toISOString();
+        if (!sameLocalCalendarDay(u.last_active_at, new Date())) {
+          u.last_active_at = new Date().toISOString();
+        }
         store.users[sessionUser.id] = u;
         localSave(store);
         sessionUser = Cloud._publicUser(u);

@@ -26,6 +26,13 @@ window.FS = window.FS || {};
     return Math.floor((b - a) / 864e5);
   }
 
+  /* Whole local calendar days between two dates (0 = same day). */
+  function calendarDaysBetween(a, b) {
+    var a0 = new Date(a.getFullYear(), a.getMonth(), a.getDate());
+    var b0 = new Date(b.getFullYear(), b.getMonth(), b.getDate());
+    return Math.round((b0 - a0) / 864e5);
+  }
+
   function progressCtx(row, cfg) {
     var done = (row.progress && row.progress.done) || {};
     var data = (row.progress && row.progress.data) || {};
@@ -49,8 +56,8 @@ window.FS = window.FS || {};
       data: data,
       sectionsDone: sectionsDone,
       sectionTotal: sections.length || 4,
-      daysSinceActive: daysBetween(last, now),
-      daysSinceJoined: Math.max(0, daysBetween(joined, now)),
+      daysSinceActive: Math.max(0, calendarDaysBetween(last, now)),
+      daysSinceJoined: Math.max(0, calendarDaysBetween(joined, now)),
       weekPosted: stats.posted,
       daysToPreReg: Math.max(0, Math.ceil((pre - now) / 864e5)),
       active: (row.progress && row.progress.active) || "welcome",
@@ -944,7 +951,7 @@ window.FS = window.FS || {};
         hub_mode: p.hub_mode,
         created_at: p.created_at || (downlineById[p.id] && downlineById[p.id].profile.created_at) || "",
         last_active_at: p.last_active_at,
-        daysSinceActive: ctx ? ctx.daysSinceActive : (p.last_active_at ? daysBetween(new Date(p.last_active_at), new Date()) : null),
+        daysSinceActive: ctx ? ctx.daysSinceActive : (p.last_active_at ? Math.max(0, calendarDaysBetween(new Date(p.last_active_at), new Date())) : null),
         sectionsDone: ctx ? ctx.sectionsDone : null,
         sectionTotal: ctx ? ctx.sectionTotal : null,
         under: under,
@@ -1088,6 +1095,7 @@ window.FS = window.FS || {};
 
   function refreshIncomingMessages() {
     if (!Cloud.isSignedIn()) return;
+    if (Cloud.touchActive) Cloud.touchActive().catch(function () {});
     renderCheers().catch(function () {});
     renderLeaderNoteBanner().catch(function () {});
   }
@@ -2092,6 +2100,9 @@ window.FS = window.FS || {};
 
   async function afterAuth() {
     renderAuthChrome();
+    if (Cloud.isSignedIn() && Cloud.touchActive) {
+      Cloud.touchActive().catch(function () {});
+    }
     await renderCheers();
     await renderSupportBanner();
     await renderPulse();
