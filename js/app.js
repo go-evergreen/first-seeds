@@ -143,9 +143,9 @@
      Full path:    roots → ground → grove → tree → plant → tend → done */
   function nextAfter(id) {
     if (isStarter()) {
-      return { roots: "ground", ground: "grove", grove: "done" }[id];
+      return { roots: "share", share: "ground", ground: "grove", grove: "done" }[id];
     }
-    return { roots: "ground", ground: "grove", grove: "tree", tree: "plant", plant: "tend", tend: "done" }[id];
+    return { roots: "share", share: "ground", ground: "grove", grove: "tree", tree: "plant", plant: "tend", tend: "done" }[id];
   }
 
   function priorSectionId(id) {
@@ -428,9 +428,9 @@
     var pathNote = document.getElementById("welcomePathNote");
     if (pathNote) {
       if (isStarter()) {
-        pathNote.innerHTML = "Your plant lives here. Leads, Learn, and your path stay one tap away at the bottom. Content and Team unlock on All in.";
+        pathNote.innerHTML = "Your plant lives here. Leads, Learn, and your path stay one tap away at the bottom. Content and Grove unlock on All in.";
       } else if (isFull()) {
-        pathNote.innerHTML = "Your plant lives here. Content, Leads, Learn, Team, and your path stay one tap away at the bottom.";
+        pathNote.innerHTML = "Your plant lives here. Content, Leads, Learn, Grove, and your path stay one tap away at the bottom.";
       } else {
         pathNote.innerHTML = "Your plant lives here. Pick Soft start or All in in Settings — then your path stays one tap away at the bottom.";
       }
@@ -439,21 +439,22 @@
     var rh = document.getElementById("rootsHeadline");
     if (rh) rh.textContent = name ? (name + " — plant your roots") : "Plant Your Roots";
 
-    /* section numbers: roots=01, ground=02, then grove/tree/plant/tend */
+    /* section numbers follow Soft start / All in path */
+    var shareNum = document.getElementById("shareNum");
     var groundNum = document.getElementById("groundNum");
     var groveNum = document.getElementById("groveNum");
     var treeNum = document.getElementById("treeNum");
     var plantNum = document.getElementById("plantNum");
     var tendNum = document.getElementById("tendNum");
-    if (groundNum) groundNum.textContent = "02";
+    if (shareNum) shareNum.textContent = "02";
+    if (groundNum) groundNum.textContent = "03";
     if (isStarter()) {
-      if (groveNum) groveNum.textContent = "03";
-      if (tendNum) tendNum.textContent = "04";
+      if (groveNum) groveNum.textContent = "04";
     } else {
-      if (groveNum) groveNum.textContent = "03";
-      if (treeNum) treeNum.textContent = "04";
-      if (plantNum) plantNum.textContent = "05";
-      if (tendNum) tendNum.textContent = "06";
+      if (groveNum) groveNum.textContent = "04";
+      if (treeNum) treeNum.textContent = "05";
+      if (plantNum) plantNum.textContent = "06";
+      if (tendNum) tendNum.textContent = "07";
     }
 
     renderFinishCopy();
@@ -463,6 +464,7 @@
   /* ── "What should I do today?" — one next move, no overwhelm ─ */
   function sectionStarted(id) {
     if (id === "roots") return filledText("why") || filledText("moment") || filledText("said_yes");
+    if (id === "share") return favoriteCount() > 0 || talkOpened();
     if (id === "grove") {
       return customerNames().length > 0 || groveNames().length > 0
         || grovePicks("customer_first").length > 0 || grovePicks("warm_first").length > 0;
@@ -512,6 +514,12 @@
         body: "Ten quiet minutes. Answer the three Roots questions in your own words — messy is fine.",
         cta: sectionStarted("roots") ? "Finish your Roots →" : "Start with Roots →",
         why: "Everything you share later grows from this."
+      },
+      share: {
+        title: "Pick your first few.",
+        body: "Heart 2–3 products you’re looking forward to, then open Talking fresh once — so your story has real product knowledge behind it.",
+        cta: sectionStarted("share") ? "Keep picking →" : "Open Pick Your First Few →",
+        why: "A shortlist + one conversation guide beats a catalog quiz."
       },
       ground: {
         title: "Claim a patch of ground.",
@@ -576,7 +584,7 @@
     if (isStarter()) {
       return {
         title: "Nice foundation.",
-        body: "You've got your story, page, and grove. Open Learn for clear facts — or unlock All in anytime for Content, Post Studio, and Team.",
+        body: "You've got your story, page, and grove. Open Learn for clear facts — or unlock All in anytime for Content, Post Studio, and Grow Your Grove.",
         why: "Calm prep beats a scramble, " + hey + ".",
         primary: { label: "Open Learn →", goto: "know" },
         secondary: { label: "Unlock All in →", action: "fullMode" }
@@ -609,9 +617,9 @@
     if (Cloud && Cloud.isSignedIn && Cloud.isSignedIn()) {
       return {
         title: "You're in motion.",
-        body: "Growth checklist humming and content warm. Open Team if you're leading partners — or leave your leader a quiet ping that you're still here.",
+        body: "Growth checklist humming and content warm. Open Grove if you're leading partners — or leave your leader a quiet ping that you're still here.",
         why: "Showing up is the whole game, " + hey + ".",
-        primary: { label: "Team →", goto: "leader" },
+        primary: { label: "Grove →", goto: "leader" },
         secondary: { label: "Notify my leader", goto: "done" }
       };
     }
@@ -671,12 +679,12 @@
     if (isStarter()) {
       if (eyebrow) eyebrow.textContent = "ROOTS DOWN";
       if (headline) headline.textContent = name ? ("Nice work, " + name + ".") : "Nice work.";
-      if (body) body.innerHTML = "You've got your story, your page, and a grove of people to talk to. That's a real foundation — before the doors open. When you're ready for Content, the dream-team sketch, Post Studio, and Team, unlock All in anytime.";
+      if (body) body.innerHTML = "You've got your story, a product shortlist, Talking fresh once, your page, and a grove of people to talk to. That's a real foundation — before the doors open. When you're ready for Content, the dream-team sketch, Post Studio, and Grow Your Grove, unlock All in anytime.";
       if (levelUp) levelUp.hidden = false;
     } else {
       if (eyebrow) eyebrow.textContent = "IN FULL BLOOM";
       if (headline) headline.textContent = name ? ("Look what you grew, " + name + ".") : "Look what you grew.";
-      if (body) body.innerHTML = "You've got your story, your grove, drafts in Post Studio, and a Content habit you can keep. Team is where live partners show up when they join — Grow Your Tree stays your practice sketch. Keep showing up, keep flipping 🌱 to 🌳, and let launch feel like opening a door you already helped build.";
+      if (body) body.innerHTML = "You've got your story, your grove, drafts in Post Studio, and a Content habit you can keep. Grow Your Grove is where live partners show up when they join — Grow Your Tree stays your practice sketch. Keep showing up, keep flipping 🌱 to 🌳, and let launch feel like opening a door you already helped build.";
       if (levelUp) levelUp.hidden = true;
     }
   }
@@ -701,8 +709,8 @@
     }
     var hint = document.getElementById("hubModeHint");
     if (hint) {
-      if (isStarter()) hint.textContent = "Soft start keeps the path light: story, page, grove, finish. Content and Team unlock on All in.";
-      else if (isFull()) hint.textContent = "All six sections unlocked, plus Content and Team in the bottom nav. Switch to Soft start for a simpler view — your progress stays.";
+      if (isStarter()) hint.textContent = "Soft start keeps the path light: story, products that feel like you, page, grove, finish. Content and Grove unlock on All in.";
+      else if (isFull()) hint.textContent = "Every runway section unlocked, plus Content and Grove in the bottom nav. Switch to Soft start for a simpler view — your progress stays.";
       else hint.textContent = "";
     }
     updateLeadPageSettingUI();
@@ -1040,9 +1048,55 @@
   /* ── Product learning library ─────────────────────────── */
   function ensureProductBrowse() {
     if (!state.productBrowse) {
-      state.productBrowse = { category: null, subcategory: null, productId: null, q: "" };
+      state.productBrowse = { category: null, subcategory: null, productId: null, q: "", scope: "all" };
     }
+    if (state.productBrowse.scope !== "favorites") state.productBrowse.scope = state.productBrowse.scope || "all";
     return state.productBrowse;
+  }
+
+  function ensureProductFavorites() {
+    if (!state.data) state.data = {};
+    if (!Array.isArray(state.data.productFavorites)) state.data.productFavorites = [];
+    return state.data.productFavorites;
+  }
+
+  function isProductFavorite(id) {
+    return ensureProductFavorites().indexOf(id) > -1;
+  }
+
+  function favoriteCount() {
+    var favs = ensureProductFavorites();
+    var n = 0;
+    for (var i = 0; i < favs.length; i++) {
+      if (productById(favs[i])) n++;
+    }
+    return n;
+  }
+
+  function talkOpened() {
+    return !!state.data.talk_opened;
+  }
+
+  function markTalkOpened() {
+    if (state.data.talk_opened) return false;
+    state.data.talk_opened = true;
+    return true;
+  }
+
+  function toggleProductFavorite(id) {
+    if (!id) return;
+    var favs = ensureProductFavorites();
+    var ix = favs.indexOf(id);
+    if (ix > -1) favs.splice(ix, 1);
+    else favs.push(id);
+  }
+
+  function favHeartBtn(id, extraClass) {
+    var on = isProductFavorite(id);
+    return '<button type="button" class="prod-fav-btn' + (on ? " on" : "") + (extraClass ? " " + extraClass : "") +
+      '" data-prod-fav="' + esc(id) + '" aria-pressed="' + (on ? "true" : "false") +
+      '" aria-label="' + (on ? "Remove from favorites" : "Add to favorites") + '">' +
+      (on ? "♥" : "♡") + "</button>";
   }
 
   function productLib() {
@@ -1161,10 +1215,14 @@
   function productsInScope(browse) {
     var list = visibleProducts();
     var q = ((browse && browse.q) || "").trim().toLowerCase();
+    var favOnly = browse && browse.scope === "favorites";
     return list.filter(function (p) {
-      if (browse.category && p.category !== browse.category) return false;
-      if (browse.subcategory && p.subcategory !== browse.subcategory) return false;
-      if (browse.subcategory && isHiddenSunSub(browse.subcategory)) return false;
+      if (favOnly && !isProductFavorite(p.id)) return false;
+      if (!favOnly) {
+        if (browse.category && p.category !== browse.category) return false;
+        if (browse.subcategory && p.subcategory !== browse.subcategory) return false;
+        if (browse.subcategory && isHiddenSunSub(browse.subcategory)) return false;
+      }
       if (!q) return true;
       var hay = [
         p.name, p.tagline, p.summary, p.heroIngredients, p.ingredientsNote,
@@ -1176,11 +1234,19 @@
   }
 
   function renderProductListRows(items) {
-    if (!items.length) return '<p class="prod-empty">No products match that search in this view. Try another word, or clear search.</p>';
+    if (!items.length) {
+      var browse = ensureProductBrowse();
+      if (browse.scope === "favorites") {
+        return '<p class="prod-empty">No favorites yet. Browse All and tap the heart on products you’re looking forward to.</p>';
+      }
+      return '<p class="prod-empty">No products match that search in this view. Try another word, or clear search.</p>';
+    }
     return '<div class="prod-list">' + items.map(function (p) {
-      return '<button type="button" class="prod-row" data-prod-open="' + esc(p.id) + '">' +
+      return '<div class="prod-row-wrap">' +
+        favHeartBtn(p.id, "prod-fav-row") +
+        '<button type="button" class="prod-row" data-prod-open="' + esc(p.id) + '">' +
         '<span class="prod-row-name">' + esc(p.name) + "</span>" +
-        "</button>";
+        "</button></div>";
     }).join("") + "</div>";
   }
 
@@ -1200,6 +1266,7 @@
         ? '<button type="button" class="prod-pill on" data-prod-nav="cat" data-prod-cat="' + esc(p.category) + '">← ' + esc(cat.label) + "</button>"
         : "") +
       '<button type="button" class="prod-pill" data-prod-nav="hub">All products</button>' +
+      favHeartBtn(p.id, "prod-fav-detail") +
       "</div>";
     html += '<div class="prod-detail-kicker">' + esc((cat ? cat.label : "") + (p.step ? " · " + p.step : "")) + "</div>";
     html += '<h1 class="prod-detail-title">' + esc(p.name) + "</h1>";
@@ -1256,6 +1323,8 @@
       if (!subOk) browse.subcategory = null;
     }
     var html = "";
+    var favN = favoriteCount();
+    var favScope = browse.scope === "favorites";
 
     if (browse.productId) {
       var detail = productById(browse.productId);
@@ -1267,11 +1336,20 @@
       }
     }
 
-    if (browse.category) {
+    html += '<div class="prod-scope-row" role="tablist" aria-label="Product library view">';
+    html += '<button type="button" class="prod-pill' + (!favScope ? " on" : "") + '" data-prod-scope="all" role="tab" aria-selected="' + (!favScope ? "true" : "false") + '">All</button>';
+    html += '<button type="button" class="prod-pill' + (favScope ? " on" : "") + '" data-prod-scope="favorites" role="tab" aria-selected="' + (favScope ? "true" : "false") + '">Favorites' +
+      (favN ? " · " + favN : "") + "</button>";
+    html += "</div>";
+
+    if (!favScope && browse.category) {
       html += '<div class="prod-nav-bar"><button type="button" class="prod-pill on" data-prod-nav="hub">← All products</button></div>';
     }
 
-    if (!browse.category) {
+    if (favScope) {
+      html += '<h1 class="prod-head-title">Your favorites</h1>';
+      html += '<p class="prod-head-sub">Products you’re looking forward to — heart a few more anytime from All.</p>';
+    } else if (!browse.category) {
       html += '<h1 class="prod-head-title">Learn the products</h1>';
       html += '<p class="prod-head-sub">' + esc(lib.sourceNote || "Browse by category — searchable and ready to learn.") + "</p>";
     } else {
@@ -1284,10 +1362,12 @@
     html += '<input type="search" id="productSearch" class="prod-search" placeholder="Search ingredients, names, skin concerns…" value="' + esc(browse.q || "") + '" autocomplete="off">';
     var scoped = productsInScope(browse);
     html += '<p class="prod-search-meta">' + scoped.length + " product" + (scoped.length === 1 ? "" : "s") +
-      (browse.q ? " matching “" + esc(browse.q) + "”" : " to explore") + "</p>";
+      (browse.q ? " matching “" + esc(browse.q) + "”" : (favScope ? " favorited" : " to explore")) + "</p>";
     html += '<p class="prod-disclaimer">' + esc(lib.disclaimer || "") + "</p>";
 
-    if (!browse.category && !browse.q) {
+    if (favScope) {
+      html += renderProductListRows(scoped);
+    } else if (!browse.category && !browse.q) {
       html += '<div class="prod-cat-grid">';
       (lib.categories || []).forEach(function (c) {
         var n = visibleProducts().filter(function (p) { return p.category === c.id; }).length;
@@ -1330,6 +1410,27 @@
         }
       });
     }
+  }
+
+  function renderShareFavPreview() {
+    var list = document.getElementById("shareFavList");
+    if (!list) return;
+    var favs = ensureProductFavorites();
+    var names = [];
+    for (var i = 0; i < favs.length; i++) {
+      var p = productById(favs[i]);
+      if (p) names.push(p.name);
+    }
+    if (!names.length) {
+      list.innerHTML = '<span class="dim">Heart a few products in Learn — they’ll show up here.</span>';
+      return;
+    }
+    list.innerHTML = "<ul>" + names.map(function (n) { return "<li>" + esc(n) + "</li>"; }).join("") + "</ul>" +
+      (names.length < 2
+        ? '<p class="share-fav-hint">Heart at least one more — 2–3 is the sweet spot.</p>'
+        : names.length > 3
+          ? '<p class="share-fav-hint">Nice shortlist. You can trim anytime in Learn → Favorites.</p>'
+          : '<p class="share-fav-hint">Solid shortlist. Open Talking fresh when you’re ready.</p>');
   }
 
   function renderNav() {
@@ -1379,6 +1480,13 @@
         { done: filledText("why"), label: "Your why" },
         { done: filledText("moment"), label: "Your moment" },
         { done: filledText("said_yes"), label: "Why you said yes" }
+      ];
+    }
+    if (id === "share") {
+      var favs = favoriteCount();
+      return [
+        { done: favs >= 2, label: "Favorite 2–3 products (" + favs + "/2)" },
+        { done: talkOpened(), label: "Open Talking fresh once" }
       ];
     }
     if (id === "grove") {
@@ -1839,8 +1947,10 @@
   function plantVisualStage(sproutDone, sproutTotal) {
     if (sproutDone <= 0) return 0;
     if (sproutTotal > 0 && sproutDone >= sproutTotal) return 6;
-    if (sproutTotal <= 1) return Math.min(5, sproutDone);
-    return Math.max(1, Math.min(5, Math.round((sproutDone / sproutTotal) * 5)));
+    if (sproutTotal <= 1) return Math.min(5, Math.max(1, sproutDone));
+    /* Even stages 1–5 across checklist progress so early wins show above ground */
+    var stage = Math.ceil((sproutDone / sproutTotal) * 5);
+    return Math.max(1, Math.min(5, stage));
   }
 
   function renderPlant(opts) {
@@ -1938,10 +2048,17 @@
       filterKnowSearch();
     }
     if (state.active === "talk") {
+      if (markTalkOpened()) {
+        save();
+        liveRefresh({ silent: true });
+      }
       renderTalkGuide((window.FS.CONTENT || {}).talkGuide);
     }
     if (state.active === "products") {
       renderProductLibrary();
+    }
+    if (state.active === "share") {
+      renderShareFavPreview();
     }
     if (state.active === "curiosity-photos" && window.FS.BridgeUI && window.FS.BridgeUI.renderCuriosityPhotos) {
       window.FS.BridgeUI.renderCuriosityPhotos();
@@ -2101,6 +2218,7 @@
 
   function canComplete(id) {
     if (id === "roots") return filledText("why") && filledText("moment") && filledText("said_yes");
+    if (id === "share") return favoriteCount() >= 2 && talkOpened();
     if (id === "grove") {
       var c = customerNames();
       var picks = grovePicks("customer_first");
@@ -2152,6 +2270,10 @@
         else if (!filledText("page_story")) b.textContent = "Draft your opening line";
         else if (usesBuiltInLeadPage() && !leadSignedIn()) b.textContent = "Sign in to set up your lead page";
         else if (usesBuiltInLeadPage() && !leadPageReady()) b.textContent = "Save the link you'll share";
+        else b.textContent = b.getAttribute("data-wait");
+      } else if (id === "share") {
+        if (favoriteCount() < 2) b.textContent = "Heart at least 2 products in Learn";
+        else if (!talkOpened()) b.textContent = "Open Talking fresh once";
         else b.textContent = b.getAttribute("data-wait");
       } else {
         b.textContent = b.getAttribute("data-wait");
@@ -2440,6 +2562,7 @@
     renderHomeRunway();
     renderGroundLeadSetup();
     renderBottomNav();
+    renderShareFavPreview();
   }
 
   /* ── leaf burst ──────────────────────────────────────── */
@@ -3376,9 +3499,39 @@
 
   /* ── clicks ──────────────────────────────────────────── */
   document.addEventListener("click", function (e) {
-    var t = e.target.closest("[data-goto],[data-complete],[data-grove-pick],[data-prod-nav],[data-prod-open],[data-choice],[data-rhythm],[data-copy],[data-tadd],[data-tstatus],[data-tdel],[data-seedtype],[data-menu-goto],[data-soft-unlock],[data-faq],[data-talk],[data-copy-toggle],#exportBtn,#exportBtn2,#resetBtn,#replayOnboardingBtn,#replayTeamTourBtn,#modeStarter,#modeFull,#lockToastUnlockFull,#todayUnlockFull,#leadPageBuiltIn,#leadPageCustom,#levelUpBtn,#settingsNavBtn,#menuCloseBtn,#menuCloseBackdrop,#todayAuthBtn,#lockToastClose");
+    var t = e.target.closest("[data-goto],[data-complete],[data-grove-pick],[data-prod-nav],[data-prod-open],[data-prod-fav],[data-prod-scope],[data-choice],[data-rhythm],[data-copy],[data-tadd],[data-tstatus],[data-tdel],[data-seedtype],[data-menu-goto],[data-soft-unlock],[data-faq],[data-talk],[data-copy-toggle],#exportBtn,#exportBtn2,#resetBtn,#replayOnboardingBtn,#replayTeamTourBtn,#modeStarter,#modeFull,#lockToastUnlockFull,#todayUnlockFull,#leadPageBuiltIn,#leadPageCustom,#levelUpBtn,#settingsNavBtn,#menuCloseBtn,#menuCloseBackdrop,#todayAuthBtn,#lockToastClose");
     if (!t) return;
 
+    if (t.hasAttribute("data-prod-fav")) {
+      e.preventDefault();
+      e.stopPropagation();
+      var beforeSproutFav = lastSprout;
+      toggleProductFavorite(t.getAttribute("data-prod-fav"));
+      save();
+      renderProductLibrary();
+      renderShareFavPreview();
+      refreshButtons();
+      renderModuleChecklists();
+      renderTodayCard();
+      liveRefresh({ silent: true });
+      if (checklistProgress().sproutDone > beforeSproutFav) {
+        lastSprout = beforeSproutFav;
+        renderPlant({});
+      }
+      return;
+    }
+    if (t.hasAttribute("data-prod-scope")) {
+      var browseScope = ensureProductBrowse();
+      browseScope.scope = t.getAttribute("data-prod-scope") === "favorites" ? "favorites" : "all";
+      browseScope.productId = null;
+      if (browseScope.scope === "favorites") {
+        browseScope.category = null;
+        browseScope.subcategory = null;
+      }
+      save();
+      renderProductLibrary();
+      return;
+    }
     if (t.hasAttribute("data-talk")) {
       var talkId = t.getAttribute("data-talk");
       state.data.openTalk = state.data.openTalk === talkId ? "" : talkId;
@@ -3527,8 +3680,14 @@
       if (goto === "talk") {
         hideLockToast();
         closeHubMenu();
+        var beforeTalk = lastSprout;
         state.active = "talk";
+        markTalkOpened();
         save(); renderNav(); renderPanels();
+        if (checklistProgress().sproutDone > beforeTalk) {
+          lastSprout = beforeTalk;
+          renderPlant({});
+        }
         return;
       }
       if (goto === "leads" && usesCustomLanding()) return;
@@ -3553,7 +3712,9 @@
         if (navMode === "hub") {
           browseNav.category = null;
           browseNav.subcategory = null;
+          browseNav.scope = "all";
         } else if (navMode === "cat") {
+          browseNav.scope = "all";
           browseNav.category = t.getAttribute("data-prod-cat") || null;
           if (t.hasAttribute("data-prod-sub")) {
             browseNav.subcategory = t.getAttribute("data-prod-sub") || null;

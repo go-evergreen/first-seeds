@@ -24,8 +24,8 @@ Zero build step: plain HTML/CSS/JS. Optional Supabase for accounts, invite links
 
 | Mode | Path |
 |---|---|
-| **Soft start** | Roots → Ground → Grove → finish |
-| **All in** | + Grow Your Tree · Start Planting · Content (+ Team in nav) |
+| **Soft start** | Roots → Pick Your First Few → Ground → Grove → finish |
+| **All in** | + Grow Your Tree · Start Planting · Content (+ Grove in nav) |
 
 ## Structure
 

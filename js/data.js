@@ -6,9 +6,10 @@
 window.FS = window.FS || {};
 
 /* modes: which hub modes show this section in the nav.
-   Starter = calm 4-step path. Full = all six. */
+   Soft start = calm path through Pick your first few. All in = all sections. */
 window.FS.SECTIONS = [
   { id: "roots",  label: "Plant Your Roots",     sub: "your story",       modes: ["starter", "full"] },
+  { id: "share",  label: "Pick Your First Few",  sub: "products · your voice", modes: ["starter", "full"] },
   { id: "ground", label: "Your Patch of Ground", sub: "your page",        modes: ["starter", "full"] },
   { id: "grove",  label: "Map Your Grove",       sub: "customers · partners optional", modes: ["starter", "full"] },
   { id: "tree",   label: "Grow Your Tree",       sub: "your future team", modes: ["full"] },

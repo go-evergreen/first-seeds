@@ -25,13 +25,13 @@ window.FS.CONFIG = {
       label: "Soft start",
       badge: "Soft start",
       tag: "Essentials",
-      desc: "Four calm steps: your story, a simple page to share, who you'd tell first, and a clear finish. Great if you're new — or you just want room to breathe. Content and Team unlock on All in."
+      desc: "Five calm steps: your story, products that feel like you, a simple page to share, who you'd tell first, and a clear finish. Content and Grove unlock on All in."
     },
     full: {
       label: "All in",
       badge: "All in",
       tag: "Everything",
-      desc: "Everything in Soft start, plus Content (calendar, post vault, stories, photos), a dream-team sketch, Post Studio, and Team tools — all the way to launch."
+      desc: "Everything in Soft start, plus Content (calendar, post vault, stories, photos), a dream-team sketch, Post Studio, and Grow Your Grove — all the way to launch."
     }
   },
 
@@ -43,19 +43,23 @@ window.FS.CONFIG = {
     },
     {
       term: "Runway",
-      def: "Your step-by-step prep path on Sprout. Soft start is the shorter path; All in unlocks Content, the dream-team sketch, Post Studio, and Team."
+      def: "Your step-by-step prep path on Sprout. Soft start is the shorter path; All in unlocks Content, the dream-team sketch, Post Studio, and Grow Your Grove."
+    },
+    {
+      term: "Pick Your First Few",
+      def: "A Soft start step after Roots: favorite a few products you’re looking forward to, and open Talking fresh — so your story has real product knowledge behind it."
     },
     {
       term: "Roots",
       def: "The three story questions that start everything — why you're here, a moment that mattered, and what made you say yes."
     },
     {
-      term: "Team",
-      def: "Your partners growing with you in First Seeds — who's moving, who needs a check-in, and your join link. Shows in the bottom nav on All in."
+      term: "Grow Your Grove",
+      def: "The All in tab for live partners in First Seeds — who’s moving, who needs a check-in, and your join link. Bottom nav shortens it to Grove."
     },
     {
       term: "Grove",
-      def: "Your people map. Customers who'd love the products come first. Partners who'd walk the mission with you are optional — for builders who want both."
+      def: "Two close meanings: on Sprout, Map Your Grove is your people list (customers first, partners optional). In the bottom nav, Grove opens Grow Your Grove — your live Fresh Grove partners."
     },
     {
       term: "Customers",
@@ -107,7 +111,7 @@ window.FS.CONFIG = {
     circleNote: "First Seeds is a Fresh Grove team resource — not something published by Ringana corporate. Launch details here can still shift as the company firms things up.",
     circleCta: "I'm in — let's grow →",
 
-    nameEyebrow: "Make it yours",
+    nameEyebrow: "Nice to meet you",
     nameTitle: "What should we call you?",
     nameHint: "First name is perfect — we'll use it on Sprout so this feels like yours.",
     namePlaceholder: "Your first name",

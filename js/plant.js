@@ -20,9 +20,14 @@ window.FS = window.FS || {};
     { d: "M60 122 C72 130, 86 138, 96 148 C104 156, 108 162, 110 168", th: 0.95, w: 1.8 }
   ];
 
-  function leaf(cx, cy, rx, ry, rot, fill, opacity) {
-    return '<ellipse cx="' + cx + '" cy="' + cy + '" rx="' + rx + '" ry="' + ry +
-      '" fill="' + fill + '" opacity="' + (opacity || 1) +
+  function leafPath(cx, cy, len, rot, fill, opacity) {
+    /* Soft pointed leaf — more plant-like than a flat ellipse */
+    var tip = -len;
+    var w = Math.max(3.2, len * 0.38);
+    return '<path d="M' + cx + ' ' + cy +
+      ' C' + (cx - w) + ' ' + (cy + tip * 0.35) + ', ' + (cx - w * 0.55) + ' ' + (cy + tip * 0.75) + ', ' + cx + ' ' + (cy + tip) +
+      ' C' + (cx + w * 0.55) + ' ' + (cy + tip * 0.75) + ', ' + (cx + w) + ' ' + (cy + tip * 0.35) + ', ' + cx + ' ' + cy +
+      ' Z" fill="' + fill + '" opacity="' + (opacity || 1) +
       '" transform="rotate(' + rot + ' ' + cx + ' ' + cy + ')"/>';
   }
 
@@ -32,9 +37,10 @@ window.FS = window.FS || {};
 
   function seedOnDirt() {
     var s = '<g class="plant-seed">';
-    s += '<ellipse cx="60" cy="117" rx="6" ry="4.5" fill="#a89060"/>';
-    s += '<ellipse cx="60" cy="115.5" rx="4.2" ry="3" fill="#c9b07a" opacity=".85"/>';
-    s += '<path d="M57 114 Q60 111 63 114" stroke="#8a7348" stroke-width="1" fill="none" opacity=".5"/>';
+    s += '<ellipse cx="60" cy="117" rx="6.5" ry="4.8" fill="#a89060"/>';
+    s += '<ellipse cx="60" cy="115.2" rx="4.5" ry="3.1" fill="#d4bc86" opacity=".9"/>';
+    s += '<path d="M57 114 Q60 110.5 63 114" stroke="#8a7348" stroke-width="1" fill="none" opacity=".55"/>';
+    s += '<ellipse cx="58.5" cy="114.5" rx="1.2" ry="0.8" fill="#efe4c4" opacity=".5"/>';
     s += '</g>';
     return s;
   }
@@ -44,22 +50,28 @@ window.FS = window.FS || {};
   window.FS.plantSVG = function (modulesDone, units, maxUnits, idPrefix) {
     var g = Math.max(0, Math.min(6, modulesDone | 0));
     var rf = Math.max(0, Math.min(units / maxUnits, 1));
-    var stemTop = 118 - Math.min(g, 5) * 14;
+    /* Let the stem climb a little more at full bloom */
+    var climb = g >= 6 ? 5.4 : Math.min(g, 5);
+    var stemTop = 118 - climb * 14.5;
     var p = idPrefix || "";
     var soil = p + "soilGrad";
     var stem = p + "stemGrad";
     var bloom = p + "bloomGrad";
     var root = p + "rootGrad";
+    var leafA = p + "leafA";
+    var leafB = p + "leafB";
     var s = '<svg viewBox="0 0 120 190" width="100%" height="100%" aria-hidden="true">';
     s += '<defs>';
     s += '<linearGradient id="' + soil + '" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#6b5844"/><stop offset="100%" stop-color="#3d3226"/></linearGradient>';
-    s += '<linearGradient id="' + stem + '" x1="0" y1="1" x2="0" y2="0"><stop offset="0%" stop-color="#6f8574"/><stop offset="100%" stop-color="#abb09a"/></linearGradient>';
-    s += '<radialGradient id="' + bloom + '" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="#f7e8b0"/><stop offset="70%" stop-color="#f0d06a"/><stop offset="100%" stop-color="#d9a93f"/></radialGradient>';
-    s += '<linearGradient id="' + root + '" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#e8d9b0"/><stop offset="100%" stop-color="#b9a47a"/></linearGradient>';
+    s += '<linearGradient id="' + stem + '" x1="0" y1="1" x2="0" y2="0"><stop offset="0%" stop-color="#5f7a62"/><stop offset="100%" stop-color="#9eae8e"/></linearGradient>';
+    s += '<linearGradient id="' + leafA + '" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#c5d0b4"/><stop offset="100%" stop-color="#7f9474"/></linearGradient>';
+    s += '<linearGradient id="' + leafB + '" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#d5deca"/><stop offset="100%" stop-color="#8fa484"/></linearGradient>';
+    s += '<radialGradient id="' + bloom + '" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="#fff4c8"/><stop offset="55%" stop-color="#f0d06a"/><stop offset="100%" stop-color="#c9922e"/></radialGradient>';
+    s += '<linearGradient id="' + root + '" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#efe4c4"/><stop offset="100%" stop-color="#b9a47a"/></linearGradient>';
     s += '</defs>';
 
     /* underground bed */
-    s += '<rect class="plant-soil-bed" x="6" y="118" width="108" height="66" rx="12" fill="url(#' + soil + ')" opacity=".9"/>';
+    s += '<rect class="plant-soil-bed" x="6" y="118" width="108" height="66" rx="12" fill="url(#' + soil + ')" opacity=".92"/>';
     s += '<ellipse cx="60" cy="120" rx="50" ry="9" fill="#4a3d2e" opacity=".55"/>';
 
     /* roots — grow with Roots answers only */
@@ -87,54 +99,55 @@ window.FS = window.FS || {};
     s += '<ellipse cx="42" cy="120" rx="5" ry="2" fill="#4a3d2e" opacity=".35"/>';
     s += '<ellipse cx="78" cy="121" rx="4" ry="1.5" fill="#4a3d2e" opacity=".3"/>';
 
-    /* Stage 0: seed rests on the dirt (always — even before any answers) */
+    /* Stage 0: seed rests on the dirt */
     if (g === 0) {
       s += seedOnDirt();
     }
 
-    /* Above ground only after first module is completed */
+    /* Above ground only after first non-Roots checklist progress */
     if (g >= 1) {
       s += '<g class="plant-sprout">';
-      s += '<path d="M60 120 C59 ' + ((120 + stemTop) / 2) + ', 61 ' + ((120 + stemTop) / 2 + 4) + ', 60 ' + stemTop +
-        '" stroke="url(#' + stem + ')" stroke-width="' + (3.2 + Math.min(g, 4) * 0.35) +
+      s += '<path d="M60 120 C58.8 ' + ((120 + stemTop) / 2) + ', 61.2 ' + ((120 + stemTop) / 2 + 3) + ', 60 ' + stemTop +
+        '" stroke="url(#' + stem + ')" stroke-width="' + (3.4 + Math.min(g, 5) * 0.4) +
         '" fill="none" stroke-linecap="round"/>';
 
       if (g >= 1) {
-        s += leaf(52, 108, 9, 4.5, -35, "#abb09a", 0.95);
-        s += leaf(68, 106, 9, 4.5, 35, "#c5c9b8", 0.95);
+        s += leafPath(60, 108, 14, -48, "url(#" + leafA + ")", 0.96);
+        s += leafPath(60, 107, 13, 46, "url(#" + leafB + ")", 0.96);
       }
       if (g >= 2) {
-        s += leaf(46, 92, 11, 5.5, -40, "#9aa08a", 1);
-        s += leaf(74, 90, 11, 5.5, 40, "#abb09a", 1);
-        s += leaf(60, 86, 7, 10, 0, "#b8bca8", 0.95);
+        s += leafPath(60, 94, 16, -52, "url(#" + leafB + ")", 1);
+        s += leafPath(60, 92, 15, 50, "url(#" + leafA + ")", 1);
+        s += leafPath(60, 88, 11, 8, "url(#" + leafA + ")", 0.92);
       }
       if (g >= 3) {
-        s += leaf(42, 74, 10, 5, -48, "#c5c9b8", 0.95);
-        s += leaf(78, 72, 10, 5, 48, "#abb09a", 0.95);
-        s += leaf(54, 68, 8, 5, -20, "#d0d3c4", 0.9);
-        s += leaf(66, 66, 8, 5, 20, "#abb09a", 0.9);
+        s += leafPath(60, 76, 15, -58, "url(#" + leafA + ")", 0.95);
+        s += leafPath(60, 74, 15, 56, "url(#" + leafB + ")", 0.95);
+        s += leafPath(60, 70, 12, -18, "url(#" + leafB + ")", 0.9);
+        s += leafPath(60, 68, 12, 22, "url(#" + leafA + ")", 0.9);
       }
       if (g >= 4) {
-        s += leaf(48, 56, 9, 4.5, -30, "#c5c9b8", 0.9);
-        s += leaf(72, 54, 9, 4.5, 30, "#d0d3c4", 0.9);
-        s += '<ellipse cx="60" cy="' + (stemTop + 2) + '" rx="6" ry="9" fill="#d9a93f" opacity=".65"/>';
-        s += '<ellipse cx="60" cy="' + (stemTop + 1) + '" rx="3.5" ry="6" fill="#f0d06a" opacity=".8"/>';
+        s += leafPath(60, 58, 13, -38, "url(#" + leafB + ")", 0.9);
+        s += leafPath(60, 56, 13, 36, "url(#" + leafA + ")", 0.9);
+        s += '<ellipse cx="60" cy="' + (stemTop + 3) + '" rx="5.5" ry="8.5" fill="#d9a93f" opacity=".7"/>';
+        s += '<ellipse cx="60" cy="' + (stemTop + 1.5) + '" rx="3.2" ry="5.5" fill="#f5e08a" opacity=".85"/>';
       }
       if (g >= 5) {
         var degs = [0, 72, 144, 216, 288];
         for (var d = 0; d < degs.length; d++) {
-          s += '<ellipse cx="60" cy="' + stemTop + '" rx="6.5" ry="12" fill="url(#' + bloom + ')" transform="rotate(' +
-            degs[d] + ' 60 ' + stemTop + ')" opacity=".92"/>';
+          s += '<ellipse cx="60" cy="' + stemTop + '" rx="7" ry="13.5" fill="url(#' + bloom + ')" transform="rotate(' +
+            degs[d] + ' 60 ' + stemTop + ')" opacity=".94"/>';
         }
-        s += '<circle cx="60" cy="' + stemTop + '" r="5.5" fill="#5a4a37"/>';
-        s += '<circle cx="60" cy="' + stemTop + '" r="3" fill="#d9a93f" opacity=".85"/>';
+        s += '<circle cx="60" cy="' + stemTop + '" r="5.8" fill="#5a4a37"/>';
+        s += '<circle cx="60" cy="' + stemTop + '" r="3.2" fill="#e8c45a" opacity=".9"/>';
       }
       if (g >= 6) {
         var outer = [36, 108, 180, 252, 324];
         for (var o = 0; o < outer.length; o++) {
-          s += '<ellipse cx="60" cy="' + stemTop + '" rx="5" ry="14" fill="#f5dc78" opacity=".55" transform="rotate(' +
+          s += '<ellipse cx="60" cy="' + stemTop + '" rx="6" ry="16" fill="#f8e28a" opacity=".62" transform="rotate(' +
             outer[o] + ' 60 ' + stemTop + ')"/>';
         }
+        s += '<circle cx="60" cy="' + stemTop + '" r="4" fill="#fff4c8" opacity=".55"/>';
       }
       s += '</g>';
     }

@@ -20,7 +20,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,400;1,9..144,500&family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/styles.css?v=135">
+<link rel="stylesheet" href="css/styles.css?v=138">
 </head>
 <body>
 
@@ -70,7 +70,7 @@
     </button>
     <button type="button" class="bottom-nav-btn full-only" data-goto="leader" data-tab="team">
       <span class="bottom-nav-ico" aria-hidden="true">🌳</span>
-      <span>Team</span>
+      <span>Grove</span>
       <span class="bottom-nav-badge" hidden>0</span>
     </button>
   </nav>
@@ -147,10 +147,10 @@
 
       <div class="hub-menu-section">
         <div class="hub-menu-label">Help</div>
-        <p class="hub-menu-note">Missed Home Screen setup or want a refresher? Replay the welcome screens or the Team coachmarks — your answers and progress stay saved.</p>
+        <p class="hub-menu-note">Missed Home Screen setup or want a refresher? Replay the welcome screens or the Grove coachmarks — your answers and progress stay saved.</p>
         <div class="hub-menu-actions">
           <button type="button" class="btn-ghost" id="replayOnboardingBtn">Replay welcome walkthrough</button>
-          <button type="button" class="btn-ghost" id="replayTeamTourBtn">Replay Team tour</button>
+          <button type="button" class="btn-ghost" id="replayTeamTourBtn">Replay Grove tour</button>
         </div>
       </div>
 
@@ -284,14 +284,42 @@
         </div>
 
         <div class="btn-row">
-          <button class="btn waiting" data-complete="roots" data-ready="Roots are down → Claim your ground" data-wait="Fill in all three above to continue">Fill in all three above to continue</button>
+          <button class="btn waiting" data-complete="roots" data-ready="Roots are down → Pick your first few" data-wait="Fill in all three above to continue">Fill in all three above to continue</button>
           <span class="save-flash" data-flash="roots">Saved ✓</span>
         </div>
       </section>
 
-      <!-- 02 GROUND -->
+      <!-- 02 PICK YOUR FIRST FEW -->
+      <section class="panel" id="panel-share" data-modes="starter full">
+        <div class="sec-num" id="shareNum">02</div>
+        <h1>Pick Your First Few</h1>
+        <p class="sec-sub">What you’d actually share — products · your voice</p>
+        <p class="body-p">Your Roots are personal. This step puts a few products behind them — not a catalog quiz. Heart <strong>2–3</strong> you’re looking forward to in Learn, then open <strong>Talking fresh</strong> once so real chats feel less blank.</p>
+
+        <div class="callout voice">
+          <div class="callout-tag">STORY + KNOWING</div>
+          <div class="callout-body">You’re building a shortlist you’d actually mention — and a little judgment for conversations. That combo is your unique story with product knowledge under it.</div>
+        </div>
+
+        <div class="share-actions">
+          <button type="button" class="btn" data-goto="products">Open products · heart favorites →</button>
+          <button type="button" class="btn-ghost" data-goto="talk">Open Talking fresh →</button>
+        </div>
+
+        <div class="live-card" id="shareFavPreview">
+          <div class="live-tag">YOUR SHORTLIST</div>
+          <div class="share-fav-list" id="shareFavList"><span class="dim">Heart a few products in Learn — they’ll show up here.</span></div>
+        </div>
+
+        <div class="btn-row">
+          <button class="btn waiting" data-complete="share" data-ready="First few picked → Claim your ground" data-wait="Heart 2–3 products and open Talking fresh">Heart 2–3 products and open Talking fresh</button>
+          <span class="save-flash" data-flash="share">Saved ✓</span>
+        </div>
+      </section>
+
+      <!-- 03 GROUND -->
       <section class="panel" id="panel-ground" data-modes="starter full">
-        <div class="sec-num" id="groundNum">02</div>
+        <div class="sec-num" id="groundNum">03</div>
         <h1>Your Own Patch of Ground</h1>
         <p class="sec-sub">A simple home base that's yours — in your voice, not a copy of anyone else's.</p>
         <p class="body-p">A landing page gives curious people one warm place to land — instead of losing them in a DM thread. Pick how you’ll do yours:</p>
@@ -366,9 +394,9 @@
         </div>
       </section>
 
-      <!-- 03 GROVE -->
+      <!-- 04 GROVE -->
       <section class="panel" id="panel-grove" data-modes="starter full">
-        <div class="sec-num" id="groveNum">03</div>
+        <div class="sec-num" id="groveNum">04</div>
         <h1>Map Your Grove</h1>
         <p class="sec-sub">Customers first. Partners if you're building.</p>
         <p class="body-p">If you're sharing Ringana more like an affiliate — products, recommendations, your link — focus on the customer lane. If you're building a business with people beside you, fill out both. Either path is valid.</p>
@@ -441,9 +469,9 @@
         </div>
       </section>
 
-      <!-- 04 TREE (full only) -->
+      <!-- 05 TREE (full only) -->
       <section class="panel" id="panel-tree" data-modes="full">
-        <div class="sec-num" id="treeNum">04</div>
+        <div class="sec-num" id="treeNum">05</div>
         <h1>Grow Your Tree</h1>
         <p class="sec-sub">Who you'd love beside you — sketched before it's real.</p>
 
@@ -459,9 +487,9 @@
         </div>
       </section>
 
-      <!-- 05 PLANT / POST STUDIO (full only) -->
+      <!-- 06 PLANT / POST STUDIO (full only) -->
       <section class="panel" id="panel-plant" data-modes="full">
-        <div class="sec-num" id="plantNum">05</div>
+        <div class="sec-num" id="plantNum">06</div>
         <h1>Start Planting</h1>
         <p class="sec-sub">Learn the five post types that earn attention — draft right inside each one.</p>
 
@@ -484,9 +512,9 @@
         </div>
       </section>
 
-      <!-- 06 TEND = CONTENT CALENDAR -->
+      <!-- 07 TEND = CONTENT CALENDAR -->
       <section class="panel" id="panel-tend" data-modes="full">
-        <div class="sec-num" id="tendNum">06</div>
+        <div class="sec-num" id="tendNum">07</div>
         <h1>Content</h1>
         <p class="sec-sub">Your calendar plus a post vault and photos — plan here, post yourself. Nothing auto-sends.</p>
 
@@ -559,7 +587,7 @@
         <div class="plantbox" id="finishPlant" aria-hidden="true"></div>
         <div class="eyebrow" style="margin-bottom:10px" id="finishEyebrow">IN FULL BLOOM</div>
         <h1 id="finishHeadline">Look what you grew.</h1>
-        <p class="body-p" style="max-width:540px;margin-left:auto;margin-right:auto" id="finishBody">You've got your story, your grove, drafts in Post Studio, and a Content habit you can keep. Team is where live partners show up when they join — Grow Your Tree stays your practice sketch. Keep showing up, keep flipping 🌱 to 🌳, and let launch feel like opening a door you already helped build.</p>
+        <p class="body-p" style="max-width:540px;margin-left:auto;margin-right:auto" id="finishBody">You've got your story, your grove, drafts in Post Studio, and a Content habit you can keep. Grow Your Grove is where live partners show up when they join — Grow Your Tree stays your practice sketch. Keep showing up, keep flipping 🌱 to 🌳, and let launch feel like opening a door you already helped build.</p>
         <div class="finish-sign" id="signoff"></div>
         <div class="btn-row" style="justify-content:center">
           <button class="btn-ghost" data-goto="roots">Revisit any section</button>
@@ -759,7 +787,7 @@
                 </svg>
               </button>
             </div>
-            <p class="leads-share-explain">Your lead generation page — curious people leave their name and how to reach them. Not your team join link (that’s under Team).</p>
+            <p class="leads-share-explain">Your lead generation page — curious people leave their name and how to reach them. Not your team join link (that’s under Grove).</p>
             <p class="leads-slug-msg" id="leadsSlugMsg" role="status"></p>
             <div class="btn-row" style="margin-top:10px">
               <a class="btn-ghost" id="leadsPreviewLink" href="lead.html">Preview page →</a>
@@ -805,9 +833,9 @@
       </section>
 
       <section class="panel" id="panel-leader">
-        <div class="eyebrow">GROWING WITH YOU</div>
+        <div class="eyebrow">THE FRESH GROVE</div>
         <div class="team-head">
-          <h1>Your team</h1>
+          <h1>Grow Your Grove</h1>
           <div class="team-invite-wrap">
             <button type="button" class="team-invite-cue" id="teamInviteOpen" aria-expanded="false" aria-controls="teamInvitePop" data-team-tour="invite">
               <span class="team-invite-cue-text">Share your unique<br>team link →</span>
@@ -890,7 +918,7 @@
     </div>
 
     <div class="onboarding-pane" data-onboard-step="2">
-      <p class="onboarding-eyebrow" id="obNameEyebrow">Make it yours</p>
+      <p class="onboarding-eyebrow" id="obNameEyebrow">Nice to meet you</p>
       <h3 id="obNameTitle">What should we call you?</h3>
       <p class="lead" id="obNameHint"></p>
       <div class="onboard-hype" id="obHype">
@@ -1065,18 +1093,18 @@
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="js/config.js?v=135"></script>
-<script src="js/supabase-config.js?v=135"></script>
-<script src="js/data.js?v=135"></script>
-<script src="js/content.js?v=135"></script>
-<script src="js/content-vault.js?v=135"></script>
-<script src="js/products.js?v=135"></script>
-<script src="js/plant.js?v=135"></script>
-<script src="js/tree.js?v=135"></script>
-<script src="js/calendar.js?v=135"></script>
-<script src="js/cloud.js?v=135"></script>
-<script src="js/bridge-ui.js?v=135"></script>
-<script src="js/app.js?v=135"></script>
-<script src="js/pwa.js?v=135"></script>
+<script src="js/config.js?v=138"></script>
+<script src="js/supabase-config.js?v=138"></script>
+<script src="js/data.js?v=138"></script>
+<script src="js/content.js?v=138"></script>
+<script src="js/content-vault.js?v=138"></script>
+<script src="js/products.js?v=138"></script>
+<script src="js/plant.js?v=138"></script>
+<script src="js/tree.js?v=138"></script>
+<script src="js/calendar.js?v=138"></script>
+<script src="js/cloud.js?v=138"></script>
+<script src="js/bridge-ui.js?v=138"></script>
+<script src="js/app.js?v=138"></script>
+<script src="js/pwa.js?v=138"></script>
 </body>
 </html>
