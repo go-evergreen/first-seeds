@@ -686,8 +686,10 @@ body.hub-menu-open{overflow:hidden}
 
 /* Mode-gated content */
 body.mode-starter .full-only{display:none!important}
-/* Main tour: briefly reveal Grove so Soft start can still highlight the team tab */
-body.tour-reveal-grove .bottom-nav-btn[data-tab="team"]{display:flex!important}
+/* Main tour: keep Grove visible the whole time so Soft start nav doesn't jump between tips */
+body.tour-reveal-grove .bottom-nav-btn[data-tab="team"]{
+  display:flex!important;
+}
 body.mode-full .starter-only{display:none!important}
 
 /* ── panels ── */
@@ -1384,7 +1386,7 @@ button.vault-week-day:hover{border-color:var(--moss);box-shadow:0 6px 18px rgba(
   box-shadow:0 0 0 9999px rgba(40,52,44,.62);
   border:2.5px solid rgba(200,162,74,.85);
   background:transparent;
-  transition:top .34s var(--ease),left .34s var(--ease),width .34s var(--ease),height .34s var(--ease),border-radius .34s;
+  transition:top .32s var(--ease),left .32s var(--ease),width .32s var(--ease),height .32s var(--ease),border-radius .32s;
   will-change:top,left,width,height;
 }
 .tour-spotlight[hidden]{display:none!important}
@@ -1393,14 +1395,21 @@ button.vault-week-day:hover{border-color:var(--moss);box-shadow:0 6px 18px rgba(
   width:min(360px,calc(100vw - 24px));max-width:min(360px,calc(100vw - 24px));
   padding:20px 18px 18px;
   box-shadow:0 14px 40px rgba(10,20,14,.4);pointer-events:auto;
-  transition:top .34s var(--ease),left .34s var(--ease),transform .34s var(--ease),opacity .2s ease;
+  transition:top .32s var(--ease),left .32s var(--ease),transform .32s var(--ease);
   will-change:top,left,transform;
 }
 @keyframes tourCardIn{from{opacity:0}to{opacity:1}}
-.overlay.tour.open .tour-card{animation:tourCardIn .28s var(--ease)}
+.overlay.tour.open .tour-card{animation:tourCardIn .25s var(--ease) both}
 /* Outline only — never raise page targets above the tip card */
 .tour-target-on{position:relative;border-radius:16px;box-shadow:0 0 0 3px rgba(200,162,74,.55)}
-.bottom-nav-btn.tour-target-on{outline:3px solid rgba(200,162,74,.7);outline-offset:3px;background:var(--paper);box-shadow:none}
+.bottom-nav-btn.tour-target-on{
+  outline:3px solid rgba(200,162,74,.85);
+  outline-offset:3px;
+  background:var(--paper);
+  box-shadow:none;
+  color:var(--green);
+  z-index:1;
+}
 .home-plant-zone.tour-target-on{outline:3px solid rgba(200,162,74,.75);outline-offset:4px;box-shadow:none}
 .home-runway.tour-target-on{outline:3px solid rgba(200,162,74,.65);outline-offset:6px;border-radius:14px;box-shadow:none}
 

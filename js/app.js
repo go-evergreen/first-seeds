@@ -3242,10 +3242,8 @@
       tourTargetEl.classList.remove("tour-target-on");
       tourTargetEl = null;
     }
-    /* Sweep any leftovers (e.g. Learn in bottom nav after the home tour) */
     var leftovers = document.querySelectorAll(".tour-target-on");
     for (var i = 0; i < leftovers.length; i++) leftovers[i].classList.remove("tour-target-on");
-    /* Between steps: keep the spotlight hole so the dim layer doesn't flash/stutter */
     if (opts.hideSpot) {
       var spot = document.getElementById("tourSpotlight");
       if (spot) {
@@ -3256,10 +3254,11 @@
     }
   }
 
-  function centerTourCard() {
+  function centerTourCard(opts) {
+    opts = opts || {};
     var card = document.getElementById("tourCard");
     var spot = document.getElementById("tourSpotlight");
-    if (spot) spot.hidden = true;
+    if (spot && opts.hideSpot) spot.hidden = true;
     if (!card) return;
     card.style.top = "50%";
     card.style.left = "50%";
@@ -3304,37 +3303,44 @@
     var card = document.getElementById("tourCard");
     var spot = document.getElementById("tourSpotlight");
     if (!card || !targetEl) {
-      centerTourCard();
+      centerTourCard({ keepSpot: true });
       return;
     }
 
     var tip = (tipOrPlacement && typeof tipOrPlacement === "object") ? tipOrPlacement : null;
     var placement = tip ? (tip.placement || "auto") : (tipOrPlacement || "auto");
     var fullSpot = !!(tip && tip.fullSpot);
+    var isNav = !!(targetEl.closest && targetEl.closest(".bottom-nav"));
 
-    var pad = 8;
+    var pad = isNav ? 6 : 8;
     var gap = 12;
-    var navSafe = 72; /* leave room above bottom nav */
+    /* Leave room above bottom nav for tips — but let the spotlight cover nav buttons fully */
+    var navSafe = isNav ? 6 : 78;
     var rect = targetEl.getBoundingClientRect();
     var vw = window.innerWidth;
     var vh = window.innerHeight;
 
-    /* Hidden / not laid out yet */
     if (rect.width < 2 && rect.height < 2) {
-      centerTourCard();
+      centerTourCard({ keepSpot: true });
       return;
     }
 
-    /* Default: cap tall targets. fullSpot (e.g. live team tree) shows most of the block. */
     var maxSpotH = fullSpot
       ? Math.max(160, Math.min(rect.height + pad * 2, vh - navSafe - 200))
-      : Math.max(64, Math.floor(vh * 0.28));
+      : isNav
+        ? Math.max(rect.height + pad * 2, 56)
+        : Math.max(64, Math.floor(vh * 0.28));
     var spotH = Math.min(rect.height + pad * 2, maxSpotH);
     var spotTop = Math.max(6, rect.top - pad);
     var spotLeft = Math.max(6, rect.left - pad);
     var spotRight = Math.min(vw - 6, rect.right + pad);
     var spotBottom = Math.min(vh - navSafe, spotTop + spotH);
-    if (spotBottom > vh - navSafe) {
+    if (isNav) {
+      /* Wrap the real tab — don't clamp away from the bottom edge */
+      spotTop = Math.max(6, rect.top - pad);
+      spotBottom = Math.min(vh - 4, rect.bottom + pad);
+      spotH = spotBottom - spotTop;
+    } else if (spotBottom > vh - navSafe) {
       spotBottom = vh - navSafe;
       spotTop = Math.max(6, spotBottom - spotH);
     }
@@ -3345,7 +3351,7 @@
       spot.style.left = spotLeft + "px";
       spot.style.width = Math.max(24, spotRight - spotLeft) + "px";
       spot.style.height = Math.max(24, spotBottom - spotTop) + "px";
-      spot.style.borderRadius = targetEl.closest(".bottom-nav-btn") ? "16px" : "14px";
+      spot.style.borderRadius = isNav || targetEl.closest(".bottom-nav-btn") ? "16px" : "14px";
     }
 
     card.style.transform = "none";
@@ -3354,23 +3360,24 @@
     card.style.maxWidth = cardW + "px";
     var cardH = card.offsetHeight || 200;
 
-    var spaceBelow = vh - spotBottom - gap - navSafe;
+    var spaceBelow = vh - spotBottom - gap - (isNav ? 8 : 72);
     var spaceAbove = spotTop - gap;
     var place = placement || "auto";
     var tall = fullSpot || rect.height > vh * 0.36;
 
-    if (place === "auto" || (tall && place !== "above" && place !== "below")) {
+    if (isNav) place = "above";
+    else if (place === "auto" || (tall && place !== "above" && place !== "below")) {
       place = spaceAbove >= cardH + 8 ? "above" : (spaceBelow >= cardH + 8 ? "below" : "center");
     }
-    if (place === "below" && spaceBelow < Math.min(cardH, 130) && spaceAbove > spaceBelow) place = "above";
-    if (place === "above" && spaceAbove < Math.min(cardH, 130) && spaceBelow > spaceAbove) place = "below";
-    /* Near the bottom of the screen, prefer the tip above the hole */
-    if (spotBottom > vh * 0.62 && spaceAbove >= Math.min(cardH, 140)) place = "above";
-    /* Full-tree steps: tip sits above so the people stay visible in the hole */
-    if (fullSpot && spaceAbove >= Math.min(cardH, 120)) place = "above";
+    if (!isNav) {
+      if (place === "below" && spaceBelow < Math.min(cardH, 130) && spaceAbove > spaceBelow) place = "above";
+      if (place === "above" && spaceAbove < Math.min(cardH, 130) && spaceBelow > spaceAbove) place = "below";
+      if (spotBottom > vh * 0.62 && spaceAbove >= Math.min(cardH, 140)) place = "above";
+      if (fullSpot && spaceAbove >= Math.min(cardH, 120)) place = "above";
+    }
 
     if (place === "center") {
-      centerTourCard();
+      centerTourCard({ keepSpot: true });
       return;
     }
 
@@ -3380,7 +3387,7 @@
 
     var left = spotLeft + ((spotRight - spotLeft) / 2) - (cardW / 2);
     left = Math.min(Math.max(12, left), vw - cardW - 12);
-    top = Math.min(Math.max(12, top), vh - cardH - navSafe);
+    top = Math.min(Math.max(12, top), vh - cardH - (isNav ? 12 : 78));
 
     card.style.top = top + "px";
     card.style.left = left + "px";
@@ -3390,13 +3397,12 @@
 
   function scrollTourTargetIntoView(el, tip) {
     if (!el) return;
-    /* Open any closed details ancestors first */
+    if (el.closest && el.closest(".bottom-nav")) return; /* fixed chrome — never scroll the page for it */
     var node = el;
     while (node && node !== document.body) {
       if (node.tagName === "DETAILS") node.open = true;
       node = node.parentElement;
     }
-    /* Tour sets body.overlay-open { overflow:hidden }, which blocks scrollIntoView */
     var locked = document.body.classList.contains("overlay-open");
     if (locked) document.body.classList.remove("overlay-open");
     try {
@@ -3404,19 +3410,13 @@
       var vh = window.innerHeight;
       var fullSpot = !!(tip && tip.fullSpot);
       var tipRoom = 200;
-      var bottomSafe = vh - 96;
       var needsScroll = fullSpot
-        ? (rect.top < tipRoom - 24 || rect.top > bottomSafe - 80)
+        ? (rect.top < tipRoom - 24 || rect.top > vh - 176)
         : (rect.top < 64 || rect.bottom > vh - 88);
       if (needsScroll) {
-        /* One instant scroll — multiple smooth/adjust passes feel stop-motion */
-        if (fullSpot) {
-          window.scrollBy(0, rect.top - tipRoom);
-        } else if (rect.top < 64) {
-          window.scrollBy(0, rect.top - 80);
-        } else {
-          window.scrollBy(0, rect.bottom - (vh - 100));
-        }
+        if (fullSpot) window.scrollBy(0, rect.top - tipRoom);
+        else if (rect.top < 64) window.scrollBy(0, rect.top - 80);
+        else window.scrollBy(0, rect.bottom - (vh - 100));
       }
     } catch (err) {
       try { el.scrollIntoView({ block: "nearest", behavior: "auto" }); } catch (err2) { /* ignore */ }
@@ -3424,12 +3424,29 @@
     if (locked) document.body.classList.add("overlay-open");
   }
 
+  function mainTourNeedsGroveReveal() {
+    var tips = CFG.tour || [];
+    for (var i = 0; i < tips.length; i++) {
+      if (tips[i] && tips[i].revealGroveTab) return true;
+    }
+    return false;
+  }
+
   function scheduleTourPlacement(tip) {
     clearTimeout(tourPlaceTimer);
     clearTourHighlight(); /* keep spotlight visible between steps */
-    document.body.classList.toggle("tour-reveal-grove", !!(tip && tip.revealGroveTab));
+
+    /* Soft start: keep Grove visible for the whole main tour so Learn→Grove doesn't reflow mid-step */
+    if (tourKind === "main" && mainTourNeedsGroveReveal()) {
+      document.body.classList.add("tour-reveal-grove");
+    } else {
+      document.body.classList.toggle("tour-reveal-grove", !!(tip && tip.revealGroveTab));
+    }
+
     var attempts = 0;
-    var settleMs = (tip && (tip.openCheerSheet || tip.openNoteSheet || tip.fullSpot)) ? 140 : 60;
+    var isSheet = !!(tip && (tip.openCheerSheet || tip.openNoteSheet));
+    var isNav = !!(tip && tip.target && String(tip.target).indexOf("bottomNav") >= 0);
+    var settleMs = isSheet ? 160 : (tip && tip.fullSpot) ? 140 : (isNav ? 100 : 70);
 
     var tryPlace = function () {
       prepareTeamTourTarget(tip);
@@ -3440,25 +3457,32 @@
         var r = el.getBoundingClientRect();
         return r.width >= 2 && r.height >= 2;
       })();
-      if ((!el || !rectOk) && attempts < 12) {
+      if ((!el || !rectOk) && attempts < 14) {
         attempts++;
-        tourPlaceTimer = setTimeout(tryPlace, 80);
+        tourPlaceTimer = setTimeout(tryPlace, 70);
         return;
       }
       if (!el || !rectOk) {
-        centerTourCard();
+        centerTourCard({ keepSpot: true });
         return;
       }
       tourTargetEl = el;
       el.classList.add("tour-target-on");
       scrollTourTargetIntoView(el, tip);
-      /* One place after scroll/layout — avoid the old double-pass stutter */
       tourPlaceTimer = setTimeout(function () {
         if (!tourTargetEl) return;
+        /* Re-query after reveal/layout — Soft start Grove tab can shift nav buttons */
+        var fresh = tip && tip.target ? document.querySelector(tip.target) : tourTargetEl;
+        if (fresh && fresh !== tourTargetEl) {
+          tourTargetEl.classList.remove("tour-target-on");
+          tourTargetEl = fresh;
+          tourTargetEl.classList.add("tour-target-on");
+        }
         placeTourChrome(tourTargetEl, tip);
       }, settleMs);
     };
 
+    /* Let CSS reveal (Grove tab) paint before first measure */
     requestAnimationFrame(function () {
       requestAnimationFrame(tryPlace);
     });
@@ -3475,10 +3499,13 @@
       return;
     }
     tourIdx = 0;
+    /* Reveal Grove for Soft start before step 1 so Learn/Grove highlights don't reflow */
+    if (mainTourNeedsGroveReveal()) document.body.classList.add("tour-reveal-grove");
     wrap.classList.add("open");
     setOverlayOpen(true);
     centerTourCard();
-    renderTourStep();
+    /* Brief beat so bottom nav can settle with Grove visible */
+    setTimeout(function () { renderTourStep(); }, mainTourNeedsGroveReveal() ? 80 : 0);
   }
 
   function startTeamTour(opts) {
