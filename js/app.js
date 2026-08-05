@@ -1275,6 +1275,26 @@
     });
   }
 
+  function productImageUrl(id) {
+    var map = window.FS.PRODUCT_IMAGES || {};
+    return map[id] || "";
+  }
+
+  function productThumbHtml(id, cls) {
+    var src = productImageUrl(id);
+    if (!src) return '<span class="prod-thumb prod-thumb-empty' + (cls ? " " + cls : "") + '" aria-hidden="true"></span>';
+    return '<img class="prod-thumb' + (cls ? " " + cls : "") + '" src="' + esc(src) + '" alt="" width="56" height="56" loading="lazy" decoding="async">';
+  }
+
+  function productCardHero(p) {
+    var hero = cleanProdSquares(p.heroIngredients || "").trim();
+    if (!hero) return "";
+    var end = hero.search(/[.!?]\s/);
+    var first = end > 24 ? hero.slice(0, end + 1) : hero;
+    if (first.length > 110) first = first.slice(0, 107).replace(/\s+\S*$/, "") + "…";
+    return first;
+  }
+
   function renderProductListRows(items) {
     if (!items.length) {
       var browse = ensureProductBrowse();
@@ -1284,9 +1304,12 @@
       return '<p class="prod-empty">No products match that search in this view. Try another word, or clear search.</p>';
     }
     return '<div class="prod-list">' + items.map(function (p) {
+      var hero = productCardHero(p);
       return '<div class="prod-row">' +
+        productThumbHtml(p.id, "prod-thumb-row") +
         '<button type="button" class="prod-row-open" data-prod-open="' + esc(p.id) + '">' +
         '<span class="prod-row-name">' + esc(p.name) + "</span>" +
+        (hero ? '<span class="prod-row-hero"><em>Heroes</em> ' + esc(hero) + "</span>" : "") +
         "</button>" +
         favHeartBtn(p.id, "prod-fav-row") +
         "</div>";
@@ -1305,6 +1328,7 @@
     var badges = (p.badges || []).map(function (b) { return cleanProdSquares(b); }).filter(Boolean).slice(0, 4);
     var claims = (p.claims || []).map(function (c) { return cleanProdSquares(c); }).filter(Boolean);
     var topClaim = claims.length ? claims[0] : "";
+    var img = productImageUrl(p.id);
 
     var html = "";
     html += '<div class="prod-nav-bar">' +
@@ -1316,9 +1340,17 @@
       "</div>";
 
     html += '<article class="prod-detail-hero">';
+    html += '<div class="prod-detail-top">';
+    if (img) {
+      html += '<img class="prod-thumb prod-thumb-detail" src="' + esc(img) + '" alt="" width="112" height="112" loading="eager" decoding="async">';
+    } else {
+      html += '<span class="prod-thumb prod-thumb-empty prod-thumb-detail" aria-hidden="true"></span>';
+    }
+    html += '<div class="prod-detail-top-copy">';
     html += '<div class="prod-detail-kicker">' + esc((cat ? cat.label : "") + (p.step ? " · " + p.step : "")) + "</div>";
     html += '<h1 class="prod-detail-title">' + esc(p.name) + "</h1>";
     if (p.tagline) html += '<p class="prod-detail-tagline">' + esc(p.tagline) + "</p>";
+    html += "</div></div>";
     if (p.summary) html += '<p class="prod-detail-summary">' + esc(cleanProdSquares(p.summary)) + "</p>";
     if (forWho.length) {
       html += '<div class="prod-detail-chips" aria-label="Who it’s for">';

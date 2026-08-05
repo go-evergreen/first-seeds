@@ -1037,11 +1037,19 @@ body.curio-lightbox-open{overflow:hidden}
 .prod-cat-card-blurb{display:block;font-size:13px;line-height:1.45;color:var(--bark)}
 .prod-cat-card-count{position:absolute;top:12px;right:12px;font-size:12px;font-weight:700;color:var(--ink);background:var(--beige);border-radius:999px;min-width:28px;height:28px;padding:0 8px;display:inline-flex;align-items:center;justify-content:center}
 .prod-list{display:flex;flex-direction:column;gap:10px}
-.prod-row{display:flex;align-items:center;gap:4px;width:100%;border:1.5px solid var(--sand);background:var(--white);border-radius:16px;padding:6px 8px 6px 16px;transition:border-color .2s,box-shadow .2s}
+.prod-row{display:flex;align-items:center;gap:10px;width:100%;border:1.5px solid var(--sand);background:var(--white);border-radius:16px;padding:8px 8px 8px 10px;transition:border-color .2s,box-shadow .2s}
 .prod-row:hover{border-color:var(--moss);box-shadow:var(--shadow)}
-.prod-row-open{appearance:none;-webkit-appearance:none;flex:1;min-width:0;display:block;text-align:left;border:0;background:transparent;padding:10px 8px 10px 0;cursor:pointer;font-family:inherit;-webkit-tap-highlight-color:transparent;touch-action:manipulation}
+.prod-thumb{flex:0 0 auto;width:56px;height:56px;border-radius:50%;object-fit:contain;background:linear-gradient(160deg,#f7f5ef,#ebe8df);border:1px solid rgba(61,69,60,.08);padding:4px;box-sizing:border-box}
+.prod-thumb-empty{display:inline-block;background:linear-gradient(160deg,#f3f0e8,#e5e2d8)}
+.prod-thumb-detail{width:112px;height:112px;padding:8px;border-width:1.5px}
+.prod-row-open{appearance:none;-webkit-appearance:none;flex:1;min-width:0;display:flex;flex-direction:column;align-items:flex-start;gap:4px;text-align:left;border:0;background:transparent;padding:6px 8px 6px 0;cursor:pointer;font-family:inherit;-webkit-tap-highlight-color:transparent;touch-action:manipulation}
 .prod-fav-row{align-self:center}
-.prod-row-name{display:block;font-family:'Fraunces',serif;font-size:20px;font-weight:500;color:#000;margin:0;line-height:1.25}
+.prod-row-name{display:block;font-family:'Fraunces',serif;font-size:18px;font-weight:500;color:#000;margin:0;line-height:1.25}
+.prod-row-hero{display:block;font-size:12px;line-height:1.4;color:var(--bark);margin:0}
+.prod-row-hero em{font-style:normal;font-weight:700;font-size:9.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--moss);margin-right:5px}
+.prod-detail-top{display:flex;align-items:flex-start;gap:16px;margin:0 0 14px}
+.prod-detail-top-copy{flex:1;min-width:0}
+.prod-detail-title{font-family:'Fraunces',serif;font-size:32px;font-weight:500;color:#000;line-height:1.1;margin:0 0 8px}
 .prod-empty{font-size:14px;color:var(--bark);padding:18px 4px}
 .prod-sub-row{display:flex;flex-wrap:wrap;gap:8px;position:sticky;top:0;z-index:4;background:var(--paper);padding:8px 0 10px;margin:0 0 14px;border-bottom:1px solid rgba(61,69,60,.06)}
 .share-actions{display:flex;flex-wrap:wrap;gap:10px;margin:0 0 18px}
@@ -1054,7 +1062,6 @@ body.curio-lightbox-open{overflow:hidden}
 .share-fav-hint{font-size:13px;color:var(--bark);margin:10px 0 0;line-height:1.45}
 .prod-detail-hero{margin:0 0 18px;padding:22px 20px 20px;border-radius:20px;background:linear-gradient(160deg,#fffef9 0%,#f4f1e6 42%,#e8ebe3 100%);border:1.5px solid rgba(200,162,74,.28);box-shadow:0 10px 28px rgba(61,69,60,.06)}
 .prod-detail-kicker{font-size:11px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--moss);margin:0 0 10px}
-.prod-detail-title{font-family:'Fraunces',serif;font-size:36px;font-weight:500;color:#000;line-height:1.1;margin:0 0 8px}
 .prod-detail-tagline{font-family:'Fraunces',serif;font-size:20px;font-style:italic;color:var(--green-mid);line-height:1.35;margin:0 0 12px}
 .prod-detail-summary{font-size:15.5px;line-height:1.65;color:var(--ink);margin:0 0 14px;white-space:pre-wrap}
 .prod-detail-chips{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 14px}
@@ -1091,7 +1098,9 @@ body.curio-lightbox-open{overflow:hidden}
   .prod-head-title{font-size:28px}
   .curio-photos-title{font-size:28px}
   .curio-photos-cta-title{font-size:24px}
-  .prod-detail-title{font-size:28px}
+  .prod-detail-title{font-size:26px}
+  .prod-thumb-detail{width:88px;height:88px}
+  .prod-detail-top{gap:12px}
   .prod-nav-bar{top:env(safe-area-inset-top, 0px)}
   .prod-acc{scroll-margin-top:calc(72px + env(safe-area-inset-top, 0px))}
 }

@@ -1,0 +1,408 @@
+{
+  "source": "/Users/tayrourke/Downloads/ringana-products",
+  "visibleProducts": 69,
+  "matched": 34,
+  "missingCount": 36,
+  "matchedList": [
+    {
+      "id": "beyond-biotic",
+      "name": "BEYOND biotic",
+      "from": "beyond/beyond-biotic.png"
+    },
+    {
+      "id": "beyond-omega",
+      "name": "BEYOND omega",
+      "from": "beyond/beyond-omega.png"
+    },
+    {
+      "id": "beyond-spermidine",
+      "name": "BEYOND spermidine",
+      "from": "beyond/beyond-spermidine.png"
+    },
+    {
+      "id": "caps-beauty-hair",
+      "name": "CAPS beauty & hair",
+      "from": "caps/caps-beauty-hair.png"
+    },
+    {
+      "id": "caps-cerebro",
+      "name": "CAPS cerebro",
+      "from": "caps/caps-cerebro.png"
+    },
+    {
+      "id": "caps-d-gest",
+      "name": "CAPS d-gest",
+      "from": "caps/caps-d-gest.png"
+    },
+    {
+      "id": "caps-fem",
+      "name": "CAPS fem",
+      "from": "caps/caps-fem.png"
+    },
+    {
+      "id": "caps-moodoo",
+      "name": "CAPS moodoo",
+      "from": "caps/caps-moodoo.png"
+    },
+    {
+      "id": "caps-move",
+      "name": "CAPS move",
+      "from": "caps/caps-move.png"
+    },
+    {
+      "id": "caps-protect",
+      "name": "CAPS protect",
+      "from": "caps/caps-protect.png"
+    },
+    {
+      "id": "ringanabty",
+      "name": "RINGANAbty",
+      "from": "drinks/drinks-bty.png"
+    },
+    {
+      "id": "ringanachi",
+      "name": "RINGANAchi",
+      "from": "drinks/drinks-chi.png"
+    },
+    {
+      "id": "ringanadea",
+      "name": "RINGANAdea",
+      "from": "drinks/drinks-dea.png"
+    },
+    {
+      "id": "ringanaisi",
+      "name": "RINGANAisi",
+      "from": "drinks/drinks-isi.png"
+    },
+    {
+      "id": "fresh-after-sun-tan-booster",
+      "name": "FRESH after sun & tan booster",
+      "from": "fresh/fresh-after-sun-tan-booster.png"
+    },
+    {
+      "id": "fresh-anti-wrinkle-serum",
+      "name": "FRESH anti wrinkle serum",
+      "from": "fresh/fresh-anti-wrinkle-serum.png"
+    },
+    {
+      "id": "fresh-body-milk-light",
+      "name": "FRESH body milk light",
+      "from": "fresh/fresh-body-milk.png"
+    },
+    {
+      "id": "fresh-body-wash",
+      "name": "FRESH body wash",
+      "from": "fresh/fresh-body-wash.png"
+    },
+    {
+      "id": "fresh-cleanser",
+      "name": "FRESH cleanser",
+      "from": "fresh/fresh-cleanser.png"
+    },
+    {
+      "id": "fresh-deodorant",
+      "name": "FRESH deodorant",
+      "from": "fresh/fresh-deodorant.png"
+    },
+    {
+      "id": "fresh-illuminating-enzyme-mask",
+      "name": "FRESH illuminating enzyme mask",
+      "from": "fresh/fresh-enzyme-mask.png"
+    },
+    {
+      "id": "fresh-eye-serum",
+      "name": "FRESH eye serum",
+      "from": "fresh/fresh-eye-serum.png"
+    },
+    {
+      "id": "fresh-repair-shampoo",
+      "name": "FRESH repair shampoo",
+      "from": "fresh/fresh-hair-duo-repair.png"
+    },
+    {
+      "id": "fresh-volume-shampoo",
+      "name": "FRESH volume shampoo",
+      "from": "fresh/fresh-hair-duo-volume.png"
+    },
+    {
+      "id": "fresh-hydro-serum",
+      "name": "FRESH hydro serum",
+      "from": "fresh/fresh-hydro-serum.png"
+    },
+    {
+      "id": "fresh-intensive-hand-cream",
+      "name": "FRESH intensive hand cream",
+      "from": "fresh/fresh-intensive-hand-cream.png"
+    },
+    {
+      "id": "fresh-lip-balm-classic",
+      "name": "FRESH lip balm classic",
+      "from": "fresh/fresh-lip-balm-classic.png"
+    },
+    {
+      "id": "fresh-scrub-face-body",
+      "name": "FRESH scrub face & body",
+      "from": "fresh/fresh-scrub-face-body.png"
+    },
+    {
+      "id": "fresh-skin-perfection",
+      "name": "FRESH skin perfection",
+      "from": "fresh/fresh-skin-perfection.png"
+    },
+    {
+      "id": "fresh-tinted-moisturiser",
+      "name": "FRESH tinted moisturiser",
+      "from": "fresh/fresh-tinted-moisturiser.png"
+    },
+    {
+      "id": "fresh-toner-calm",
+      "name": "FRESH toner calm",
+      "from": "fresh/fresh-toner-calm.png"
+    },
+    {
+      "id": "fresh-packs-abc",
+      "name": "FRESH packs ABC",
+      "from": "packs/packs-abc.png"
+    },
+    {
+      "id": "sport-endurance",
+      "name": "SPORT endurance",
+      "from": "sport/sport-endurance.png"
+    },
+    {
+      "id": "sport-protein",
+      "name": "SPORT protein",
+      "from": "sport/sport-protein.png"
+    }
+  ],
+  "unusedImages": [
+    {
+      "rel": "fresh/fresh-tooth-oil.png",
+      "reason": "no id"
+    }
+  ],
+  "extraNotes": [
+    "fresh-adds-trio.png skipped (group shot)",
+    "fresh-tooth-oil.png in folder but no matching catalog product (not baby tooth gel)",
+    "fresh-body-milk.png → body milk light (only one milk PNG; rich still missing)",
+    "fresh-tinted-moisturiser.png present but product is SPF-filtered from library view"
+  ],
+  "missing": [
+    {
+      "id": "adds-effect",
+      "name": "ADDS effect",
+      "category": "skincare",
+      "subcategory": "boosters"
+    },
+    {
+      "id": "adds-glow",
+      "name": "ADDS glow",
+      "category": "skincare",
+      "subcategory": "boosters"
+    },
+    {
+      "id": "adds-repair",
+      "name": "ADDS repair",
+      "category": "skincare",
+      "subcategory": "boosters"
+    },
+    {
+      "id": "fresh-cleansing-water",
+      "name": "FRESH cleansing water",
+      "category": "skincare",
+      "subcategory": "cleansers"
+    },
+    {
+      "id": "fresh-cream-light",
+      "name": "FRESH cream light",
+      "category": "skincare",
+      "subcategory": "creams"
+    },
+    {
+      "id": "fresh-cream-medium",
+      "name": "FRESH cream medium",
+      "category": "skincare",
+      "subcategory": "creams"
+    },
+    {
+      "id": "fresh-cream-rich",
+      "name": "FRESH cream rich",
+      "category": "skincare",
+      "subcategory": "creams"
+    },
+    {
+      "id": "fresh-eye-cream",
+      "name": "FRESH eye cream",
+      "category": "skincare",
+      "subcategory": "eye-care"
+    },
+    {
+      "id": "fresh-moisturiser-for-men",
+      "name": "FRESH moisturiser for men",
+      "category": "skincare",
+      "subcategory": "men"
+    },
+    {
+      "id": "fresh-overnight-face-treatment",
+      "name": "FRESH overnight face treatment",
+      "category": "skincare",
+      "subcategory": "treatments"
+    },
+    {
+      "id": "fresh-tinted-balm-lip-cheek-rosewood",
+      "name": "FRESH tinted balm lip & cheek rosewood",
+      "category": "skincare",
+      "subcategory": "lip-care"
+    },
+    {
+      "id": "fresh-toner-calm-pocket",
+      "name": "FRESH toner calm pocket",
+      "category": "skincare",
+      "subcategory": "toners"
+    },
+    {
+      "id": "fresh-toner-pure",
+      "name": "FRESH toner pure",
+      "category": "skincare",
+      "subcategory": "toners"
+    },
+    {
+      "id": "fresh-after-sun-tan-booster-golden-glow",
+      "name": "FRESH after sun & tan booster golden glow",
+      "category": "body",
+      "subcategory": "sun"
+    },
+    {
+      "id": "fresh-body-milk-rich",
+      "name": "FRESH body milk rich",
+      "category": "body",
+      "subcategory": "body-milk"
+    },
+    {
+      "id": "fresh-deodorant-pocket",
+      "name": "FRESH deodorant pocket",
+      "category": "body",
+      "subcategory": "deodorant"
+    },
+    {
+      "id": "fresh-foot-balm",
+      "name": "FRESH foot balm",
+      "category": "body",
+      "subcategory": "feet-legs"
+    },
+    {
+      "id": "fresh-hand-balm",
+      "name": "FRESH hand balm",
+      "category": "body",
+      "subcategory": "hands"
+    },
+    {
+      "id": "fresh-hand-balm-pocket",
+      "name": "FRESH hand balm pocket",
+      "category": "body",
+      "subcategory": "hands"
+    },
+    {
+      "id": "fresh-light-legs",
+      "name": "FRESH light legs",
+      "category": "body",
+      "subcategory": "feet-legs"
+    },
+    {
+      "id": "fresh-soap",
+      "name": "FRESH soap",
+      "category": "body",
+      "subcategory": "wash"
+    },
+    {
+      "id": "fresh-soap-liquid",
+      "name": "FRESH soap liquid",
+      "category": "body",
+      "subcategory": "wash"
+    },
+    {
+      "id": "fresh-stay-fresh",
+      "name": "FRESH stay fresh",
+      "category": "body",
+      "subcategory": "wash"
+    },
+    {
+      "id": "fresh-hair-treatment",
+      "name": "FRESH hair treatment",
+      "category": "hair",
+      "subcategory": "treatment"
+    },
+    {
+      "id": "fresh-baby-body-hair-wash",
+      "name": "FRESH baby body & hair wash",
+      "category": "baby",
+      "subcategory": "wash"
+    },
+    {
+      "id": "fresh-baby-bum-cream",
+      "name": "FRESH baby bum cream",
+      "category": "baby",
+      "subcategory": "bum-care"
+    },
+    {
+      "id": "fresh-baby-cream",
+      "name": "FRESH baby cream",
+      "category": "baby",
+      "subcategory": "cream"
+    },
+    {
+      "id": "fresh-baby-oil",
+      "name": "FRESH baby oil",
+      "category": "baby",
+      "subcategory": "oil"
+    },
+    {
+      "id": "fresh-baby-tooth-gel",
+      "name": "FRESH baby tooth gel",
+      "category": "baby",
+      "subcategory": "tooth"
+    },
+    {
+      "id": "caps-hydro",
+      "name": "CAPS hydro",
+      "category": "supplements",
+      "subcategory": "caps"
+    },
+    {
+      "id": "caps-immu",
+      "name": "CAPS immu",
+      "category": "supplements",
+      "subcategory": "caps"
+    },
+    {
+      "id": "caps-mascu",
+      "name": "CAPS mascu",
+      "category": "supplements",
+      "subcategory": "caps"
+    },
+    {
+      "id": "fresh-pack-antiox",
+      "name": "FRESH pack antiox",
+      "category": "supplements",
+      "subcategory": "packs"
+    },
+    {
+      "id": "fresh-pack-balancing",
+      "name": "FRESH pack balancing",
+      "category": "supplements",
+      "subcategory": "packs"
+    },
+    {
+      "id": "fresh-pack-cleansing",
+      "name": "FRESH pack cleansing",
+      "category": "supplements",
+      "subcategory": "packs"
+    },
+    {
+      "id": "sport-push",
+      "name": "SPORT push",
+      "category": "supplements",
+      "subcategory": "sport"
+    }
+  ]
+}
