@@ -467,6 +467,47 @@ window.FS = window.FS || {};
       }
     },
 
+    loadSupportPreferences: async function () {
+      if (!sessionUser) return null;
+      if (configured() && client) {
+        var { data, error } = await client.from("support_preferences")
+          .select("partner_id, answers, completed_at, updated_at")
+          .eq("partner_id", sessionUser.id)
+          .maybeSingle();
+        if (error) throw error;
+        return data || null;
+      }
+      var u = localUserFromId(sessionUser.id);
+      return u && u.support_preferences ? u.support_preferences : null;
+    },
+
+    saveSupportPreferences: async function (answers, complete) {
+      if (!sessionUser) throw new Error("Sign in first.");
+      var now = new Date().toISOString();
+      var existing = await Cloud.loadSupportPreferences();
+      var payload = {
+        partner_id: sessionUser.id,
+        answers: answers || {},
+        completed_at: complete ? ((existing && existing.completed_at) || now) : ((existing && existing.completed_at) || null),
+        updated_at: now
+      };
+      if (configured() && client) {
+        var { data, error } = await client.from("support_preferences")
+          .upsert(payload)
+          .select("partner_id, answers, completed_at, updated_at")
+          .single();
+        if (error) throw error;
+        return data;
+      }
+      var store = localStore();
+      var u = store.users[sessionUser.id];
+      if (!u) throw new Error("Account not found.");
+      u.support_preferences = payload;
+      store.users[sessionUser.id] = u;
+      localSave(store);
+      return payload;
+    },
+
     myInviteCode: function () {
       return sessionUser ? sessionUser.invite_code : "";
     },
@@ -484,14 +525,23 @@ window.FS = window.FS || {};
         var { data: progressRows } = await client.from("runway_progress")
           .select("partner_id, active, data, done, calendar, updated_at")
           .in("partner_id", ids);
+        var supportRows = [];
+        try {
+          var supportRes = await client.from("support_preferences")
+            .select("partner_id, answers, completed_at, updated_at")
+            .in("partner_id", ids);
+          if (!supportRes.error) supportRows = supportRes.data || [];
+        } catch (e) {}
         var byId = {};
         (progressRows || []).forEach(function (r) { byId[r.partner_id] = r; });
+        var supportById = {};
+        supportRows.forEach(function (r) { supportById[r.partner_id] = r; });
         return people.map(function (p) {
           var prog = byId[p.id] || null;
           if (prog && prog.data && prog.data._notified_at) {
             prog = Object.assign({}, prog, { notified_at: prog.data._notified_at });
           }
-          return { profile: p, progress: prog };
+          return { profile: p, progress: prog, support_preferences: supportById[p.id] || null };
         });
       }
       var store = localStore();
@@ -508,7 +558,8 @@ window.FS = window.FS || {};
               last_active_at: u.last_active_at,
               created_at: u.created_at || u.last_active_at
             },
-            progress: u.progress || blankProgress()
+            progress: u.progress || blankProgress(),
+            support_preferences: u.support_preferences || null
           });
         }
       });

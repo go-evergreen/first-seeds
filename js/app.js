@@ -3826,13 +3826,333 @@
     renderPanels();
     var wasReplay = onboardingReplay;
     onboardingReplay = false;
+    offerHowGrowAfterOnboarding = !wasReplay;
     if (!wasReplay && !state.tourDone) startTour();
-    else setOverlayOpen(false);
+    else {
+      setOverlayOpen(false);
+      setTimeout(maybeOfferHowIGrow, 250);
+    }
   }
 
   function replayOnboardingFromSettings() {
     closeHubMenu();
     startOnboarding({ replay: true });
+  }
+
+  /* ── How I Grow support profile ─────────────────────── */
+  var HOW_GROW_DRAFT_KEY = "firstSeeds_how_i_grow_draft_v1";
+  var HOW_GROW_TOTAL = 11;
+  var howGrowStep = 0;
+  var howGrowAnswers = {};
+  var howGrowAdvanceTimer = null;
+  var offerHowGrowAfterOnboarding = false;
+
+  function howGrowCloud() {
+    return window.FS && window.FS.Cloud;
+  }
+
+  function readHowGrowDraft() {
+    try { return JSON.parse(localStorage.getItem(HOW_GROW_DRAFT_KEY) || "{}") || {}; }
+    catch (e) { return {}; }
+  }
+
+  function writeHowGrowDraft() {
+    try { localStorage.setItem(HOW_GROW_DRAFT_KEY, JSON.stringify(howGrowAnswers)); } catch (e) {}
+  }
+
+  function howGrowInput(id) {
+    var el = document.getElementById(id);
+    return el ? String(el.value || "").trim() : "";
+  }
+
+  function collectHowGrowText() {
+    howGrowAnswers.struggling_support = howGrowInput("howGrowStruggling");
+    howGrowAnswers.surprise_other = howGrowInput("howGrowSurpriseOther");
+    howGrowAnswers.one_year_vision = howGrowInput("howGrowOneYear");
+    howGrowAnswers.leader_note = howGrowInput("howGrowLeaderNote");
+    howGrowAnswers.little_joys = {
+      snack: howGrowInput("howGrowSnack"),
+      drink: howGrowInput("howGrowDrink"),
+      birthday: howGrowInput("howGrowBirthday"),
+      color: howGrowInput("howGrowColor"),
+      hobby: howGrowInput("howGrowHobby"),
+      travel: howGrowInput("howGrowTravel"),
+      pets: howGrowInput("howGrowPets"),
+      anything_else: howGrowInput("howGrowAnything")
+    };
+    writeHowGrowDraft();
+  }
+
+  function paintHowGrowForm() {
+    var singleGroups = document.querySelectorAll("[data-how-grow-group]");
+    for (var i = 0; i < singleGroups.length; i++) {
+      var key = singleGroups[i].getAttribute("data-how-grow-group");
+      var buttons = singleGroups[i].querySelectorAll("[data-how-grow-value]");
+      for (var b = 0; b < buttons.length; b++) {
+        buttons[b].classList.toggle("on", howGrowAnswers[key] === buttons[b].getAttribute("data-how-grow-value"));
+      }
+    }
+    var multiGroups = document.querySelectorAll("[data-how-grow-multi]");
+    for (var m = 0; m < multiGroups.length; m++) {
+      var multiKey = multiGroups[m].getAttribute("data-how-grow-multi");
+      var selected = Array.isArray(howGrowAnswers[multiKey]) ? howGrowAnswers[multiKey] : [];
+      var multiButtons = multiGroups[m].querySelectorAll("[data-how-grow-value]");
+      for (var mb = 0; mb < multiButtons.length; mb++) {
+        multiButtons[mb].classList.toggle("on", selected.indexOf(multiButtons[mb].getAttribute("data-how-grow-value")) >= 0);
+      }
+    }
+    var fields = {
+      howGrowStruggling: howGrowAnswers.struggling_support,
+      howGrowSurpriseOther: howGrowAnswers.surprise_other,
+      howGrowOneYear: howGrowAnswers.one_year_vision,
+      howGrowLeaderNote: howGrowAnswers.leader_note,
+      howGrowSnack: howGrowAnswers.little_joys && howGrowAnswers.little_joys.snack,
+      howGrowDrink: howGrowAnswers.little_joys && howGrowAnswers.little_joys.drink,
+      howGrowBirthday: howGrowAnswers.little_joys && howGrowAnswers.little_joys.birthday,
+      howGrowColor: howGrowAnswers.little_joys && howGrowAnswers.little_joys.color,
+      howGrowHobby: howGrowAnswers.little_joys && howGrowAnswers.little_joys.hobby,
+      howGrowTravel: howGrowAnswers.little_joys && howGrowAnswers.little_joys.travel,
+      howGrowPets: howGrowAnswers.little_joys && howGrowAnswers.little_joys.pets,
+      howGrowAnything: howGrowAnswers.little_joys && howGrowAnswers.little_joys.anything_else
+    };
+    Object.keys(fields).forEach(function (id) {
+      var el = document.getElementById(id);
+      if (el) el.value = fields[id] || "";
+    });
+    var hint = document.getElementById("howGrowEncouragementHint");
+    if (hint) {
+      var picked = Array.isArray(howGrowAnswers.encouragement) ? howGrowAnswers.encouragement.length : 0;
+      hint.textContent = picked >= 2
+        ? "That’s your two — tap one again to swap it out."
+        : "Pick the two that feel most like you.";
+    }
+  }
+
+  function clearHowGrowAdvance() {
+    if (howGrowAdvanceTimer) {
+      clearTimeout(howGrowAdvanceTimer);
+      howGrowAdvanceTimer = null;
+    }
+  }
+
+  function showHowGrowStep(step) {
+    clearHowGrowAdvance();
+    howGrowStep = Math.max(0, Math.min(HOW_GROW_TOTAL, step));
+    var panes = document.querySelectorAll("#howGrowOverlay [data-how-grow-step]");
+    for (var i = 0; i < panes.length; i++) {
+      panes[i].classList.toggle("on", parseInt(panes[i].getAttribute("data-how-grow-step"), 10) === howGrowStep);
+    }
+    var progress = document.getElementById("howGrowProgress");
+    var label = document.getElementById("howGrowStepLabel");
+    var fill = document.getElementById("howGrowProgressFill");
+    if (progress) {
+      progress.hidden = howGrowStep === 0;
+      if (label) label.textContent = howGrowStep + " of " + HOW_GROW_TOTAL;
+      if (fill) fill.style.width = Math.round((howGrowStep / HOW_GROW_TOTAL) * 100) + "%";
+    }
+    var card = document.querySelector("#howGrowOverlay .how-grow-card");
+    if (card) card.scrollTop = 0;
+  }
+
+  async function openHowIGrow(skipIntro) {
+    var Cloud = howGrowCloud();
+    if (!Cloud || !Cloud.isSignedIn()) {
+      var auth = document.getElementById("authOpenBtn");
+      if (auth) auth.click();
+      return;
+    }
+    howGrowAnswers = readHowGrowDraft();
+    try {
+      var saved = await Cloud.loadSupportPreferences();
+      if (saved && saved.answers) howGrowAnswers = Object.assign({}, howGrowAnswers, saved.answers);
+    } catch (e) {}
+    var ctx = null;
+    try { ctx = await Cloud.mySupportContext(); } catch (e) {}
+    var intro = document.getElementById("howGrowIntro");
+    var leaderName = ctx && (ctx.invited_by_name || ctx.sponsor_name);
+    if (intro) {
+      intro.textContent = leaderName
+        ? leaderName + " would love to know how to best support you on this journey."
+        : "Your leader would love to know how to best support you on this journey.";
+    }
+    paintHowGrowForm();
+    showHowGrowStep(skipIntro ? 1 : 0);
+    var overlay = document.getElementById("howGrowOverlay");
+    if (overlay) {
+      overlay.hidden = false;
+      overlay.classList.add("open");
+      setOverlayOpen(true);
+    }
+  }
+
+  function closeHowIGrow(opts) {
+    clearHowGrowAdvance();
+    if (!opts || !opts.skipDraftSave) collectHowGrowText();
+    var overlay = document.getElementById("howGrowOverlay");
+    if (overlay) {
+      overlay.classList.remove("open");
+      overlay.hidden = true;
+    }
+    setOverlayOpen(false);
+  }
+
+  function validateHowGrowStep(step) {
+    var required = {
+      1: "learning_style",
+      2: "question_style",
+      4: "accountability",
+      5: "support_frequency",
+      6: "encouragement",
+      7: "recognition"
+    };
+    var key = required[step];
+    if (!key) return true;
+    var value = howGrowAnswers[key];
+    if (!value || (Array.isArray(value) && !value.length)) return false;
+    return true;
+  }
+
+  function validateHowGrowRequired() {
+    return [1, 2, 4, 5, 6, 7].every(validateHowGrowStep);
+  }
+
+  async function refreshHowGrowReminder() {
+    var reminders = document.querySelectorAll("[data-how-grow-reminder]");
+    var Cloud = howGrowCloud();
+    if (!reminders.length) return;
+    if (!Cloud || !Cloud.isSignedIn()) {
+      for (var h = 0; h < reminders.length; h++) reminders[h].hidden = true;
+      return;
+    }
+    var saved = null;
+    try { saved = await Cloud.loadSupportPreferences(); } catch (e) {}
+    var complete = !!(saved && saved.completed_at);
+    for (var i = 0; i < reminders.length; i++) {
+      reminders[i].hidden = complete;
+      if (!complete) {
+        reminders[i].innerHTML =
+          '<div><strong>🌱 How I Grow</strong><span>Help your leader support you in a way that feels like you.</span></div>' +
+          '<button type="button" class="btn-ghost" data-open-how-grow>Fill out my support map →</button>';
+      }
+    }
+    var edit = document.getElementById("editHowIGrowBtn");
+    if (edit) edit.textContent = complete ? "Edit How I Grow" : "Start How I Grow";
+  }
+
+  async function maybeOfferHowIGrow() {
+    if (!offerHowGrowAfterOnboarding) return;
+    offerHowGrowAfterOnboarding = false;
+    var Cloud = howGrowCloud();
+    if (!Cloud || !Cloud.isSignedIn()) return;
+    try {
+      var saved = await Cloud.loadSupportPreferences();
+      if (saved && saved.completed_at) return;
+      var ctx = await Cloud.mySupportContext();
+      if (!ctx || !(ctx.invited_by_id || ctx.sponsor_id)) return;
+      openHowIGrow(false);
+    } catch (e) {}
+  }
+
+  function wireHowIGrow() {
+    var overlay = document.getElementById("howGrowOverlay");
+    if (!overlay || overlay.dataset.wired === "1") return;
+    overlay.dataset.wired = "1";
+    overlay.addEventListener("click", async function (e) {
+      var t = e.target.closest("[data-how-grow-value],[data-how-grow-next],[data-how-grow-back],#howGrowStart,#howGrowLater,#howGrowClose,#howGrowSubmit");
+      if (!t) return;
+      if (t.hasAttribute("data-how-grow-value")) {
+        var group = t.closest("[data-how-grow-group],[data-how-grow-multi]");
+        if (!group) return;
+        var value = t.getAttribute("data-how-grow-value");
+        var isSingle = group.hasAttribute("data-how-grow-group");
+        if (isSingle) {
+          howGrowAnswers[group.getAttribute("data-how-grow-group")] = value;
+        } else {
+          var key = group.getAttribute("data-how-grow-multi");
+          var list = Array.isArray(howGrowAnswers[key]) ? howGrowAnswers[key].slice() : [];
+          var found = list.indexOf(value);
+          if (found >= 0) list.splice(found, 1);
+          else {
+            var max = parseInt(group.getAttribute("data-max"), 10) || 99;
+            if (list.length >= max) {
+              var hint = document.getElementById("howGrowEncouragementHint");
+              if (hint) hint.textContent = "You’ve picked two — tap one to remove it first.";
+              return;
+            }
+            list.push(value);
+          }
+          howGrowAnswers[key] = list;
+        }
+        writeHowGrowDraft();
+        paintHowGrowForm();
+        if (isSingle && howGrowStep > 0 && howGrowStep < HOW_GROW_TOTAL) {
+          clearHowGrowAdvance();
+          howGrowAdvanceTimer = setTimeout(function () {
+            howGrowAdvanceTimer = null;
+            showHowGrowStep(howGrowStep + 1);
+          }, 280);
+        }
+        return;
+      }
+      if (t.id === "howGrowStart") { showHowGrowStep(1); return; }
+      if (t.id === "howGrowLater" || t.id === "howGrowClose") {
+        state.data.howGrowDeferred = true;
+        save();
+        closeHowIGrow();
+        refreshHowGrowReminder();
+        return;
+      }
+      if (t.hasAttribute("data-how-grow-back")) {
+        collectHowGrowText();
+        showHowGrowStep(howGrowStep - 1);
+        return;
+      }
+      if (t.hasAttribute("data-how-grow-next")) {
+        collectHowGrowText();
+        if (!validateHowGrowStep(howGrowStep)) {
+          alert(howGrowStep === 6
+            ? "Pick at least one kind of encouragement before continuing."
+            : "Choose an answer before continuing.");
+          return;
+        }
+        showHowGrowStep(howGrowStep + 1);
+        return;
+      }
+      if (t.id === "howGrowSubmit") {
+        collectHowGrowText();
+        if (!validateHowGrowRequired()) {
+          alert("A few choice questions are still unanswered.");
+          return;
+        }
+        var msg = document.getElementById("howGrowMsg");
+        try {
+          t.disabled = true;
+          if (msg) msg.textContent = "Sharing your support map…";
+          await howGrowCloud().saveSupportPreferences(howGrowAnswers, true);
+          state.data.howGrowDeferred = false;
+          save();
+          if (msg) msg.textContent = "Shared! Your leader can now see how to best support you.";
+          setTimeout(function () {
+            closeHowIGrow({ skipDraftSave: true });
+            try { localStorage.removeItem(HOW_GROW_DRAFT_KEY); } catch (e) {}
+            refreshHowGrowReminder();
+          }, 900);
+        } catch (err) {
+          if (msg) msg.textContent = (err && err.message) || "Could not save your answers.";
+        } finally {
+          t.disabled = false;
+        }
+      }
+    });
+    overlay.addEventListener("input", function () {
+      collectHowGrowText();
+    });
+    document.addEventListener("click", function (e) {
+      var open = e.target.closest("[data-open-how-grow],#editHowIGrowBtn");
+      if (!open) return;
+      if (open.id === "editHowIGrowBtn") closeHubMenu();
+      openHowIGrow(true);
+    });
   }
 
   function wireOnboarding() {
@@ -4405,6 +4725,7 @@
     save();
     setOverlayOpen(false);
     renderGreetings();
+    setTimeout(maybeOfferHowIGrow, 250);
   }
 
   function wireTour() {
@@ -4920,6 +5241,7 @@
 
   renderBrand();
   wireOnboarding();
+  wireHowIGrow();
   wireGrowthSettings();
   wireWeekStartSettings();
   syncGrowthSettingsUI();
@@ -4963,9 +5285,11 @@
   function finishBootGate() {
     if (dismissOnboardingIfModeChosen()) {
       if (!state.tourDone) startTour();
+      else refreshHowGrowReminder();
       return;
     }
     if (!modeChosen()) startOnboarding();
+    refreshHowGrowReminder();
   }
 
   if (window.FS.BridgeUI) {

@@ -15,6 +15,7 @@ window.FS = window.FS || {};
   var persist = null;
   var gotoPanel = null;
   var wired = false;
+  var supportProfileByPartner = {};
 
   function esc(t) {
     return (t + "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
@@ -356,6 +357,77 @@ window.FS = window.FS || {};
     return html;
   }
 
+  function supportSnapshotHtml(partnerId, support) {
+    if (!support || !support.completed_at) {
+      return '<div class="how-grow-snapshot is-empty">' +
+        '<div><strong>How they grow</strong><span>Not filled out yet</span></div>' +
+        "</div>";
+    }
+    var a = support.answers || {};
+    var chips = [a.learning_style, a.accountability, a.support_frequency].filter(Boolean);
+    var html = '<div class="how-grow-snapshot">';
+    html += '<div class="how-grow-snapshot-head"><div><strong>How they grow</strong><span>A quick support snapshot</span></div>';
+    html += '<button type="button" class="btn-ghost" data-how-they-grow="' + esc(partnerId) + '">See how they grow →</button></div>';
+    if (chips.length) {
+      html += '<div class="how-grow-snapshot-chips">';
+      chips.forEach(function (chip) { html += "<span>" + esc(chip) + "</span>"; });
+      html += "</div>";
+    }
+    html += "</div>";
+    return html;
+  }
+
+  function supportAnswerRow(label, value) {
+    if (!value || (Array.isArray(value) && !value.length)) return "";
+    var shown = Array.isArray(value) ? value.join(" · ") : value;
+    return '<div class="how-they-grow-row"><dt>' + esc(label) + "</dt><dd>" + esc(shown) + "</dd></div>";
+  }
+
+  function openHowTheyGrowSheet(partnerId) {
+    var record = supportProfileByPartner[partnerId];
+    if (!record || !record.support || !record.support.completed_at) return;
+    var a = record.support.answers || {};
+    var sheet = $("howTheyGrowSheet");
+    var name = $("howTheyGrowName");
+    var body = $("howTheyGrowBody");
+    if (!sheet || !name || !body) return;
+    name.textContent = record.name || "Partner";
+    var html = '<div class="how-they-grow-summary"><dl>';
+    html += supportAnswerRow("Learns best", a.learning_style);
+    html += supportAnswerRow("Questions", a.question_style);
+    html += supportAnswerRow("Accountability", a.accountability);
+    html += supportAnswerRow("Support rhythm", a.support_frequency);
+    html += supportAnswerRow("Feels encouraged by", a.encouragement);
+    html += supportAnswerRow("Recognition", a.recognition);
+    html += "</dl></div>";
+    if (a.struggling_support || a.one_year_vision || a.leader_note) {
+      html += '<div class="how-they-grow-notes">';
+      if (a.struggling_support) html += '<section><span>When they’re struggling</span><p>' + esc(a.struggling_support) + "</p></section>";
+      if (a.one_year_vision) html += '<section><span>One year from now</span><p>' + esc(a.one_year_vision) + "</p></section>";
+      if (a.leader_note) html += '<section><span>For their leaders to know</span><p>' + esc(a.leader_note) + "</p></section>";
+      html += "</div>";
+    }
+    var joys = a.little_joys || {};
+    var joyRows = [
+      ["Snack", joys.snack], ["Drink", joys.drink], ["Birthday", joys.birthday],
+      ["Color", joys.color], ["Hobby", joys.hobby], ["Travel", joys.travel],
+      ["Pets", joys.pets], ["Anything else", joys.anything_else],
+      ["Sweet surprises", [].concat(a.surprises || [], a.surprise_other || []).filter(Boolean)]
+    ];
+    var joysHtml = "";
+    joyRows.forEach(function (row) { joysHtml += supportAnswerRow(row[0], row[1]); });
+    if (joysHtml) {
+      html += '<details class="how-they-grow-joys"><summary>Little joys <span>open when you need a thoughtful idea</span></summary><dl>' + joysHtml + "</dl></details>";
+    }
+    body.innerHTML = html;
+    sheet.hidden = false;
+  }
+
+  function closeHowTheyGrowSheet() {
+    var sheet = $("howTheyGrowSheet");
+    if (sheet) sheet.hidden = true;
+  }
+
   async function renderLeader() {
     var root = $("leaderLists");
     if (!root) return;
@@ -379,6 +451,7 @@ window.FS = window.FS || {};
     }
     var underById = {};
     suggestedNotesByPartner = {};
+    supportProfileByPartner = {};
     function countDesc(nodes) {
       var n = 0;
       (nodes || []).forEach(function (p) {
@@ -415,6 +488,10 @@ window.FS = window.FS || {};
       var ctx = progressCtx(row, cfg);
       var under = underById[row.profile.id] || 0;
       var b = bucketFor(ctx);
+        supportProfileByPartner[row.profile.id] = {
+          name: row.profile.display_name || row.profile.email || "Partner",
+          support: row.support_preferences || null
+        };
       buckets[b].push({ row: row, ctx: ctx, nudge: pickMentorMessage(ctx, b), under: under, bucket: b });
     });
     function sortByUnder(a, b) {
@@ -479,6 +556,7 @@ window.FS = window.FS || {};
             html += '<div class="leader-ping">Pinged you ' + (pingAge === 0 ? "today" : pingAge + "d ago") + '</div>';
           }
         }
+        html += supportSnapshotHtml(p.id, item.row.support_preferences);
         html += outreachLogHtml(p.id, outreachById[p.id] || []);
         html += '<div class="leader-card-actions"' + (isMentorDemo ? ' data-team-tour="mentor"' : "") + '>';
         html += '<button type="button" class="btn-ghost leader-action-btn" data-cheer="' + esc(p.id) + '"' +
@@ -2154,6 +2232,11 @@ window.FS = window.FS || {};
           closeTeamPersonSheet();
           return;
         }
+        var growSheet = $("howTheyGrowSheet");
+        if (growSheet && !growSheet.hidden) {
+          closeHowTheyGrowSheet();
+          return;
+        }
         var box = $("curiosityLightbox");
         if (box && !box.hidden) {
           closeCuriosityLightbox();
@@ -2234,7 +2317,7 @@ window.FS = window.FS || {};
         "#teamInviteOpen,#teamInviteClose,#teamInviteX,#exportBridgeBtn,#importLiveTreeBtn,#cheerDismiss,#notifySponsorBtn,[data-goto-bridge],[data-copy-nudge],[data-cheer],[data-note],[data-leader-log]," +
         "#cheerSheetClose,#cheerSheetCancel,#cheerChooseAnother,#cheerConfirmSend," +
         "#noteSheetClose,#noteSheetCancel,#noteSheetCopy,#noteConfirmSend," +
-        "#teamPersonClose,#teamPersonX,#teamPersonCancel,[data-team-sort],[data-team-person]," +
+        "#teamPersonClose,#teamPersonX,#teamPersonCancel,#howTheyGrowClose,#howTheyGrowX,#howTheyGrowCancel,[data-how-they-grow],[data-team-sort],[data-team-person]," +
         "#teamRearrangeToggle,#teamMoveClose,#teamMoveX,#teamMoveCancel,[data-team-move],[data-team-move-to],[data-team-admin]," +
         "[data-cal-day],[data-cal-select],[data-cal-status],[data-cal-swap],[data-cal-week],[data-cal-nav],[data-cal-view],[data-cal-add],[data-cal-clear]," +
         "[data-cal-new],[data-cal-edit],[data-cal-item],[data-cal-accept],[data-cal-cadence],[data-cal-setup-toggle],[data-cal-save],[data-cal-delete]," +
@@ -2504,6 +2587,14 @@ window.FS = window.FS || {};
       }
       if (t.id === "teamPersonClose" || t.id === "teamPersonX" || t.id === "teamPersonCancel") {
         closeTeamPersonSheet();
+        return;
+      }
+      if (t.id === "howTheyGrowClose" || t.id === "howTheyGrowX" || t.id === "howTheyGrowCancel") {
+        closeHowTheyGrowSheet();
+        return;
+      }
+      if (t.hasAttribute("data-how-they-grow")) {
+        openHowTheyGrowSheet(t.getAttribute("data-how-they-grow"));
         return;
       }
       if (t.id === "teamMoveClose" || t.id === "teamMoveX" || t.id === "teamMoveCancel") {

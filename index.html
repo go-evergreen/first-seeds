@@ -20,7 +20,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,400;1,9..144,500&family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/styles.css?v=178">
+<link rel="stylesheet" href="css/styles.css?v=180">
 </head>
 <body>
 
@@ -90,6 +90,7 @@
       <div class="hub-menu-section">
         <div class="hub-menu-label">Your answers</div>
         <div class="hub-menu-actions">
+          <button type="button" class="btn-ghost" id="editHowIGrowBtn">Edit How I Grow</button>
           <button type="button" class="btn-ghost" id="exportBtn">Download my answers</button>
           <button type="button" class="btn-ghost danger-ghost" id="resetBtn">Start over</button>
         </div>
@@ -371,6 +372,7 @@
         <div class="sec-num" id="groveNum">04</div>
         <h1>Map Your Grove</h1>
         <p class="sec-sub">Customers first. Partners if you're building.</p>
+        <div class="how-grow-reminder" data-how-grow-reminder hidden></div>
         <p class="body-p">If you're sharing Ringana more like an affiliate — products, recommendations, your link — focus on the customer lane. If you're building a business with people beside you, fill out both. Either path is valid.</p>
 
         <div class="grove-lane customer">
@@ -852,6 +854,7 @@
           </div>
         </div>
         <p class="sec-sub">The people building alongside you — check in, cheer them on, watch the family grow.</p>
+        <div class="how-grow-reminder" data-how-grow-reminder hidden></div>
 
         <button type="button" class="team-invite-backdrop" id="teamInviteClose" aria-label="Close invite" hidden></button>
 
@@ -1014,6 +1017,201 @@
   </div>
 </div>
 
+<!-- ═══ HOW I GROW ═══ -->
+<div class="overlay how-grow-overlay" id="howGrowOverlay" role="dialog" aria-modal="true" aria-labelledby="howGrowTitle" hidden>
+  <div class="overlay-card how-grow-card">
+    <button type="button" class="overlay-close" id="howGrowClose" aria-label="Close">×</button>
+    <div class="how-grow-progress" id="howGrowProgress" hidden>
+      <div class="how-grow-progress-meta">
+        <span id="howGrowStepLabel">1 of 11</span>
+      </div>
+      <div class="how-grow-progress-track" aria-hidden="true"><i id="howGrowProgressFill"></i></div>
+    </div>
+
+    <section class="how-grow-pane on" data-how-grow-step="0">
+      <p class="onboarding-eyebrow">HOW I GROW</p>
+      <h3 id="howGrowTitle">A little support map, made for you.</h3>
+      <p class="lead" id="howGrowIntro">Your leader would love to know how to best support you on this journey.</p>
+      <p class="how-grow-privacy">Your answers are shared only with your direct leader and can be changed anytime.</p>
+      <button type="button" class="btn overlay-btn" id="howGrowStart">Let’s do it →</button>
+      <button type="button" class="btn-ghost overlay-btn" id="howGrowLater">Maybe later</button>
+      <p class="how-grow-later-hint">No rush — you’ll find this anytime at the top of Grove.</p>
+    </section>
+
+    <section class="how-grow-pane" data-how-grow-step="1">
+      <span class="how-grow-chip">How I learn</span>
+      <h3>When you’re learning something new, you prefer…</h3>
+      <div class="how-grow-choices" data-how-grow-group="learning_style">
+        <button type="button" data-how-grow-value="Step-by-step instruction">Step-by-step instruction</button>
+        <button type="button" data-how-grow-value="Watching someone do it first">Watching someone do it first</button>
+        <button type="button" data-how-grow-value="Jumping in and figuring it out">Jumping in and figuring it out</button>
+        <button type="button" data-how-grow-value="Talking it through">Talking it through</button>
+      </div>
+      <div class="how-grow-actions">
+        <button type="button" class="btn-ghost" data-how-grow-back>Back</button>
+        <button type="button" class="btn" data-how-grow-next>Next →</button>
+      </div>
+    </section>
+
+    <section class="how-grow-pane" data-how-grow-step="2">
+      <span class="how-grow-chip">How I learn</span>
+      <h3>If you have a question, you’re most likely to…</h3>
+      <div class="how-grow-choices" data-how-grow-group="question_style">
+        <button type="button" data-how-grow-value="Ask right away">Ask right away</button>
+        <button type="button" data-how-grow-value="Research it first">Research it first</button>
+        <button type="button" data-how-grow-value="Wait until someone checks in">Wait until someone checks in</button>
+        <button type="button" data-how-grow-value="Ask a friend before asking a leader">Ask a friend first</button>
+      </div>
+      <div class="how-grow-actions">
+        <button type="button" class="btn-ghost" data-how-grow-back>Back</button>
+        <button type="button" class="btn" data-how-grow-next>Next →</button>
+      </div>
+    </section>
+
+    <section class="how-grow-pane" data-how-grow-step="3">
+      <span class="how-grow-chip">How to show up for me</span>
+      <h3>When you’re struggling, what’s the most helpful thing a leader can do?</h3>
+      <label class="field">
+        <textarea id="howGrowStruggling" rows="4" maxlength="500" placeholder="A check-in, help me make a plan, give me space…"></textarea>
+      </label>
+      <p class="field-hint">Optional — skip if you’re not sure yet.</p>
+      <div class="how-grow-actions">
+        <button type="button" class="btn-ghost" data-how-grow-back>Back</button>
+        <button type="button" class="btn" data-how-grow-next>Next →</button>
+      </div>
+    </section>
+
+    <section class="how-grow-pane" data-how-grow-step="4">
+      <span class="how-grow-chip">How to show up for me</span>
+      <h3>What kind of accountability helps you most?</h3>
+      <div class="how-grow-choices" data-how-grow-group="accountability">
+        <button type="button" data-how-grow-value="Gentle check-ins">Gentle check-ins</button>
+        <button type="button" data-how-grow-value="Direct coaching">Direct coaching</button>
+        <button type="button" data-how-grow-value="Clear goals">Clear goals</button>
+        <button type="button" data-how-grow-value="I prefer to ask when I need help">I’ll ask when I need help</button>
+      </div>
+      <div class="how-grow-actions">
+        <button type="button" class="btn-ghost" data-how-grow-back>Back</button>
+        <button type="button" class="btn" data-how-grow-next>Next →</button>
+      </div>
+    </section>
+
+    <section class="how-grow-pane" data-how-grow-step="5">
+      <span class="how-grow-chip">How to show up for me</span>
+      <h3>How often would you like support?</h3>
+      <div class="how-grow-choices" data-how-grow-group="support_frequency">
+        <button type="button" data-how-grow-value="Weekly">Weekly</button>
+        <button type="button" data-how-grow-value="Every couple weeks">Every couple weeks</button>
+        <button type="button" data-how-grow-value="Monthly">Monthly</button>
+        <button type="button" data-how-grow-value="Mostly as needed">Mostly as needed</button>
+      </div>
+      <div class="how-grow-actions">
+        <button type="button" class="btn-ghost" data-how-grow-back>Back</button>
+        <button type="button" class="btn" data-how-grow-next>Next →</button>
+      </div>
+    </section>
+
+    <section class="how-grow-pane" data-how-grow-step="6">
+      <span class="how-grow-chip">How I feel seen</span>
+      <h3>What kind of encouragement lands?</h3>
+      <p class="field-hint" style="margin:0 0 12px">Choose up to two.</p>
+      <div class="how-grow-choices multi" data-how-grow-multi="encouragement" data-max="2">
+        <button type="button" data-how-grow-value="Words of encouragement"><strong>Words</strong><span>A thoughtful text, note, or verbal encouragement.</span></button>
+        <button type="button" data-how-grow-value="Quality time"><strong>Quality time</strong><span>Conversation, coaching, or time together.</span></button>
+        <button type="button" data-how-grow-value="Thoughtful gifts"><strong>Thoughtful gifts</strong><span>A small meaningful surprise.</span></button>
+        <button type="button" data-how-grow-value="Acts of service"><strong>Acts of service</strong><span>Help solving a problem or lightening the load.</span></button>
+        <button type="button" data-how-grow-value="Celebration"><strong>Celebration</strong><span>Acknowledging milestones and wins.</span></button>
+      </div>
+      <p class="field-hint" id="howGrowEncouragementHint">Pick the two that feel most like you.</p>
+      <div class="how-grow-actions">
+        <button type="button" class="btn-ghost" data-how-grow-back>Back</button>
+        <button type="button" class="btn" data-how-grow-next>Next →</button>
+      </div>
+    </section>
+
+    <section class="how-grow-pane" data-how-grow-step="7">
+      <span class="how-grow-chip">How I feel seen</span>
+      <h3>How do you feel about recognition?</h3>
+      <div class="how-grow-choices" data-how-grow-group="recognition">
+        <button type="button" data-how-grow-value="Public celebration">I love being celebrated publicly</button>
+        <button type="button" data-how-grow-value="Small group recognition">A small group is perfect</button>
+        <button type="button" data-how-grow-value="Private recognition">A private message means more</button>
+        <button type="button" data-how-grow-value="No spotlight">Please don’t put me in the spotlight</button>
+      </div>
+      <div class="how-grow-actions">
+        <button type="button" class="btn-ghost" data-how-grow-back>Back</button>
+        <button type="button" class="btn" data-how-grow-next>Next →</button>
+      </div>
+    </section>
+
+    <section class="how-grow-pane" data-how-grow-step="8">
+      <span class="how-grow-chip">How I feel seen</span>
+      <h3>If we surprised you one day, what would make your heart happiest?</h3>
+      <p class="field-hint" style="margin:0 0 12px">Check all that apply — optional.</p>
+      <div class="how-grow-choices compact multi" data-how-grow-multi="surprises">
+        <button type="button" data-how-grow-value="Coffee">Coffee</button>
+        <button type="button" data-how-grow-value="Books">Books</button>
+        <button type="button" data-how-grow-value="Flowers">Flowers</button>
+        <button type="button" data-how-grow-value="Healthy snacks">Healthy snacks</button>
+        <button type="button" data-how-grow-value="Skincare">Skincare</button>
+        <button type="button" data-how-grow-value="Gift card">Gift card</button>
+        <button type="button" data-how-grow-value="Handwritten note">Handwritten note</button>
+        <button type="button" data-how-grow-value="Time together">Time together</button>
+      </div>
+      <input class="cal-input how-grow-other-input" id="howGrowSurpriseOther" maxlength="120" placeholder="Something else…">
+      <div class="how-grow-actions">
+        <button type="button" class="btn-ghost" data-how-grow-back>Back</button>
+        <button type="button" class="btn" data-how-grow-next>Next →</button>
+      </div>
+    </section>
+
+    <section class="how-grow-pane" data-how-grow-step="9">
+      <span class="how-grow-chip">Looking ahead</span>
+      <h3>One year from now, what would make you say, “I’m so glad I did this”?</h3>
+      <label class="field">
+        <textarea id="howGrowOneYear" rows="4" maxlength="700" placeholder="Optional — share as much or as little as you like."></textarea>
+      </label>
+      <div class="how-grow-actions">
+        <button type="button" class="btn-ghost" data-how-grow-back>Back</button>
+        <button type="button" class="btn" data-how-grow-next>Next →</button>
+      </div>
+    </section>
+
+    <section class="how-grow-pane" data-how-grow-step="10">
+      <span class="how-grow-chip">Looking ahead</span>
+      <h3>What’s one thing we should know that would help us be better leaders for you?</h3>
+      <label class="field">
+        <textarea id="howGrowLeaderNote" rows="4" maxlength="700" placeholder="Optional — honesty helps more than polish."></textarea>
+      </label>
+      <div class="how-grow-actions">
+        <button type="button" class="btn-ghost" data-how-grow-back>Back</button>
+        <button type="button" class="btn" data-how-grow-next>Next →</button>
+      </div>
+    </section>
+
+    <section class="how-grow-pane" data-how-grow-step="11">
+      <span class="how-grow-chip">Little joys · optional</span>
+      <h3>A few fun things, if you want.</h3>
+      <p class="lead how-grow-joys-lead">Totally optional — leaders love these for thoughtful check-ins and surprises.</p>
+      <div class="how-grow-joy-grid how-grow-joy-grid-open">
+        <label class="field"><span class="field-label">Favorite snack</span><input id="howGrowSnack" maxlength="100"></label>
+        <label class="field"><span class="field-label">Favorite drink</span><input id="howGrowDrink" maxlength="100"></label>
+        <label class="field"><span class="field-label">Birthday</span><input id="howGrowBirthday" maxlength="40" placeholder="Month + day"></label>
+        <label class="field"><span class="field-label">Favorite color</span><input id="howGrowColor" maxlength="80"></label>
+        <label class="field"><span class="field-label">Favorite hobby</span><input id="howGrowHobby" maxlength="120"></label>
+        <label class="field"><span class="field-label">Favorite place traveled</span><input id="howGrowTravel" maxlength="160"></label>
+        <label class="field"><span class="field-label">Dogs, cats… or chickens?</span><input id="howGrowPets" maxlength="120"></label>
+        <label class="field full"><span class="field-label">Anything else we should know?</span><textarea id="howGrowAnything" rows="3" maxlength="500"></textarea></label>
+      </div>
+      <p class="auth-msg" id="howGrowMsg" role="status"></p>
+      <div class="how-grow-actions">
+        <button type="button" class="btn-ghost" data-how-grow-back>Back</button>
+        <button type="button" class="btn" id="howGrowSubmit">Share with my leader →</button>
+      </div>
+    </section>
+  </div>
+</div>
+
 <!-- ═══ AUTH ═══ -->
 <div class="overlay auth" id="authOverlay" role="dialog" aria-modal="true" aria-labelledby="authTitle">
   <div class="overlay-card">
@@ -1108,6 +1306,20 @@
   </div>
 </div>
 
+<!-- ═══ HOW THEY GROW (LEADER VIEW) ═══ -->
+<div class="cheer-sheet" id="howTheyGrowSheet" hidden>
+  <button type="button" class="cheer-sheet-backdrop" id="howTheyGrowClose" aria-label="Close"></button>
+  <div class="cheer-sheet-card how-they-grow-card" role="dialog" aria-modal="true" aria-labelledby="howTheyGrowName">
+    <div class="team-person-head">
+      <div class="live-tag">HOW THEY GROW</div>
+      <button type="button" class="team-person-x" id="howTheyGrowX" aria-label="Close">×</button>
+    </div>
+    <h3 id="howTheyGrowName"></h3>
+    <div id="howTheyGrowBody"></div>
+    <button type="button" class="cheer-sheet-cancel" id="howTheyGrowCancel">Close</button>
+  </div>
+</div>
+
 <!-- ═══ MOVE UNDER PICKER ═══ -->
 <div class="cheer-sheet" id="teamMoveSheet" hidden>
   <button type="button" class="cheer-sheet-backdrop" id="teamMoveClose" aria-label="Close"></button>
@@ -1139,19 +1351,19 @@
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="js/config.js?v=178"></script>
-<script src="js/supabase-config.js?v=178"></script>
-<script src="js/data.js?v=178"></script>
-<script src="js/content.js?v=178"></script>
-<script src="js/content-vault.js?v=178"></script>
-<script src="js/products.js?v=178"></script>
-<script src="assets/products/manifest.js?v=178"></script>
-<script src="js/plant.js?v=178"></script>
-<script src="js/tree.js?v=178"></script>
-<script src="js/calendar.js?v=178"></script>
-<script src="js/cloud.js?v=178"></script>
-<script src="js/bridge-ui.js?v=178"></script>
-<script src="js/app.js?v=178"></script>
-<script src="js/pwa.js?v=178"></script>
+<script src="js/config.js?v=180"></script>
+<script src="js/supabase-config.js?v=180"></script>
+<script src="js/data.js?v=180"></script>
+<script src="js/content.js?v=180"></script>
+<script src="js/content-vault.js?v=180"></script>
+<script src="js/products.js?v=180"></script>
+<script src="assets/products/manifest.js?v=180"></script>
+<script src="js/plant.js?v=180"></script>
+<script src="js/tree.js?v=180"></script>
+<script src="js/calendar.js?v=180"></script>
+<script src="js/cloud.js?v=180"></script>
+<script src="js/bridge-ui.js?v=180"></script>
+<script src="js/app.js?v=180"></script>
+<script src="js/pwa.js?v=180"></script>
 </body>
 </html>

@@ -34,6 +34,14 @@ create table if not exists public.runway_progress (
   updated_at timestamptz not null default now()
 );
 
+-- ── how i grow (partner support preferences) ─────────────
+create table if not exists public.support_preferences (
+  partner_id uuid primary key references public.profiles (id) on delete cascade,
+  answers jsonb not null default '{}'::jsonb,
+  completed_at timestamptz,
+  updated_at timestamptz not null default now()
+);
+
 -- ── leader notes (optional message shown on a section) ────
 create table if not exists public.leader_notes (
   id uuid primary key default gen_random_uuid(),
@@ -105,9 +113,14 @@ drop trigger if exists runway_updated on public.runway_progress;
 create trigger runway_updated before update on public.runway_progress
   for each row execute function public.set_updated_at();
 
+drop trigger if exists support_preferences_updated on public.support_preferences;
+create trigger support_preferences_updated before update on public.support_preferences
+  for each row execute function public.set_updated_at();
+
 -- ── RLS ───────────────────────────────────────────────────
 alter table public.profiles enable row level security;
 alter table public.runway_progress enable row level security;
+alter table public.support_preferences enable row level security;
 alter table public.leader_notes enable row level security;
 alter table public.team_events enable row level security;
 
@@ -145,6 +158,27 @@ create policy "runway_upsert_own" on public.runway_progress
 drop policy if exists "runway_update_own" on public.runway_progress;
 create policy "runway_update_own" on public.runway_progress
   for update using (partner_id = auth.uid());
+
+-- How I Grow: partner owns the answers; current direct sponsor can read them
+drop policy if exists "support_preferences_select_own_or_sponsor" on public.support_preferences;
+create policy "support_preferences_select_own_or_sponsor" on public.support_preferences
+  for select using (
+    partner_id = auth.uid()
+    or exists (
+      select 1 from public.profiles p
+      where p.id = support_preferences.partner_id
+        and p.sponsor_id = auth.uid()
+    )
+  );
+
+drop policy if exists "support_preferences_insert_own" on public.support_preferences;
+create policy "support_preferences_insert_own" on public.support_preferences
+  for insert with check (partner_id = auth.uid());
+
+drop policy if exists "support_preferences_update_own" on public.support_preferences;
+create policy "support_preferences_update_own" on public.support_preferences
+  for update using (partner_id = auth.uid())
+  with check (partner_id = auth.uid());
 
 -- leader notes: sponsor writes; partner + sponsor read
 drop policy if exists "notes_select" on public.leader_notes;
