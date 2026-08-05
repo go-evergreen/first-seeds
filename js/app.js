@@ -1398,7 +1398,6 @@
     if (ing.usageExtra) {
       howTo = howTo ? (howTo + "\n\n" + ing.usageExtra) : ing.usageExtra;
     }
-    var badges = (p.badges || []).map(function (b) { return cleanProdSquares(b); }).filter(Boolean).slice(0, 4);
     var claims = (p.claims || []).map(function (c) { return cleanProdSquares(c); }).filter(Boolean);
     var topClaim = claims.length ? claims[0] : "";
     var img = productImageUrl(p.id);
@@ -1448,13 +1447,6 @@
         '<span class="prod-detail-claim-label">From the studies</span>' +
         '<p>' + esc(topClaim) + "</p>" +
         "</blockquote>";
-    }
-    if (badges.length) {
-      html += '<div class="prod-detail-badges">';
-      badges.forEach(function (b) {
-        html += '<span class="prod-detail-badge">' + esc(b) + "</span>";
-      });
-      html += "</div>";
     }
     html += "</article>";
 
