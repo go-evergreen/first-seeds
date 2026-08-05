@@ -410,8 +410,19 @@ body.overlay-open #cheerSheet .cheer-sheet-backdrop{pointer-events:none}
 .talk-pull{margin:8px 0 18px;padding:12px 0 12px 14px;border-left:3px solid var(--moss);font-family:'Fraunces',serif;font-size:1.05rem;font-style:italic;line-height:1.4;color:var(--green)}
 .talk-sec-label{margin:22px 0 8px;font-size:11px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--moss)}
 .talk-principles{margin-bottom:8px}
-.talk-q-wrap{display:flex;flex-direction:column;align-items:flex-start;gap:5px;min-width:0;flex:1}
-.talk-cat{font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--moss)}
+.talk-principle-card{position:relative;padding-top:18px}
+.talk-emoji-bubble{flex:0 0 auto;width:36px;height:36px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:17px;line-height:1;background:linear-gradient(160deg,#f4f1e6,#e7ebe3);border:1px solid rgba(61,69,60,.1);box-shadow:0 1px 0 rgba(255,255,255,.7) inset}
+.talk-emoji-bubble-sm{width:32px;height:32px;font-size:15px}
+.talk-emoji-bubble-lg{width:44px;height:44px;font-size:20px}
+.talk-principle-card .talk-emoji-bubble{margin:0 0 10px}
+.talk-cat-block{margin:18px 0 22px}
+.talk-cat-head{display:flex;align-items:flex-start;gap:12px;margin:0 0 12px;padding:12px 14px;border-radius:16px;background:linear-gradient(160deg,rgba(255,255,255,.85),rgba(232,235,227,.55));border:1px solid rgba(61,69,60,.08)}
+.talk-cat-head-copy{min-width:0;flex:1}
+.talk-cat-title{font-family:'Fraunces',serif;font-size:18px;font-weight:500;color:#000;line-height:1.2;margin:2px 0 4px}
+.talk-cat-blurb{margin:0;font-size:13px;line-height:1.45;color:var(--bark)}
+.talk-moments .faq-q{align-items:center;gap:10px}
+.talk-q-wrap{min-width:0;flex:1;font-size:14.5px;font-weight:600;line-height:1.35;color:var(--green)}
+.talk-moments .faq-chev{flex:0 0 auto;margin-left:auto}
 .talk-why{background:rgba(171,176,154,.22);border-radius:10px;padding:12px 13px;margin:12px 0}
 .talk-why-label{font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--moss);margin-bottom:6px}
 .talk-why p{margin:0!important;font-size:13.5px;line-height:1.5;color:var(--green)}

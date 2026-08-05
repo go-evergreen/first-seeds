@@ -990,6 +990,16 @@
     var root = document.getElementById("talkGuideRoot");
     if (!root || !G) return;
     var openTalk = state.data.openTalk || "";
+    var catMeta = {
+      Warm: { emoji: "💬", label: "Warm moments", blurb: "Someone already lit up — keep the human feeling warm." },
+      "Cold-ish": { emoji: "👋", label: "Cold-ish reach", blurb: "No prior chat yet — earn recognition before the ask." },
+      Objection: { emoji: "🧭", label: "Objections", blurb: "A pushback is still a conversation. Decode what’s underneath." },
+      Business: { emoji: "🤝", label: "Business curiosity", blurb: "Diagnose before you pitch the partner path." },
+      Fade: { emoji: "🌙", label: "When it goes quiet", blurb: "One useful deposit — then let silence mean no." }
+    };
+    var catOrder = ["Warm", "Cold-ish", "Objection", "Business", "Fade"];
+    var principleEmoji = ["🔍", "🌿", "✨", "🎯", "🕊️"];
+
     var html = "";
     html += '<p class="body-p">' + esc(G.lede || "") + "</p>";
     if (G.thesis) {
@@ -1010,48 +1020,74 @@
       html += '<p class="talk-sec-label">The posture</p>';
       html += '<div class="fact-grid talk-principles">';
       G.principles.forEach(function (p, i) {
-        html += '<div class="fact-card"><div class="fact-label">' +
-          esc(String(i + 1)) + " · " + esc(p.title) +
-          "</div><p>" + esc(p.body) + "</p></div>";
+        var em = principleEmoji[i] || "•";
+        html += '<div class="fact-card talk-principle-card">' +
+          '<div class="talk-emoji-bubble" aria-hidden="true">' + em + "</div>" +
+          '<div class="fact-label">' + esc(p.title) + "</div><p>" + esc(p.body) + "</p></div>";
       });
       html += "</div>";
     }
     if (G.moments && G.moments.length) {
       html += '<p class="talk-sec-label">In the moment</p>';
       html += '<p class="body-p">' + esc(G.momentsIntro || "") + "</p>";
-      html += '<div class="faq-list talk-moments">';
+
+      var byCat = {};
       G.moments.forEach(function (m) {
-        var id = "talk_" + m.id;
-        var isOpen = openTalk === id;
-        html += '<div class="faq-item' + (isOpen ? " open" : "") + '">';
-        html += '<button type="button" class="faq-q" data-talk="' + id + '">' +
-          '<span class="talk-q-wrap"><span class="talk-cat">' + esc(m.cat) + "</span>" +
-          esc(m.q) + '</span><span class="faq-chev">' + (isOpen ? "−" : "+") + "</span></button>";
-        if (isOpen) {
-          html += '<div class="faq-a talk-moment-body">';
-          html += '<div class="talk-why"><div class="talk-why-label">The mechanism</div><p>' +
-            esc(m.mechanism) + "</p></div>";
-          if (m.note) html += "<p>" + esc(m.note) + "</p>";
-          html += '<div class="talk-play"><div class="talk-play-label">' + esc(m.playLabel || "The play") + "</div>";
-          html += '<div class="talk-exchange">';
-          (m.lines || []).forEach(function (ln) {
-            var cls = ln.who === "You" ? "you" : "them";
-            html += '<div class="talk-line ' + cls + '"><span class="talk-who">' + esc(ln.who) +
-              "</span><span>" + esc(ln.text) + "</span></div>";
-          });
-          html += "</div>";
-          var copyId = id + "_play";
-          html += '<p class="talk-play-copy" id="' + copyId + '" hidden>' + esc(talkPlayCopy(m)) + "</p>";
-          html += '<button type="button" class="copy-btn small" data-copy="' + copyId + '">Copy the play</button>';
-          html += "</div>";
-          if (m.trap) {
-            html += '<div class="talk-trap"><strong>The trap:</strong> ' + esc(m.trap) + "</div>";
+        var cat = m.cat || "Warm";
+        if (!byCat[cat]) byCat[cat] = [];
+        byCat[cat].push(m);
+      });
+      var ordered = catOrder.slice();
+      Object.keys(byCat).forEach(function (c) {
+        if (ordered.indexOf(c) < 0) ordered.push(c);
+      });
+
+      ordered.forEach(function (cat) {
+        var list = byCat[cat];
+        if (!list || !list.length) return;
+        var meta = catMeta[cat] || { emoji: "💬", label: cat, blurb: "" };
+        html += '<section class="talk-cat-block">';
+        html += '<div class="talk-cat-head">' +
+          '<span class="talk-emoji-bubble talk-emoji-bubble-lg" aria-hidden="true">' + meta.emoji + "</span>" +
+          '<div class="talk-cat-head-copy">' +
+          '<div class="talk-cat-title">' + esc(meta.label) + "</div>" +
+          (meta.blurb ? '<p class="talk-cat-blurb">' + esc(meta.blurb) + "</p>" : "") +
+          "</div></div>";
+        html += '<div class="faq-list talk-moments">';
+        list.forEach(function (m) {
+          var id = "talk_" + m.id;
+          var isOpen = openTalk === id;
+          html += '<div class="faq-item talk-moment-card' + (isOpen ? " open" : "") + '">';
+          html += '<button type="button" class="faq-q" data-talk="' + id + '">' +
+            '<span class="talk-emoji-bubble talk-emoji-bubble-sm" aria-hidden="true">' + meta.emoji + "</span>" +
+            '<span class="talk-q-wrap">' + esc(m.q) + "</span>" +
+            '<span class="faq-chev">' + (isOpen ? "−" : "+") + "</span></button>";
+          if (isOpen) {
+            html += '<div class="faq-a talk-moment-body">';
+            html += '<div class="talk-why"><div class="talk-why-label">The mechanism</div><p>' +
+              esc(m.mechanism) + "</p></div>";
+            if (m.note) html += "<p>" + esc(m.note) + "</p>";
+            html += '<div class="talk-play"><div class="talk-play-label">' + esc(m.playLabel || "The play") + "</div>";
+            html += '<div class="talk-exchange">';
+            (m.lines || []).forEach(function (ln) {
+              var cls = ln.who === "You" ? "you" : "them";
+              html += '<div class="talk-line ' + cls + '"><span class="talk-who">' + esc(ln.who) +
+                "</span><span>" + esc(ln.text) + "</span></div>";
+            });
+            html += "</div>";
+            var copyId = id + "_play";
+            html += '<p class="talk-play-copy" id="' + copyId + '" hidden>' + esc(talkPlayCopy(m)) + "</p>";
+            html += '<button type="button" class="copy-btn small" data-copy="' + copyId + '">Copy the play</button>';
+            html += "</div>";
+            if (m.trap) {
+              html += '<div class="talk-trap"><strong>The trap:</strong> ' + esc(m.trap) + "</div>";
+            }
+            html += "</div>";
           }
           html += "</div>";
-        }
-        html += "</div>";
+        });
+        html += "</div></section>";
       });
-      html += "</div>";
     }
     if (G.arc && G.arc.length) {
       html += '<p class="talk-sec-label">The full arc</p>';
@@ -1150,15 +1186,12 @@
   function isSpfProduct(p) {
     if (!p) return true;
     var name = ((p.name || "") + " " + (p.id || "")).toLowerCase();
-    /* After-sun stays in the library — only hide true SPF / sunscreen products */
+    /* After-sun stays — only hide true SPF / sunscreen SKUs (not related-product badge noise). */
     if (/after[\s-]*sun/.test(name)) return false;
     var sub = ((p.subcategory || "") + "").toLowerCase();
     if (sub === "sunscreen") return true;
     if (/\bspf\b|sunscreen/.test(name)) return true;
     if (sub === "sun" && !/after[\s-]*sun|tan booster/.test(name)) return true;
-    if (/tinted moisturiser/i.test(p.name || "") && (p.badges || []).some(function (b) {
-      return /\bspf\b/i.test(b || "");
-    })) return true;
     return false;
   }
 
@@ -1226,7 +1259,134 @@
 
   function isHiddenSunSub(subId) {
     var id = ((subId || "") + "").toLowerCase();
+    /* No SPF line in the US library yet — hide empty sun-care browse chips. */
     return id === "sunscreen" || id === "tooth";
+  }
+
+  /* Concern / ingredient aliases so “acne” also finds impure / blemish copy. */
+  var PRODUCT_SEARCH_GROUPS = [
+    {
+      keys: ["acne", "blemish", "blemishes", "impure", "impurities", "pimple", "pimples", "comedone", "comedones", "blackhead", "whitehead"],
+      terms: ["acne", "impure", "impurities", "blemish", "blemishes", "blemished", "pimple", "comedone", "comedones", "blackhead"]
+    },
+    {
+      keys: ["wrinkle", "wrinkles", "aging", "ageing", "antiaging", "anti-aging", "anti-ageing", "fine lines"],
+      terms: ["wrinkle", "wrinkles", "anti-wrinkle", "ageing", "aging", "fine lines", "collagen", "firming", "firm"]
+    },
+    {
+      keys: ["sensitive", "redness", "reddened", "irritat", "calm"],
+      terms: ["sensitive", "reddened", "redness", "irritat", "sooth", "calm"]
+    },
+    {
+      keys: ["dry", "dehydrated", "hydration", "moisture", "hydrating"],
+      terms: ["dry", "dehydrated", "hydrat", "moisture", "moisturis", "moisturiz"]
+    },
+    {
+      keys: ["oily", "oiliness", "sebum", "shine"],
+      terms: ["oily", "oiliness", "sebum", "shine", "matt"]
+    },
+    {
+      keys: ["pores", "pore"],
+      terms: ["pore", "pores", "refine"]
+    },
+    {
+      keys: ["gut", "digestive", "digestion", "bloating"],
+      terms: ["gut", "digest", "biotic", "bloating", "d-gest"]
+    },
+    {
+      keys: ["energy", "sport", "workout", "performance"],
+      terms: ["energy", "sport", "performance", "training", "workout"]
+    },
+    {
+      keys: ["hair", "scalp", "volume"],
+      terms: ["hair", "scalp", "volume", "beauty & hair"]
+    },
+    {
+      keys: ["baby", "diaper", "bum"],
+      terms: ["baby", "diaper", "bum", "little ones"]
+    },
+    {
+      keys: ["vitamin c", "vit c", "ascorbic"],
+      terms: ["vitamin c", "ascorb", "ascorbic"]
+    },
+    {
+      keys: ["hyaluronic", "ha", "hyaluron"],
+      terms: ["hyaluronic", "hyaluron", "sodium hyaluronate"]
+    },
+    {
+      keys: ["niacinamide", "vitamin b3", "b3"],
+      terms: ["niacinamide", "vitamin b3"]
+    },
+    {
+      keys: ["retinol", "bakuchiol"],
+      terms: ["retinol", "bakuchiol", "vitamin a"]
+    }
+  ];
+
+  function productSearchHaystack(p) {
+    var badges = (p.badges || []).filter(function (b) {
+      return !/\bspf\b|sunscreen/i.test(b || "");
+    });
+    return [
+      p.name, p.tagline, p.summary, p.heroIngredients, p.ingredientsNote,
+      p.application, (p.claims || []).join(" "), (p.forWho || []).join(" "),
+      p.step, p.subcategory, p.category, badges.join(" ")
+    ].join(" ").toLowerCase();
+  }
+
+  function expandProductSearchTerms(q) {
+    var raw = ((q || "") + "").trim().toLowerCase();
+    if (!raw) return [];
+    var out = [raw];
+    var seen = {};
+    seen[raw] = true;
+    function add(t) {
+      t = (t || "").toLowerCase();
+      if (!t || seen[t]) return;
+      seen[t] = true;
+      out.push(t);
+    }
+    function hitsKey(key) {
+      if (!key) return false;
+      if (raw === key) return true;
+      /* Short aliases (ha, b3) — exact query only, avoid “shampoo” → hyaluronic. */
+      if (key.length <= 2) return false;
+      if (key.indexOf(" ") >= 0) return raw.indexOf(key) >= 0;
+      if (key.length >= 4 && raw.indexOf(key) >= 0) return true;
+      if (key.indexOf(raw) === 0 && raw.length >= 4) return true;
+      return false;
+    }
+    PRODUCT_SEARCH_GROUPS.forEach(function (g) {
+      var hit = false;
+      for (var i = 0; i < g.keys.length; i++) {
+        if (hitsKey(g.keys[i])) { hit = true; break; }
+      }
+      if (!hit) return;
+      (g.terms || []).forEach(add);
+    });
+    return out;
+  }
+
+  function productMatchesQuery(p, q) {
+    var raw = ((q || "") + "").trim().toLowerCase();
+    if (!raw) return true;
+    var hay = productSearchHaystack(p);
+    if (hay.indexOf(raw) >= 0) return true;
+    var expanded = expandProductSearchTerms(raw);
+    for (var i = 0; i < expanded.length; i++) {
+      if (hay.indexOf(expanded[i]) >= 0) return true;
+    }
+    /* Multi-word: every token must match (literal or via aliases). */
+    var tokens = raw.split(/\s+/).filter(function (t) { return t.length > 1; });
+    if (tokens.length > 1) {
+      return tokens.every(function (tok) {
+        if (hay.indexOf(tok) >= 0) return true;
+        return expandProductSearchTerms(tok).some(function (t) {
+          return hay.indexOf(t) >= 0;
+        });
+      });
+    }
+    return false;
   }
 
   function productById(id) {
@@ -1275,6 +1435,113 @@
         .replace(/\s*\((site category|site tag)\)\s*/gi, "")
         .trim();
     }).filter(Boolean);
+  }
+
+  /* Short, useful chips under the product blurb — never pregnancy/breastfeeding. */
+  function shortenForWhoChip(raw) {
+    var t = (raw || "").trim();
+    if (!t) return "";
+    if (/pregnancy|breastfeed/i.test(t)) return "";
+    var map = [
+      [/food supplement\s*[—\-].*adults.*/i, "Adults · food supplement"],
+      [/beauty-from-within.*/i, "Beauty from within"],
+      [/gut\s*\/\s*digestive.*/i, "Gut wellness"],
+      [/omega-3.*/i, "Omega-3 support"],
+      [/mood\s*\/\s*mental.*/i, "Mood & focus"],
+      [/immune-season.*/i, "Immune support"],
+      [/sport\s*\/\s*energy.*/i, "Sport & energy"],
+      [/training\s*\/\s*performance.*/i, "Training & performance"],
+      [/hands needing.*/i, "Hands"],
+      [/feet or legs.*/i, "Feet & legs"],
+      [/body skin needing.*/i, "Body moisture"],
+      [/fresh baby line.*/i, "Baby care"],
+      [/developed with baby.*/i, "For little ones"],
+      [/fresh hair care.*/i, "Hair care"],
+      [/damaged, dyed, or dry hair/i, "Damaged / dry hair"],
+      [/fine hair looking for volume/i, "Fine hair · volume"],
+      [/intensive hair treatment.*/i, "Hair treatment"],
+      [/sensitive\s*\/\s*reddened.*/i, "Sensitive / reddened"],
+      [/sensitive,?\s*reddened.*/i, "Sensitive / reddened"],
+      [/impure skin/i, "Blemish-prone"],
+      [/combination skin/i, "Combination"],
+      [/oily skin/i, "Oily"],
+      [/dry skin/i, "Dry"],
+      [/mature skin/i, "Mature"],
+      [/normal skin/i, "Normal"],
+      [/all skin types/i, "All skin types"],
+      [/men.?s face care/i, "Men’s face care"],
+      [/daily underarm care/i, "Daily deodorant"],
+      [/diaper-area care/i, "Diaper area"],
+      [/sun\s*\/\s*environmental.*/i, "Environmental support"],
+      [/beauty &\s*hair from within/i, "Beauty & hair within"],
+      [/\s+interest$/i, ""]
+    ];
+    for (var i = 0; i < map.length; i++) {
+      if (map[i][0].test(t)) {
+        if (map[i][1] === "") return t.replace(map[i][0], "").trim();
+        return map[i][1];
+      }
+    }
+    return t.replace(/\s+interest$/i, "").trim();
+  }
+
+  function productHeroChips(p) {
+    var out = [];
+    var seen = {};
+    function add(label) {
+      label = (label || "").trim();
+      if (!label || /pregnancy|breastfeed/i.test(label)) return;
+      var key = label.toLowerCase();
+      if (seen[key]) return;
+      seen[key] = true;
+      out.push(label);
+    }
+    cleanForWhoList(p && p.forWho).forEach(function (c) {
+      add(shortenForWhoChip(c));
+    });
+    /* Fill gaps with clear product-type chips from the catalog */
+    if (out.length < 3 && p.step) add(p.step);
+    if (out.length < 3) {
+      var sub = ((p.subcategory || "") + "").toLowerCase();
+      var subLabel = {
+        cleansers: "Cleansing",
+        toners: "Toning",
+        serums: "Serums",
+        creams: "Creams",
+        "eye-care": "Eye care",
+        "masks-exfoliants": "Masks & exfoliants",
+        boosters: "ADDS boosters",
+        treatments: "Treatments",
+        "lip-care": "Lip care",
+        "body-milk": "Body milk",
+        deodorant: "Deodorant",
+        sun: "After-sun",
+        wash: "Body wash",
+        hands: "Hand care",
+        "feet-legs": "Feet & legs",
+        soap: "Soap",
+        oil: "Body oil",
+        caps: "CAPS",
+        drinks: "Drinks",
+        packs: "PACKS",
+        sport: "SPORT",
+        beyond: "BEYOND"
+      };
+      if (subLabel[sub]) add(subLabel[sub]);
+    }
+    if (out.length < 2) {
+      var catLabel = {
+        skincare: "Face care",
+        body: "Body care",
+        hair: "Hair care",
+        baby: "Baby care",
+        supplements: "Supplements"
+      };
+      if (catLabel[p.category]) add(catLabel[p.category]);
+    }
+    if (hasPocketSize(p)) add("Pocket size");
+    if (hasGoldenGlowOption(p)) add("Golden glow option");
+    return out.slice(0, 5);
   }
 
   function realNotForList(list) {
@@ -1335,12 +1602,7 @@
         if (browse.subcategory && isHiddenSunSub(browse.subcategory)) return false;
       }
       if (!q) return true;
-      var hay = [
-        p.name, p.tagline, p.summary, p.heroIngredients, p.ingredientsNote,
-        p.application, (p.claims || []).join(" "), (p.forWho || []).join(" "),
-        p.step, p.subcategory, p.category
-      ].join(" ").toLowerCase();
-      return hay.indexOf(q) > -1;
+      return productMatchesQuery(p, q);
     });
   }
 
@@ -1481,9 +1743,10 @@
       html += '<p class="prod-detail-variant-note">Same after-sun care with a <strong>Golden glow</strong> option — erythrulose plus red algae for a subtle self-tan, with a soft golden shimmer from mineral pearl pigments. Packaging looks the same; pick golden glow when you want that extra glow.</p>';
     }
     if (p.summary) html += '<p class="prod-detail-summary">' + esc(cleanProdSquares(p.summary)) + "</p>";
-    if (forWho.length) {
-      html += '<div class="prod-detail-chips" aria-label="Who it’s for">';
-      forWho.slice(0, 6).forEach(function (c) {
+    var heroChips = productHeroChips(p);
+    if (heroChips.length) {
+      html += '<div class="prod-detail-chips" aria-label="Good for">';
+      heroChips.forEach(function (c) {
         html += '<span class="prod-detail-chip">' + esc(c) + "</span>";
       });
       html += "</div>";

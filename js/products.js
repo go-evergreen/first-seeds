@@ -52,10 +52,6 @@ window.FS.PRODUCT_LIB = {
           "label": "Tinted care"
         },
         {
-          "id": "sunscreen",
-          "label": "Sun care"
-        },
-        {
           "id": "lip-care",
           "label": "Lip care"
         },
@@ -68,7 +64,7 @@ window.FS.PRODUCT_LIB = {
     {
       "id": "body",
       "label": "Body care",
-      "blurb": "Full body library — wash, body milk, deodorant, hands, feet & legs, and after-sun care.",
+      "blurb": "Full body library — wash, body milk, deodorant, hands, feet & legs, and after-sun.",
       "subs": [
         {
           "id": "wash",
@@ -92,7 +88,7 @@ window.FS.PRODUCT_LIB = {
         },
         {
           "id": "sun",
-          "label": "Sun care"
+          "label": "After-sun"
         }
       ]
     },
@@ -131,10 +127,6 @@ window.FS.PRODUCT_LIB = {
         {
           "id": "oil",
           "label": "Oil"
-        },
-        {
-          "id": "sun",
-          "label": "Sun care"
         }
       ]
     },
@@ -256,7 +248,7 @@ window.FS.PRODUCT_LIB = {
       "summary": "Visibly clear skin that’s balanced and healthy? No problem with ADDS repair. \n\nProbiotic ferments and natural salicylic acid purify the skin. Upcycled apple peel extract visibly refines the complexion. Plant-based moisturisers provide deep, long-lasting hydration. The microbiome stays in balance – and the skin glows.",
       "heroIngredients": "10% Liquorice Root Extract\nFights impurities and soothes irritated skin\n\n4% Niacinamide\nRegulates sebum production, calms redness, and refines pores\n\n3% Willow Bark Extract\nContains salicylic acid and supports cell renewal\n\nLactobacillus and Bacillus Ferments\nSupport the skin’s natural microbiome\n\nSea Buckthorn Leaf Extract\nSoothes the skin and reduces redness or tightness\n\nUpcycled Apple Peel Extract\nRefines pores and regenerates the skin holistically\n\nExtracts of Ginger, Frankincense and Grape\nTarget the causes of blemished skin without disturbing the healthy skin flora\n\nZinc PCA\nRegulates sebum and provides moisture",
       "ingredientsNote": "INGREDIENTS: Citrus aurantium dulcis fruit water* (orange hydrosol), Glycerin (plant-derived moisturising agent), Actinidia chinensis fruit water (kiwi water), Pentylene glycol (plant-derived moisturising agent), Pyrus malus fruit water (apple hydrosol), niacinamide (Vitamin B3 derivative), Aqua ■ (water), Salix alba bark extract (skin clarifying willow bark extract), Rosa damascena flower water* (rose water), Lactobacillus ferment (skin-nurturing substance from lactic acid bacteria), Bacillus ferment (regulates sebum), Arginine (moisturising amino acid), Glycyrrhiza glabra root extract* (soothing liquorice root extract), Vitis vinifera fruit extract (antioxidant red wine polyphenols), Boswellia serrata resin extract (skin-soothing frankincense extract), Zingiber officinale root extract (ginger extract), Hippophae rhamnoides extract* (upcycled, soothing sea buckthorn extract), Pyrus malus fruit extract (cell-protecting, skin-invigorating apple extract), Zinc PCA (sebum-reducing substance), sodium phytate (antioxidant rice bran extract), Xanthan gum (natural thickening agent), Propanediol (natural moisturising agent), Sodium citrate (salt of citric acid), Alcohol (undenatured ethanol), Citric acid (Citric acid), CI 75810 (chlorophyll) * Ingredients from organic farming | ■ Contained in the product as a component of an active substance V 3.1 A product’s ingredients may change over the course of time. If you want to know for sure what a product contains, the respective product packaging provides a list of ingredients.",
-      "application": "Mix & love: Simply mix one pump of ADDS repair with two pumps of your favourite serum (FRESH hydro serum or FRESH anti wrinkle serum). The result: gentle yet powerful care for impure skin. Spot-on care: Apply pure directly to individual blemishes twice a day – for targeted action exactly where needed. Extra tip: Before prolonged sun exposure, additionally apply FRESH sunscreen face SPF 30 or, if necessary, FRESH baby sunscreen SPF 50 in the morning.",
+      "application": "Mix & love: Simply mix one pump of ADDS repair with two pumps of your favourite serum (FRESH hydro serum or FRESH anti wrinkle serum). The result: gentle yet powerful care for impure skin. Spot-on care: Apply pure directly to individual blemishes twice a day – for targeted action exactly where needed.",
       "claims": [
         "Used with FRESH hydro serum: 86.3% reported reduced redness.",
         "Used with FRESH hydro serum: 77.2% felt that skin irritations had decreased.",
@@ -275,9 +267,7 @@ window.FS.PRODUCT_LIB = {
       ],
       "badges": [
         "Beat the Microbead",
-        "cosmeticsanalysis.com - FRESH ADDS repair",
-        "SPF 30",
-        "SPF 50"
+        "cosmeticsanalysis.com - FRESH ADDS repair"
       ],
       "sourceUrl": "https://www.ringana.com/produkt/fresh-adds-repair/?lang=en",
       "sourcedFrom": "ringana.com",
@@ -1073,7 +1063,7 @@ window.FS.PRODUCT_LIB = {
       "subcategory": "tinted",
       "step": "Tinted care",
       "tagline": "Looks like bare skin –",
-      "summary": "The skin-loving formula provides buildable coverage without weighing the skin down, ranging from sheer to naturally perfected. Thanks to mineral pigments, it adapts to a variety of skin tones. FRESH tinted moisturiser is suitable for all skin types.\n\nGood to know: The shade of FRESH tinted moisturiser corresponds approximately to that of FRESH tinted moisturiser SPF 30 – N2. To ensure optimal protection during the summer months, we recommend combining FRESH tinted moisturiser with a high-protection sunscreen such as FRESH sunscreen face SPF 30.",
+      "summary": "The skin-loving formula provides buildable coverage without weighing the skin down, ranging from sheer to naturally perfected. Thanks to mineral pigments, it adapts to a variety of skin tones. FRESH tinted moisturiser is suitable for all skin types.",
       "heroIngredients": "1.5% Birch Sugar Complex made from Anhydroxylitol, Xylitylglucoside and Xylitol helps the skin retain moisture more effectively. At the same time, it supports the skin’s natural production of hyaluronic acid, collagen and ceramides. This strengthens the skin barrier and leaves the skin feeling smoother and more supple. The complex also supports the skin’s Natural Moisturising Factor (NMF). 1% White Horehound Extract supports the skin’s natural antioxidant processes, helps make it more resilient against visible and invisible environmental stressors and strengthens its natural protective barrier. 1% Olive Leaf Extract provides hydration and contains oleuropein, an antioxidant that helps protect the skin from free radicals. 1.2% Inca Inchi Oil supplies the skin with valuable omega fatty acids such as alpha-linoleic and alpha-linolenic acid. It supports the skin barrier, provides intensive care and is particularly suitable for dry skin. 1% Pomegranate Seed Oil is rich in polyphenols, delivers hydration and helps improve skin firmness while supporting skin regeneration and reducing the appearance of wrinkles. 0.1% Cranberry Seed Oil provides valuable antioxidants and essential omega-3 fatty acids, particularly alpha-linolenic acid. It helps protect the skin against environmentally induced skin ageing. The lightweight oil absorbs quickly, leaves the skin feeling soft and does not leave a greasy residue. 2.7% Meadowfoam Seed Oil consists predominantly of long-chain unsaturated fatty acids with excellent moisture-retaining properties. 2.8% Tucuma Butter contains highly moisture-binding lauric acid, making it especially suitable for the care of dry skin and leaving it feeling wonderfully soft. Naturally occurring beta-carotene helps protect against free radicals. 8.5% Sweet Almond Oil contains a high level of unsaturated fatty acids and alpha-tocopherol. It helps protect the skin and absorbs exceptionally well. 7% Squalane derived from olives closely resembles the skin’s nat",
       "ingredientsNote": "INGREDIENTS: Citrus aurantium dulcis fruit water* (orange hydrosol), Prunus amygdalus dulcis oil* (almond kernel oil), Squalanes (olive squalane), CI 77891 (titanium dioxide as a mineral pigment), Silica (matting effect), Glyceryl stearate citrate (natural emulsifier from rapeseed oil), Pentylene glycol (plant-derived moisturiser), Astrocaryum tucuma seed butter* (silky-soft tucuma butter), Limnanthes alba seed oil (meadowfoam seed oil), Isoamyl laurate (light ester oil), Glycerin (plant-derived moisturising agent), Aqua (water), Plukenetia volubilis seed oil* (cell-regenerated Inca nut oil), Punica granatum seed oil* (pomegranate seed oil), Sucrose stearate (natural sugar emulsifier), Xylitylglucoside, Anhydroxylitol, Xylitol (moisturising birch sugar compounds), Vaccinium macrocarpon seed oil* (cranberry seed oil), Fructose (fruit sugar), Marrubium vulgare extract (anti-pollution substance from white horehound), Vitis vinifera seed oil* (grape seed oil), Salvia hispanica seed extract* (chia seed oil), Sodium hyaluronate (hyaluronic acid), Olea europaea leaf extract (antioxidant olive leaf extract), Prunus persica bud extract* (moisturising peach tree bud extract), Glucose (preserves moisture), Xanthan gum (natural thickening agent), Arginine (moisturising amino acid), Tocopherol (vitamin E), Phenethyl alcohol (rose alcohol), Citric acid (Citric acid), Sodium citrate (salt of citric acid), Rosmarinus officinalis leaf extract* (skin-regenerating rosemary extract), CI 77491, CI 77492, CI 77499 (iron oxide as mineral pigments) * Ingredients from organic farming | 100 % natural origin of total | 64,9 % of the total ingredients are from organic farming | COSMOS ORGANIC certified by Ecocert Greenlife in accordance with the COSMOS Standard, standard available at http://COSMOS.ecocert.com CBV 8.1 A product’s ingredients may change over the course of time. If you want to know for sure what a product contains, the respective product packaging provides a list of ingredients.",
       "application": "Apply FRESH tinted moisturiser drop by drop to the face and blend from the centre outwards. For especially seamless transitions around the hairline, neck and ears, use the RINGANA foundation brush. You can also apply FRESH tinted moisturiser after your preferred FRESH cream. Alternatively, mix both products in the palm of your hand before applying them to the face. To conceal pigmentation spots, dab on several layers and gently pat into the skin. Mix & Match: Depending on the season, your skin tone may appear lighter or more intense. Mix FRESH tinted moisturiser with FRESH tinted moisturiser tan for a natural finish that perfectly matches your individual skin tone at any time.",
@@ -1092,7 +1082,6 @@ window.FS.PRODUCT_LIB = {
         "COSMOS Organic",
         "Beat the Microbead",
         "cosmeticsanalysis.com - FRESH tinted moisturiser",
-        "SPF 30",
         "COSMOS ORGANIC"
       ],
       "sourceUrl": "https://www.ringana.com/produkt/fresh-tinted-moisturiser/?lang=en",
@@ -1307,7 +1296,7 @@ window.FS.PRODUCT_LIB = {
       "subcategory": "tinted",
       "step": "Tinted care",
       "tagline": "Naturally flawless. Effortlessly fresh.",
-      "summary": "The skin-flattering texture provides easily buildable coverage while still looking natural. FRESH tinted moisturiser tan is suitable for all skin types and adapts to different skin tones thanks to mineral pigments.\n\nGood to know: The tint of FRESH tinted moisturiser tan is approximately equivalent to that of FRESH tinted moisturiser SPF 30 – N3. To keep your skin optimally protected in summer, we recommend using sun care with a high SPF in addition to FRESH tinted moisturiser tan, such as FRESH sunscreen face SPF 30.",
+      "summary": "The skin-flattering texture provides easily buildable coverage while still looking natural. FRESH tinted moisturiser tan is suitable for all skin types and adapts to different skin tones thanks to mineral pigments.",
       "heroIngredients": "1.5% birch sugar complex from anhydroxylitol, xylitylglucoside and xylitol helps the skin retain moisture more effectively. At the same time, it supports the natural formation of hyaluronic acid, collagen and ceramides. This strengthens the skin barrier and leaves the skin feeling smoother. In addition, the complex supports the skin’s Natural Moisturizing Factor (NMF). 1% white horehound extract supports the skin’s own antioxidant processes, makes the skin more resilient against visible and invisible environmental stressors and strengthens its natural protective barrier. 1% olive leaf extract provides hydration and contains oleuropein, which acts as an antioxidant to protect the skin from free radicals. 1.2% inca nut oil supplies the skin with valuable omega fatty acids such as α-linoleic and α-linolenic acid. It supports the skin barrier, provides intensive care and is particularly suitable for dry skin. 1% pomegranate seed oil contains many polyphenols, provides moisture and has a firming, wrinkle-reducing and skin-regenerating effect. 0.1% cranberry seed oil delivers valuable antioxidants and essential omega-3 fatty acids, especially α-linolenic acid. It helps the skin protect itself against environmentally induced skin ageing. The lightweight oil absorbs quickly, leaves the skin feeling supple and does not leave a greasy film. 2.7% meadowfoam seed oil mainly consists of long-chain unsaturated fatty acids with pronounced moisture-retaining properties. 2.8% tucuma butter contains highly moisture-binding lauric acid, is especially suitable for the care of dry skin and leaves the skin feeling pleasantly soft. Naturally occurring beta-carotene supports protection against free radicals. 8.5% almond oil contains many unsaturated fatty acids as well as α-tocopherol. It helps protect the skin and absorbs very well. 7% squalane from olives resembles the skin’s natural lipids. It helps the skin retain moisture and protects it from drying out. This makes the skin appear smo",
       "ingredientsNote": "INGREDIENTS: Citrus aurantium dulcis fruit water* (orange hydrosol), Prunus amygdalus dulcis oil* (almond kernel oil), squalanes (olive squalane), CI 77891 (titanium dioxide as a mineral pigment), Silica (silicic acid), Glyceryl stearate citrate (natural emulsifier from rapeseed oil), Pentylene glycol (plant-derived moisturiser), Astrocaryum tucuma seed butter* (silky-soft tucuma butter), Limnanthes alba seed oil (meadowfoam seed oil), Glycerin (plant-derived moisturising agent), Isoamyl laurate (light ester oil), Aqua (water), CI 77499 (iron oxide as mineral pigments), Plukenetia volubilis seed oil* (cell-regenerated Inca nut oil), Punica granatum seed oil* (pomegranate seed oil), Sucrose stearate (natural sugar emulsifier), Xylitylglucoside, Anhydroxylitol, Xylitol (moisturising birch sugar compounds), Vaccinium macrocarpon seed oil* (cranberry seed oil), Marrubium vulgare extract (anti-pollution substance from white horehound), Vitis vinifera seed oil* (grape seed oil), Salvia hispanica seed extract* (chia seed oil), Sodium hyaluronate (hyaluronic acid), Olea europaea leaf extract (antioxidant olive leaf extract), Fructose (fruit sugar), Prunus persica bud extract* (moisturising peach tree bud extract), Glucose (preserves moisture), Xanthan gum (natural thickening agent), Arginine (moisturising amino acid), Tocopherol (vitamin E), Phenethyl alcohol (rose alcohol), Citric acid (Citric acid), Sodium stearoyl glutamate (plant-derived emulsifier), Sodium citrate (salt of citric acid), Rosmarinus officinalis leaf extract* (skin-regenerating rosemary extract), CI 77492, CI 77491 * Ingredients from organic farming | 100 % natural origin of total | 63,6 % of the total ingredients are from organic farming | COSMOS ORGANIC certified by Ecocert Greenlife in accordance with the COSMOS Standard, standard available at http://COSMOS.ecocert.com CBV 2.1 A product’s ingredients may change over the course of time. If you want to know for sure what a product contains, the respective product packaging provides a list of ingredients.",
       "application": "Apply FRESH tinted moisturiser tan drop by drop to the face and blend from the centre outwards. The RINGANA foundation brush helps create especially seamless transitions at the hairline, neck and ears. You can also apply FRESH tinted moisturiser tan after a FRESH cream of your choice. Or optionally mix it with the cream in the palm of your hand before applying it to the face. To conceal pigmentation spots, dab on several times and gently pat in. Mix & Match: Depending on the season, your skin may appear lighter or more intense. Mix FRESH tinted moisturiser with FRESH tinted moisturiser tan for a natural finish that perfectly matches your individual skin tone at any time.",
@@ -1326,7 +1315,6 @@ window.FS.PRODUCT_LIB = {
         "Beat the Microbead",
         "COSMOS Organic",
         "cosmeticsanalysis.com - FRESH tinted moisturiser tan",
-        "SPF 30",
         "COSMOS ORGANIC"
       ],
       "sourceUrl": "https://www.ringana.com/produkt/fresh-tinted-moisturiser-tan/?lang=en",
@@ -1477,7 +1465,7 @@ window.FS.PRODUCT_LIB = {
       "matchcode": "SBA",
       "category": "body",
       "subcategory": "sun",
-      "step": "Sun care",
+      "step": "After-sun",
       "tagline": "The most beautiful season: summer on your skin.",
       "summary": "An award-winning substance from the alga Codium tomentosum boosts Vitamin B5 production directly in the skin. It reduces redness and supports the skin’s natural regeneration. Buriti oil protects against UV-related stress and makes sun-stressed skin supple again. A clever mix of erythrulose and Porphyridium cruentum alga ensures a delicate, natural tan – entirely without the sun. A rich mix of prickly pear seed oil, hyaluronic acid and other nourishing ingredients gives your skin plenty of moisture, which it needs after being exposed to the sun. An extract from the resurrection plant soothes your skin, and pampers you with its fragrance. The cream is instantly absorbed without leaving any residue. The result? A natural tan that gives you a f",
       "heroIngredients": "Algal substance (Codium tomentosum)\nsupports the body’s own production of Vitamin B5, promotes skin regeneration, reduces redness and moisturises\n\nBuriti oil\nhas an antioxidant effect and protects your skin from UV-related stress\n\nResurrection plant\nrelaxes the skin, relieves irritation, and makes the skin radiant. Its fragrance is soothing\n\nRed alga extract\nhelps activate the skin’s natural tanning process with or without exposure to the sun, and helps you to keep your tan for longer\n\nErythrulose\nis a sugar substance that delivers a delicate tan – even without the sun\n\nEctoin\nsoothes the skin and cares for it when it’s damaged by the sun\n\nHyaluronic acid\ndelivers moisture; renews and revitalises the cells\n\nPrickly pear seed oil\ngrooms skin that has been exposed to the sun and boosts its regeneration",
@@ -1520,7 +1508,7 @@ window.FS.PRODUCT_LIB = {
       "matchcode": "SBA-GG",
       "category": "body",
       "subcategory": "sun",
-      "step": "Sun care",
+      "step": "After-sun",
       "tagline": "Soft Tan. Precious Touch.",
       "summary": "The smart formula contains the self-tanning sugar active ingredient erythrulose and a powerful extract from purple red algae, which together create a subtle tan. The combination of prickly pear seed oil and hyaluronic acid provides intense hydration. An extract from the resurrection plant soothes and relaxes your skin after sun exposure. FRESH after sun & tan booster golden glow is your must-have for softly tanned skin with a delicate shimmer.",
       "heroIngredients": "1% Pantodium CICA (fermented green algae extract)\nis an innovative active ingredient that stimulates the skin’s own production of vitamin B5. In scientifically studied concentration, it supports skin regeneration, reduces redness and provides hydration.\n\nBuriti oil\nprotects the skin against UV-induced stress, is rich in beta-carotene and supports regeneration after sun exposure.\n\n1.5% resurrection plant extract\nin scientifically studied concentration relaxes the skin, reduces irritation and gives it a radiant appearance. The fragrance has a calming effect.\n\nPurple red algae extract\nsupports the skin’s natural tanning process with and without sun exposure and helps maintain the tan for longer.\n\n1% erythrulose\nis a sugar-based active ingredient that provides a subtle tan, even without sun exposure.\n\n0.5% ectoin\nin scientifically studied concentration soothes the skin and cares for sun-stressed skin.\n\nHyaluronic acid\nprovides hydration, renews and revitalises the cells.\n\nPrickly pear seed oil\ncares for skin stressed by the sun and supports its regeneration.\n\nMineral pearl-effect pigments\ncreate a golden bronze shimmer effect.",
