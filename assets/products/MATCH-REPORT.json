@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-08-05T06:38:40.838127Z",
+  "generatedAt": "2026-08-05T06:41:03.588408Z",
   "visible": 65,
   "matched": 65,
   "missing": [],
@@ -272,5 +272,6 @@
     }
   ],
   "thumbKb": 129,
-  "thumbFill": 0.95
+  "thumbFit": "circle-inscribed",
+  "circleInset": 0.9
 }
