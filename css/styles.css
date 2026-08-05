@@ -18,8 +18,14 @@
 }
 *{margin:0;padding:0;box-sizing:border-box;-webkit-font-smoothing:antialiased}
 /* overflow-x:hidden on html/body can break position:fixed bottom bars on mobile WebKit */
-html{max-width:100%;overflow-x:clip}
-body{font-family:'DM Sans',sans-serif;background:var(--paper);color:var(--ink);min-height:100vh;max-width:100%;overflow-x:clip}
+html{
+  max-width:100%;
+  overflow-x:clip;
+  touch-action:manipulation; /* kill double-tap zoom; keep scroll/pinch out of accidental taps */
+  -webkit-text-size-adjust:100%;
+  text-size-adjust:100%;
+}
+body{font-family:'DM Sans',sans-serif;background:var(--paper);color:var(--ink);min-height:100vh;max-width:100%;overflow-x:clip;touch-action:manipulation;-webkit-tap-highlight-color:transparent}
 button{font-family:inherit;cursor:pointer}
 :focus-visible{outline:3px solid var(--gold);outline-offset:2px;border-radius:4px}
 ::selection{background:var(--gold-soft);color:var(--green)}
@@ -1615,6 +1621,12 @@ body.overlay-open{overflow:hidden}
     -webkit-backdrop-filter:none;
   }
   .bottom-nav-btn{max-width:none;min-width:0;min-height:58px;padding:12px 4px;font-size:11px}
+  /* iOS zooms the viewport when focusing inputs under 16px — keep controls readable without zoom */
+  input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="file"]):not([type="hidden"]),
+  textarea,
+  select{
+    font-size:16px!important;
+  }
 }
 @media (prefers-reduced-motion:reduce){
   *{animation:none!important;transition:none!important}

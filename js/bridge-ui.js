@@ -2958,17 +2958,44 @@ window.FS = window.FS || {};
     return html;
   }
 
+  var vaultSearchTimer = null;
+
   function wireVaultFilters(kind, rerender) {
     var browse = ensureVaultBrowse(kind);
     var search = $("vaultSearch");
     if (search && !search.dataset.bound) {
       search.dataset.bound = "1";
+      search.setAttribute("spellcheck", "false");
+      search.setAttribute("enterkeyhint", "search");
       search.addEventListener("input", function () {
         browse.q = search.value;
         persist();
+        if (kind === "vault") {
+          if (vaultSearchTimer) clearTimeout(vaultSearchTimer);
+          vaultSearchTimer = setTimeout(function () {
+            vaultSearchTimer = null;
+            updateVaultSearchResults();
+          }, 120);
+          return;
+        }
         rerender();
       });
     }
+  }
+
+  function updateVaultSearchResults() {
+    var browse = ensureVaultBrowse("vault");
+    var list = filterVaultList(allVaultItems(), browse);
+    var count = document.querySelector("#contentVaultRoot .vault-count");
+    var cards = document.querySelector("#contentVaultRoot .vault-card-list");
+    if (count) {
+      count.textContent = list.length + " idea" + (list.length === 1 ? "" : "s");
+    }
+    if (!cards) return;
+    var html = "";
+    list.forEach(function (p) { html += vaultCardHtml(p, "vault"); });
+    if (!list.length) html += '<p class="cal-lib-hint">Nothing matches those filters.</p>';
+    cards.innerHTML = html;
   }
 
   function renderContentVault() {

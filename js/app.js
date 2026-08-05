@@ -1323,15 +1323,25 @@
     }
   ];
 
+  var productHaystackCache = null;
+  var productSearchTimer = null;
+  var productResultKey = "";
+  var productLibSearchWired = false;
+
   function productSearchHaystack(p) {
+    if (!p || !p.id) return "";
+    if (!productHaystackCache) productHaystackCache = {};
+    if (productHaystackCache[p.id]) return productHaystackCache[p.id];
     var badges = (p.badges || []).filter(function (b) {
       return !/\bspf\b|sunscreen/i.test(b || "");
     });
-    return [
+    var hay = [
       p.name, p.tagline, p.summary, p.heroIngredients, p.ingredientsNote,
       p.application, (p.claims || []).join(" "), (p.forWho || []).join(" "),
       p.step, p.subcategory, p.category, badges.join(" ")
     ].join(" ").toLowerCase();
+    productHaystackCache[p.id] = hay;
+    return hay;
   }
 
   function expandProductSearchTerms(q) {
@@ -1417,6 +1427,7 @@
     return String(text || "")
       .replace(/[\u25A0\u25A1\u25AA\u25AB\u25FC\u25FB\u25FE\u25FD\u25A0]/g, "")
       .replace(/■/g, "")
+      .replace(/(\d)[\s\u00a0\u202f\u2009\u200a]+%/g, "$1%")
       .replace(/[ \t]+\n/g, "\n")
       .replace(/ {2,}/g, " ")
       .trim();
@@ -1433,6 +1444,8 @@
     }).map(function (t) {
       return t
         .replace(/\s*\((site category|site tag)\)\s*/gi, "")
+        .replace(/sensitive\s*\/\s*reddened\s*skin/gi, "Sensitive skin")
+        .replace(/sensitive,?\s*reddened\s*skin/gi, "Sensitive skin")
         .trim();
     }).filter(Boolean);
   }
@@ -1460,8 +1473,8 @@
       [/damaged, dyed, or dry hair/i, "Damaged / dry hair"],
       [/fine hair looking for volume/i, "Fine hair · volume"],
       [/intensive hair treatment.*/i, "Hair treatment"],
-      [/sensitive\s*\/\s*reddened.*/i, "Sensitive / reddened"],
-      [/sensitive,?\s*reddened.*/i, "Sensitive / reddened"],
+      [/sensitive\s*\/\s*reddened.*/i, "Sensitive skin"],
+      [/sensitive,?\s*reddened.*/i, "Sensitive skin"],
       [/impure skin/i, "Blemish-prone"],
       [/combination skin/i, "Combination"],
       [/oily skin/i, "Oily"],
@@ -1712,14 +1725,20 @@
     var pocket = hasPocketSize(p);
     var glow = hasGoldenGlowOption(p);
 
+    var browse = ensureProductBrowse();
+    var fromFavorites = browse.scope === "favorites";
     var html = "";
-    html += '<div class="prod-nav-bar">' +
-      (cat
+    html += '<div class="prod-nav-bar">';
+    if (fromFavorites) {
+      html += '<button type="button" class="prod-pill on" data-prod-nav="favorites">← Favorites</button>';
+      html += '<button type="button" class="prod-pill" data-prod-nav="hub">All products</button>';
+    } else {
+      html += (cat
         ? '<button type="button" class="prod-pill on" data-prod-nav="cat" data-prod-cat="' + esc(p.category) + '">← ' + esc(cat.label) + "</button>"
         : "") +
-      '<button type="button" class="prod-pill" data-prod-nav="hub">All products</button>' +
-      favHeartBtn(p.id, "prod-fav-detail") +
-      "</div>";
+        '<button type="button" class="prod-pill" data-prod-nav="hub">All products</button>';
+    }
+    html += favHeartBtn(p.id, "prod-fav-detail") + "</div>";
 
     html += '<article class="prod-detail-hero">';
     html += '<div class="prod-detail-top">';
@@ -1795,9 +1814,99 @@
     return html;
   }
 
+  function productSearchMetaText(browse, scoped) {
+    var favScope = browse && browse.scope === "favorites";
+    return scoped.length + " product" + (scoped.length === 1 ? "" : "s") +
+      (browse.q ? " matching “" + browse.q + "”" : (favScope ? " favorited" : " to explore"));
+  }
+
+  function productBrowseBodyHtml(browse, scoped) {
+    var lib = productLib();
+    var favScope = browse.scope === "favorites";
+    var html = "";
+    if (favScope) {
+      html += renderProductListRows(scoped);
+    } else if (!browse.category && !browse.q) {
+      html += '<div class="prod-cat-grid">';
+      (lib.categories || []).forEach(function (c) {
+        var n = visibleProducts().filter(function (p) { return p.category === c.id; }).length;
+        if (!n) return;
+        html += '<button type="button" class="prod-cat-card" data-prod-nav="cat" data-prod-cat="' + esc(c.id) + '">' +
+          '<span class="prod-cat-card-count">' + n + "</span>" +
+          '<span class="prod-cat-card-label">' + esc(c.label) + "</span>" +
+          '<span class="prod-cat-card-blurb">' + esc(c.blurb) + "</span></button>";
+      });
+      html += "</div>";
+    } else if (!browse.category && browse.q) {
+      html += renderProductListRows(scoped);
+    } else {
+      var catObj = categoryById(browse.category);
+      var subs = categorySubs(catObj);
+      if (subs.length && !browse.q) {
+        html += '<div class="prod-sub-row" id="prodSubRow">';
+        html += '<button type="button" class="prod-pill' + (!browse.subcategory ? " on" : "") + '" data-prod-nav="cat" data-prod-cat="' + esc(browse.category) + '" data-prod-sub="">All</button>';
+        subs.forEach(function (s) {
+          html += '<button type="button" class="prod-pill' + (browse.subcategory === s.id ? " on" : "") +
+            '" data-prod-nav="cat" data-prod-cat="' + esc(browse.category) + '" data-prod-sub="' + esc(s.id) + '">' +
+            esc(s.label) + "</button>";
+        });
+        html += "</div>";
+      }
+      html += renderProductListRows(scoped);
+    }
+    if (lib.disclaimer) {
+      html += '<p class="prod-disclaimer">' + esc(lib.disclaimer) + "</p>";
+    }
+    return html;
+  }
+
+  function productResultsSignature(browse, scoped) {
+    var ids = [];
+    for (var i = 0; i < scoped.length; i++) ids.push(scoped[i].id);
+    return [
+      browse.scope || "all",
+      browse.category || "",
+      browse.subcategory || "",
+      browse.q || "",
+      ids.join(",")
+    ].join("|");
+  }
+
+  function updateProductBrowseResults() {
+    var meta = document.getElementById("prodSearchMeta");
+    var body = document.getElementById("prodBrowseBody");
+    if (!meta && !body) return;
+    var browse = ensureProductBrowse();
+    var scoped = productsInScope(browse);
+    if (meta) meta.textContent = productSearchMetaText(browse, scoped);
+    var key = productResultsSignature(browse, scoped);
+    if (body && key !== productResultKey) {
+      productResultKey = key;
+      body.innerHTML = productBrowseBodyHtml(browse, scoped);
+    }
+  }
+
+  function wireProductLibrarySearch() {
+    if (productLibSearchWired) return;
+    var root = document.getElementById("productLibRoot");
+    if (!root) return;
+    productLibSearchWired = true;
+    root.addEventListener("input", function (e) {
+      var t = e.target;
+      if (!t || t.id !== "productSearch") return;
+      ensureProductBrowse().q = t.value || "";
+      if (productSearchTimer) clearTimeout(productSearchTimer);
+      productSearchTimer = setTimeout(function () {
+        productSearchTimer = null;
+        updateProductBrowseResults();
+      }, 120);
+    });
+  }
+
   function renderProductLibrary() {
     var root = document.getElementById("productLibRoot");
     if (!root) return;
+    wireProductLibrarySearch();
     var lib = productLib();
     var browse = ensureProductBrowse();
     if (browse.subcategory && isHiddenSunSub(browse.subcategory)) browse.subcategory = null;
@@ -1849,60 +1958,13 @@
     }
 
     html += '<label class="sr-only" for="productSearch">Search products</label>';
-    html += '<input type="search" id="productSearch" class="prod-search" placeholder="Search ingredients, names, skin concerns…" value="' + esc(browse.q || "") + '" autocomplete="off">';
+    html += '<input type="search" id="productSearch" class="prod-search" placeholder="Search ingredients, names, skin concerns…" value="' + esc(browse.q || "") + '" autocomplete="off" enterkeyhint="search" spellcheck="false">';
     var scoped = productsInScope(browse);
-    html += '<p class="prod-search-meta">' + scoped.length + " product" + (scoped.length === 1 ? "" : "s") +
-      (browse.q ? " matching “" + esc(browse.q) + "”" : (favScope ? " favorited" : " to explore")) + "</p>";
-
-    if (favScope) {
-      html += renderProductListRows(scoped);
-    } else if (!browse.category && !browse.q) {
-      html += '<div class="prod-cat-grid">';
-      (lib.categories || []).forEach(function (c) {
-        var n = visibleProducts().filter(function (p) { return p.category === c.id; }).length;
-        if (!n) return;
-        html += '<button type="button" class="prod-cat-card" data-prod-nav="cat" data-prod-cat="' + esc(c.id) + '">' +
-          '<span class="prod-cat-card-count">' + n + "</span>" +
-          '<span class="prod-cat-card-label">' + esc(c.label) + "</span>" +
-          '<span class="prod-cat-card-blurb">' + esc(c.blurb) + "</span></button>";
-      });
-      html += "</div>";
-    } else if (!browse.category && browse.q) {
-      html += renderProductListRows(scoped);
-    } else {
-      var catObj = categoryById(browse.category);
-      var subs = categorySubs(catObj);
-      if (subs.length && !browse.q) {
-        html += '<div class="prod-sub-row" id="prodSubRow">';
-        html += '<button type="button" class="prod-pill' + (!browse.subcategory ? " on" : "") + '" data-prod-nav="cat" data-prod-cat="' + esc(browse.category) + '" data-prod-sub="">All</button>';
-        subs.forEach(function (s) {
-          html += '<button type="button" class="prod-pill' + (browse.subcategory === s.id ? " on" : "") +
-            '" data-prod-nav="cat" data-prod-cat="' + esc(browse.category) + '" data-prod-sub="' + esc(s.id) + '">' +
-            esc(s.label) + "</button>";
-        });
-        html += "</div>";
-      }
-      html += renderProductListRows(scoped);
-    }
-
-    if (lib.disclaimer) {
-      html += '<p class="prod-disclaimer">' + esc(lib.disclaimer) + "</p>";
-    }
+    productResultKey = productResultsSignature(browse, scoped);
+    html += '<p class="prod-search-meta" id="prodSearchMeta">' + esc(productSearchMetaText(browse, scoped)) + "</p>";
+    html += '<div id="prodBrowseBody">' + productBrowseBodyHtml(browse, scoped) + "</div>";
 
     root.innerHTML = html;
-    var search = document.getElementById("productSearch");
-    if (search) {
-      search.addEventListener("input", function () {
-        ensureProductBrowse().q = search.value || "";
-        renderProductLibrary();
-        var again = document.getElementById("productSearch");
-        if (again) {
-          again.focus();
-          var len = again.value.length;
-          try { again.setSelectionRange(len, len); } catch (e) {}
-        }
-      });
-    }
   }
 
   function favoriteProducts() {
@@ -2236,6 +2298,8 @@
     }
   }
 
+  var knowSearchTimer = null;
+
   function filterKnowSearch() {
     var input = document.getElementById("knowSearch");
     var empty = document.getElementById("knowSearchEmpty");
@@ -2245,8 +2309,8 @@
     var shown = 0;
     for (var i = 0; i < secs.length; i++) {
       var sec = secs[i];
-      var text = (sec.textContent || "").toLowerCase();
-      var match = !q || text.indexOf(q) > -1;
+      if (!sec._knowSearchText) sec._knowSearchText = (sec.textContent || "").toLowerCase();
+      var match = !q || sec._knowSearchText.indexOf(q) > -1;
       sec.hidden = !match;
       if (match) {
         shown++;
@@ -2260,7 +2324,15 @@
     var input = document.getElementById("knowSearch");
     if (!input || input.dataset.bound) return;
     input.dataset.bound = "1";
-    input.addEventListener("input", filterKnowSearch);
+    input.setAttribute("spellcheck", "false");
+    input.setAttribute("enterkeyhint", "search");
+    input.addEventListener("input", function () {
+      if (knowSearchTimer) clearTimeout(knowSearchTimer);
+      knowSearchTimer = setTimeout(function () {
+        knowSearchTimer = null;
+        filterKnowSearch();
+      }, 120);
+    });
   }
 
   function renderHomeRunway() {
@@ -4422,6 +4494,11 @@
           browseNav.category = null;
           browseNav.subcategory = null;
           browseNav.scope = "all";
+        } else if (navMode === "favorites") {
+          browseNav.scope = "favorites";
+          browseNav.category = null;
+          browseNav.subcategory = null;
+          browseNav.q = "";
         } else if (navMode === "cat") {
           browseNav.scope = "all";
           var nextCat = t.getAttribute("data-prod-cat") || null;
