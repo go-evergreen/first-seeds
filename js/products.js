@@ -13,7 +13,7 @@ window.FS.PRODUCT_LIB = {
     {
       "id": "skincare",
       "label": "Skincare",
-      "blurb": "Full face-care library — 30 products across cleansers, toners, serums, creams, eye care, masks, ADDS, tinted care & more.",
+      "blurb": "Full face-care library — cleansers, toners, serums, creams, eye care, masks, ADDS, treatments & more.",
       "subs": [
         {
           "id": "cleansers",
@@ -68,7 +68,7 @@ window.FS.PRODUCT_LIB = {
     {
       "id": "body",
       "label": "Body care",
-      "blurb": "Full body library — 17 products across wash, body milk, deodorant, hands, feet & legs, and sun care.",
+      "blurb": "Full body library — wash, body milk, deodorant, hands, feet & legs, and after-sun care.",
       "subs": [
         {
           "id": "wash",
@@ -114,7 +114,7 @@ window.FS.PRODUCT_LIB = {
     {
       "id": "baby",
       "label": "Baby",
-      "blurb": "Full FRESH baby library — wash, bum care, cream, oil, and sun.",
+      "blurb": "Full FRESH baby library — wash, bum care, cream, and oil.",
       "subs": [
         {
           "id": "wash",

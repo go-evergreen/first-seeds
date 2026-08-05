@@ -1045,8 +1045,10 @@ body.curio-lightbox-open{overflow:hidden}
 .prod-row-open{appearance:none;-webkit-appearance:none;flex:1;min-width:0;display:flex;flex-direction:column;align-items:flex-start;gap:4px;text-align:left;border:0;background:transparent;padding:6px 8px 6px 0;cursor:pointer;font-family:inherit;-webkit-tap-highlight-color:transparent;touch-action:manipulation}
 .prod-fav-row{align-self:center}
 .prod-row-name{display:block;font-family:'Fraunces',serif;font-size:18px;font-weight:500;color:#000;margin:0;line-height:1.25}
-.prod-row-pocket,.prod-detail-pocket{display:inline-block;margin-top:2px;font-size:10.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--moss);background:rgba(107,143,107,.12);border:1px solid rgba(107,143,107,.28);border-radius:999px;padding:4px 9px;line-height:1.2}
-.prod-detail-pocket{margin:0 0 10px}
+.prod-row-pocket,.prod-detail-pocket{display:inline-block;margin-top:2px;margin-right:6px;font-size:10.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--moss);background:rgba(107,143,107,.12);border:1px solid rgba(107,143,107,.28);border-radius:999px;padding:4px 9px;line-height:1.2}
+.prod-detail-pocket{margin:0 6px 10px 0}
+.prod-detail-variant-note{font-size:13.5px;line-height:1.5;color:var(--bark);margin:0 0 14px;padding:12px 14px;border-radius:14px;background:rgba(200,162,74,.1);border:1px solid rgba(200,162,74,.28)}
+.prod-detail-variant-note strong{font-weight:700;color:var(--ink)}
 .prod-row-hero{display:block;font-size:12px;line-height:1.4;color:var(--bark);margin:0}
 .prod-row-hero em{font-style:normal;font-weight:700;font-size:9.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--moss);margin-right:5px}
 .prod-detail-top{display:flex;align-items:flex-start;gap:16px;margin:0 0 14px}

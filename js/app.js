@@ -72,6 +72,7 @@
         state.tourDone = !!p.tourDone;
       }
       if (!state.data.calendar) state.data.calendar = {};
+      if (state.active === "calendar") state.active = "tend";
       ensureSettings();
       migrateGrovePicks();
     } catch (e) {
@@ -1090,7 +1091,17 @@
   function ensureProductFavorites() {
     if (!state.data) state.data = {};
     if (!Array.isArray(state.data.productFavorites)) state.data.productFavorites = [];
-    return state.data.productFavorites;
+    var favs = state.data.productFavorites;
+    var glowIx = favs.indexOf("fresh-after-sun-tan-booster-golden-glow");
+    if (glowIx > -1) {
+      favs.splice(glowIx, 1);
+      if (favs.indexOf("fresh-after-sun-tan-booster") < 0) favs.push("fresh-after-sun-tan-booster");
+    }
+    /* Drop favorites that are no longer visible (SPF, pocket, tooth gel, etc.). */
+    for (var i = favs.length - 1; i >= 0; i--) {
+      if (!productById(favs[i])) favs.splice(i, 1);
+    }
+    return favs;
   }
 
   function isProductFavorite(id) {
@@ -1199,7 +1210,14 @@
     if (isSpfProduct(p)) return true;
     if (isPocketSizeProduct(p)) return true;
     if (p.id === "fresh-baby-tooth-gel") return true;
+    /* Golden glow shares packaging art with regular after sun — one card + note. */
+    if (p.id === "fresh-after-sun-tan-booster-golden-glow") return true;
     return false;
+  }
+
+  function hasGoldenGlowOption(productOrId) {
+    var id = typeof productOrId === "string" ? productOrId : (productOrId && productOrId.id);
+    return id === "fresh-after-sun-tan-booster";
   }
 
   function visibleProducts() {
@@ -1357,11 +1375,13 @@
     return '<div class="prod-list">' + items.map(function (p) {
       var hero = productCardHero(p);
       var pocket = hasPocketSize(p);
+      var glow = hasGoldenGlowOption(p);
       return '<div class="prod-row">' +
         productThumbHtml(p.id, "prod-thumb-row") +
         '<button type="button" class="prod-row-open" data-prod-open="' + esc(p.id) + '">' +
         '<span class="prod-row-name">' + esc(p.name) + "</span>" +
         (pocket ? '<span class="prod-row-pocket">Pocket size available</span>' : "") +
+        (glow ? '<span class="prod-row-pocket">Golden glow option</span>' : "") +
         (hero ? '<span class="prod-row-hero"><em>Heroes</em> ' + esc(hero) + "</span>" : "") +
         "</button>" +
         favHeartBtn(p.id, "prod-fav-row") +
@@ -1383,6 +1403,7 @@
     var topClaim = claims.length ? claims[0] : "";
     var img = productImageUrl(p.id);
     var pocket = hasPocketSize(p);
+    var glow = hasGoldenGlowOption(p);
 
     var html = "";
     html += '<div class="prod-nav-bar">' +
@@ -1407,7 +1428,13 @@
     if (pocket) {
       html += '<span class="prod-detail-pocket">Pocket size available</span>';
     }
+    if (glow) {
+      html += '<span class="prod-detail-pocket">Golden glow option</span>';
+    }
     html += "</div></div>";
+    if (glow) {
+      html += '<p class="prod-detail-variant-note">Same after-sun care with a <strong>Golden glow</strong> option — erythrulose plus red algae for a subtle self-tan, with a soft golden shimmer from mineral pearl pigments. Packaging looks the same; pick golden glow when you want that extra glow.</p>';
+    }
     if (p.summary) html += '<p class="prod-detail-summary">' + esc(cleanProdSquares(p.summary)) + "</p>";
     if (forWho.length) {
       html += '<div class="prod-detail-chips" aria-label="Who it’s for">';
@@ -4376,6 +4403,7 @@
         state.data = next.data || state.data;
         state.done = next.done || state.done;
         state.active = next.active || state.active;
+        if (state.active === "calendar") state.active = "tend";
         state.settings = next.settings || state.settings;
         ensureSettings();
         state.tourDone = !!next.tourDone;
@@ -4405,6 +4433,7 @@
         if (id === "leads" && usesCustomLanding()) {
           id = "ground";
         }
+        if (id === "calendar") id = "tend";
         if (id === "content-stories") {
           if (!state.data.vaultBrowse) state.data.vaultBrowse = {};
           if (!state.data.vaultBrowse.vault) state.data.vaultBrowse.vault = { q: "", format: "", promoting: "", lane: "all" };

@@ -20,7 +20,9 @@ window.FS.PRODUCT_IMAGES = {
   "fresh-after-sun-tan-booster": "assets/products/thumbs/fresh-after-sun-tan-booster.webp",
   "fresh-anti-wrinkle-serum": "assets/products/thumbs/fresh-anti-wrinkle-serum.webp",
   "fresh-baby-body-hair-wash": "assets/products/thumbs/fresh-baby-body-hair-wash.webp",
+  "fresh-baby-bum-cream": "assets/products/thumbs/fresh-baby-bum-cream.webp",
   "fresh-baby-cream": "assets/products/thumbs/fresh-baby-cream.webp",
+  "fresh-baby-oil": "assets/products/thumbs/fresh-baby-oil.webp",
   "fresh-body-milk-light": "assets/products/thumbs/fresh-body-milk-light.webp",
   "fresh-body-milk-rich": "assets/products/thumbs/fresh-body-milk-rich.webp",
   "fresh-body-wash": "assets/products/thumbs/fresh-body-wash.webp",
@@ -49,9 +51,10 @@ window.FS.PRODUCT_IMAGES = {
   "fresh-repair-shampoo": "assets/products/thumbs/fresh-repair-shampoo.webp",
   "fresh-scrub-face-body": "assets/products/thumbs/fresh-scrub-face-body.webp",
   "fresh-skin-perfection": "assets/products/thumbs/fresh-skin-perfection.webp",
+  "fresh-soap": "assets/products/thumbs/fresh-soap.webp",
   "fresh-soap-liquid": "assets/products/thumbs/fresh-soap-liquid.webp",
+  "fresh-stay-fresh": "assets/products/thumbs/fresh-stay-fresh.webp",
   "fresh-tinted-balm-lip-cheek-rosewood": "assets/products/thumbs/fresh-tinted-balm-lip-cheek-rosewood.webp",
-  "fresh-tinted-moisturiser": "assets/products/thumbs/fresh-tinted-moisturiser.webp",
   "fresh-toner-calm": "assets/products/thumbs/fresh-toner-calm.webp",
   "fresh-toner-pure": "assets/products/thumbs/fresh-toner-pure.webp",
   "fresh-volume-shampoo": "assets/products/thumbs/fresh-volume-shampoo.webp",
@@ -60,5 +63,6 @@ window.FS.PRODUCT_IMAGES = {
   "ringanadea": "assets/products/thumbs/ringanadea.webp",
   "ringanaisi": "assets/products/thumbs/ringanaisi.webp",
   "sport-endurance": "assets/products/thumbs/sport-endurance.webp",
-  "sport-protein": "assets/products/thumbs/sport-protein.webp"
+  "sport-protein": "assets/products/thumbs/sport-protein.webp",
+  "sport-push": "assets/products/thumbs/sport-push.webp"
 };
