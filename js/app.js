@@ -1275,23 +1275,6 @@
     });
   }
 
-  function productCardBlurb(p) {
-    var tag = cleanProdSquares(p.tagline || "").trim();
-    if (tag) return tag;
-    var sum = cleanProdSquares(p.summary || "").trim().split(/\n/)[0] || "";
-    if (sum.length > 130) sum = sum.slice(0, 127).replace(/\s+\S*$/, "") + "…";
-    return sum;
-  }
-
-  function productCardHero(p) {
-    var hero = cleanProdSquares(p.heroIngredients || "").trim();
-    if (!hero) return "";
-    var end = hero.search(/[.!?]\s/);
-    var first = end > 24 ? hero.slice(0, end + 1) : hero;
-    if (first.length > 110) first = first.slice(0, 107).replace(/\s+\S*$/, "") + "…";
-    return first;
-  }
-
   function renderProductListRows(items) {
     if (!items.length) {
       var browse = ensureProductBrowse();
@@ -1301,22 +1284,12 @@
       return '<p class="prod-empty">No products match that search in this view. Try another word, or clear search.</p>';
     }
     return '<div class="prod-list">' + items.map(function (p) {
-      var cat = categoryById(p.category);
-      var metaBits = [];
-      if (cat && cat.label) metaBits.push(cat.label);
-      if (p.step && (!cat || p.step !== cat.label)) metaBits.push(p.step);
-      var blurb = productCardBlurb(p);
-      var hero = productCardHero(p);
-      return '<article class="prod-card' + (isProductFavorite(p.id) ? " fav" : "") + '">' +
-        '<button type="button" class="prod-card-open" data-prod-open="' + esc(p.id) + '">' +
-        (metaBits.length ? '<span class="prod-card-meta">' + esc(metaBits.join(" · ")) + "</span>" : "") +
-        '<span class="prod-card-name">' + esc(p.name) + "</span>" +
-        (blurb ? '<span class="prod-card-tagline">' + esc(blurb) + "</span>" : "") +
-        (hero ? '<span class="prod-card-hero"><em>Heroes</em> ' + esc(hero) + "</span>" : "") +
-        '<span class="prod-card-go">Open →</span>' +
+      return '<div class="prod-row">' +
+        '<button type="button" class="prod-row-open" data-prod-open="' + esc(p.id) + '">' +
+        '<span class="prod-row-name">' + esc(p.name) + "</span>" +
         "</button>" +
-        favHeartBtn(p.id, "prod-fav-card") +
-        "</article>";
+        favHeartBtn(p.id, "prod-fav-row") +
+        "</div>";
     }).join("") + "</div>";
   }
 
@@ -1329,6 +1302,9 @@
     if (ing.usageExtra) {
       howTo = howTo ? (howTo + "\n\n" + ing.usageExtra) : ing.usageExtra;
     }
+    var badges = (p.badges || []).map(function (b) { return cleanProdSquares(b); }).filter(Boolean).slice(0, 4);
+    var claims = (p.claims || []).map(function (c) { return cleanProdSquares(c); }).filter(Boolean);
+    var topClaim = claims.length ? claims[0] : "";
 
     var html = "";
     html += '<div class="prod-nav-bar">' +
@@ -1338,20 +1314,44 @@
       '<button type="button" class="prod-pill" data-prod-nav="hub">All products</button>' +
       favHeartBtn(p.id, "prod-fav-detail") +
       "</div>";
+
+    html += '<article class="prod-detail-hero">';
     html += '<div class="prod-detail-kicker">' + esc((cat ? cat.label : "") + (p.step ? " · " + p.step : "")) + "</div>";
     html += '<h1 class="prod-detail-title">' + esc(p.name) + "</h1>";
     if (p.tagline) html += '<p class="prod-detail-tagline">' + esc(p.tagline) + "</p>";
-    if (p.summary) html += '<p class="prod-detail-summary">' + esc(p.summary) + "</p>";
+    if (p.summary) html += '<p class="prod-detail-summary">' + esc(cleanProdSquares(p.summary)) + "</p>";
+    if (forWho.length) {
+      html += '<div class="prod-detail-chips" aria-label="Who it’s for">';
+      forWho.slice(0, 6).forEach(function (c) {
+        html += '<span class="prod-detail-chip">' + esc(c) + "</span>";
+      });
+      html += "</div>";
+    }
+    if (topClaim) {
+      html += '<blockquote class="prod-detail-claim">' +
+        '<span class="prod-detail-claim-label">From the studies</span>' +
+        '<p>' + esc(topClaim) + "</p>" +
+        "</blockquote>";
+    }
+    if (badges.length) {
+      html += '<div class="prod-detail-badges">';
+      badges.forEach(function (b) {
+        html += '<span class="prod-detail-badge">' + esc(b) + "</span>";
+      });
+      html += "</div>";
+    }
+    html += "</article>";
 
     html += '<div class="prod-acc-stack">';
     if (p.heroIngredients) {
       html += prodAcc("Hero ingredients", "<p>" + esc(cleanProdSquares(p.heroIngredients)) + "</p>", true);
     }
-    if (p.claims && p.claims.length) {
+    if (claims.length) {
       html += prodAcc(
         "Study / performance notes",
-        "<ul>" + p.claims.map(function (c) { return "<li>" + esc(cleanProdSquares(c)) + "</li>"; }).join("") +
-          '</ul><p class="prod-acc-note">As published on the ringana.com product page. Not a guarantee of individual results.</p>'
+        "<ul>" + claims.map(function (c) { return "<li>" + esc(c) + "</li>"; }).join("") +
+          '</ul><p class="prod-acc-note">As published on the ringana.com product page. Not a guarantee of individual results.</p>',
+        !topClaim
       );
     }
     if (forWho.length) {
@@ -1412,6 +1412,9 @@
       }
     }
 
+    /* View mode lives at the top — away from category/subcategory filter chips */
+    html += scopeRow;
+
     if (!favScope && browse.category) {
       html += '<div class="prod-nav-bar"><button type="button" class="prod-pill on" data-prod-nav="hub">← All products</button></div>';
     }
@@ -1433,9 +1436,6 @@
     var scoped = productsInScope(browse);
     html += '<p class="prod-search-meta">' + scoped.length + " product" + (scoped.length === 1 ? "" : "s") +
       (browse.q ? " matching “" + esc(browse.q) + "”" : (favScope ? " favorited" : " to explore")) + "</p>";
-
-    /* All | Favorites sits just above section chips / browse content */
-    html += scopeRow;
 
     if (favScope) {
       html += renderProductListRows(scoped);
