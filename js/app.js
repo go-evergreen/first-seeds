@@ -1159,6 +1159,41 @@
     return /(^|-)pocket($|-)/.test(id) || /\bpocket\b/.test(name);
   }
 
+  function parentIdForPocket(p) {
+    if (!p || !p.id) return "";
+    var id = p.id;
+    /* fresh-sunscreen-pocket-spf-25 → fresh-sunscreen-spf-25 (if present) or drop */
+    if (/^(.+)-pocket(-spf-\d+)?$/i.test(id)) {
+      return id.replace(/-pocket/i, "");
+    }
+    if (/^(.+)-pocket$/i.test(id)) return id.replace(/-pocket$/i, "");
+    return "";
+  }
+
+  var pocketParentCache = null;
+  function productsWithPocketSize() {
+    if (pocketParentCache) return pocketParentCache;
+    var map = {};
+    var all = productLib().products || [];
+    for (var i = 0; i < all.length; i++) {
+      var p = all[i];
+      if (!isPocketSizeProduct(p)) continue;
+      var parent = parentIdForPocket(p);
+      if (parent) map[parent] = true;
+      /* Also mark known full-size ids when SPF suffix differs */
+      if (p.id === "fresh-toner-calm-pocket") map["fresh-toner-calm"] = true;
+      if (p.id === "fresh-deodorant-pocket") map["fresh-deodorant"] = true;
+      if (p.id === "fresh-hand-balm-pocket") map["fresh-hand-balm"] = true;
+    }
+    pocketParentCache = map;
+    return map;
+  }
+
+  function hasPocketSize(productOrId) {
+    var id = typeof productOrId === "string" ? productOrId : (productOrId && productOrId.id);
+    return !!(id && productsWithPocketSize()[id]);
+  }
+
   function isHiddenLibraryProduct(p) {
     if (!p) return true;
     if (isSpfProduct(p)) return true;
@@ -1321,10 +1356,12 @@
     }
     return '<div class="prod-list">' + items.map(function (p) {
       var hero = productCardHero(p);
+      var pocket = hasPocketSize(p);
       return '<div class="prod-row">' +
         productThumbHtml(p.id, "prod-thumb-row") +
         '<button type="button" class="prod-row-open" data-prod-open="' + esc(p.id) + '">' +
         '<span class="prod-row-name">' + esc(p.name) + "</span>" +
+        (pocket ? '<span class="prod-row-pocket">Pocket size available</span>' : "") +
         (hero ? '<span class="prod-row-hero"><em>Heroes</em> ' + esc(hero) + "</span>" : "") +
         "</button>" +
         favHeartBtn(p.id, "prod-fav-row") +
@@ -1345,6 +1382,7 @@
     var claims = (p.claims || []).map(function (c) { return cleanProdSquares(c); }).filter(Boolean);
     var topClaim = claims.length ? claims[0] : "";
     var img = productImageUrl(p.id);
+    var pocket = hasPocketSize(p);
 
     var html = "";
     html += '<div class="prod-nav-bar">' +
@@ -1366,6 +1404,9 @@
     html += '<div class="prod-detail-kicker">' + esc((cat ? cat.label : "") + (p.step ? " · " + p.step : "")) + "</div>";
     html += '<h1 class="prod-detail-title">' + esc(p.name) + "</h1>";
     if (p.tagline) html += '<p class="prod-detail-tagline">' + esc(p.tagline) + "</p>";
+    if (pocket) {
+      html += '<span class="prod-detail-pocket">Pocket size available</span>';
+    }
     html += "</div></div>";
     if (p.summary) html += '<p class="prod-detail-summary">' + esc(cleanProdSquares(p.summary)) + "</p>";
     if (forWho.length) {
