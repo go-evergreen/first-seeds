@@ -1275,6 +1275,23 @@
     });
   }
 
+  function productCardBlurb(p) {
+    var tag = cleanProdSquares(p.tagline || "").trim();
+    if (tag) return tag;
+    var sum = cleanProdSquares(p.summary || "").trim().split(/\n/)[0] || "";
+    if (sum.length > 130) sum = sum.slice(0, 127).replace(/\s+\S*$/, "") + "…";
+    return sum;
+  }
+
+  function productCardHero(p) {
+    var hero = cleanProdSquares(p.heroIngredients || "").trim();
+    if (!hero) return "";
+    var end = hero.search(/[.!?]\s/);
+    var first = end > 24 ? hero.slice(0, end + 1) : hero;
+    if (first.length > 110) first = first.slice(0, 107).replace(/\s+\S*$/, "") + "…";
+    return first;
+  }
+
   function renderProductListRows(items) {
     if (!items.length) {
       var browse = ensureProductBrowse();
@@ -1284,12 +1301,22 @@
       return '<p class="prod-empty">No products match that search in this view. Try another word, or clear search.</p>';
     }
     return '<div class="prod-list">' + items.map(function (p) {
-      return '<div class="prod-row">' +
-        '<button type="button" class="prod-row-open" data-prod-open="' + esc(p.id) + '">' +
-        '<span class="prod-row-name">' + esc(p.name) + "</span>" +
+      var cat = categoryById(p.category);
+      var metaBits = [];
+      if (cat && cat.label) metaBits.push(cat.label);
+      if (p.step && (!cat || p.step !== cat.label)) metaBits.push(p.step);
+      var blurb = productCardBlurb(p);
+      var hero = productCardHero(p);
+      return '<article class="prod-card' + (isProductFavorite(p.id) ? " fav" : "") + '">' +
+        '<button type="button" class="prod-card-open" data-prod-open="' + esc(p.id) + '">' +
+        (metaBits.length ? '<span class="prod-card-meta">' + esc(metaBits.join(" · ")) + "</span>" : "") +
+        '<span class="prod-card-name">' + esc(p.name) + "</span>" +
+        (blurb ? '<span class="prod-card-tagline">' + esc(blurb) + "</span>" : "") +
+        (hero ? '<span class="prod-card-hero"><em>Heroes</em> ' + esc(hero) + "</span>" : "") +
+        '<span class="prod-card-go">Open →</span>' +
         "</button>" +
-        favHeartBtn(p.id, "prod-fav-row") +
-        "</div>";
+        favHeartBtn(p.id, "prod-fav-card") +
+        "</article>";
     }).join("") + "</div>";
   }
 
@@ -1406,7 +1433,6 @@
     var scoped = productsInScope(browse);
     html += '<p class="prod-search-meta">' + scoped.length + " product" + (scoped.length === 1 ? "" : "s") +
       (browse.q ? " matching “" + esc(browse.q) + "”" : (favScope ? " favorited" : " to explore")) + "</p>";
-    html += '<p class="prod-disclaimer">' + esc(lib.disclaimer || "") + "</p>";
 
     /* All | Favorites sits just above section chips / browse content */
     html += scopeRow;
@@ -1430,7 +1456,7 @@
       var catObj = categoryById(browse.category);
       var subs = categorySubs(catObj);
       if (subs.length && !browse.q) {
-        html += '<div class="prod-sub-row">';
+        html += '<div class="prod-sub-row" id="prodSubRow">';
         html += '<button type="button" class="prod-pill' + (!browse.subcategory ? " on" : "") + '" data-prod-nav="cat" data-prod-cat="' + esc(browse.category) + '" data-prod-sub="">All</button>';
         subs.forEach(function (s) {
           html += '<button type="button" class="prod-pill' + (browse.subcategory === s.id ? " on" : "") +
@@ -1440,6 +1466,10 @@
         html += "</div>";
       }
       html += renderProductListRows(scoped);
+    }
+
+    if (lib.disclaimer) {
+      html += '<p class="prod-disclaimer">' + esc(lib.disclaimer) + "</p>";
     }
 
     root.innerHTML = html;
@@ -3963,7 +3993,10 @@
     }
     if (t.hasAttribute("data-prod-nav") || t.hasAttribute("data-prod-open")) {
       var browseNav = ensureProductBrowse();
-      if (t.hasAttribute("data-prod-open")) {
+      var wasOnProducts = state.active === "products";
+      var openingDetail = t.hasAttribute("data-prod-open");
+      var keepScroll = false;
+      if (openingDetail) {
         browseNav.productId = t.getAttribute("data-prod-open");
       } else {
         var navMode = t.getAttribute("data-prod-nav");
@@ -3974,7 +4007,10 @@
           browseNav.scope = "all";
         } else if (navMode === "cat") {
           browseNav.scope = "all";
-          browseNav.category = t.getAttribute("data-prod-cat") || null;
+          var nextCat = t.getAttribute("data-prod-cat") || null;
+          /* Subcategory chips — stay put instead of jumping to the top */
+          keepScroll = wasOnProducts && t.hasAttribute("data-prod-sub") && browseNav.category === nextCat;
+          browseNav.category = nextCat;
           if (t.hasAttribute("data-prod-sub")) {
             browseNav.subcategory = t.getAttribute("data-prod-sub") || null;
           } else {
@@ -3983,7 +4019,17 @@
         }
       }
       state.active = "products";
-      save(); renderNav(); renderPanels();
+      save();
+      if (keepScroll) {
+        var y = window.scrollY || window.pageYOffset || 0;
+        renderProductLibrary();
+        requestAnimationFrame(function () {
+          window.scrollTo(0, y);
+        });
+      } else {
+        renderNav();
+        renderPanels();
+      }
       return;
     }
     if (t.hasAttribute("data-complete")) {
