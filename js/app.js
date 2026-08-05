@@ -1151,13 +1151,29 @@
     return false;
   }
 
+  /* Pocket sizes duplicate full-size formulas — keep one listing. */
+  function isPocketSizeProduct(p) {
+    if (!p) return true;
+    var id = ((p.id || "") + "").toLowerCase();
+    var name = ((p.name || "") + "").toLowerCase();
+    return /(^|-)pocket($|-)/.test(id) || /\bpocket\b/.test(name);
+  }
+
+  function isHiddenLibraryProduct(p) {
+    if (!p) return true;
+    if (isSpfProduct(p)) return true;
+    if (isPocketSizeProduct(p)) return true;
+    if (p.id === "fresh-baby-tooth-gel") return true;
+    return false;
+  }
+
   function visibleProducts() {
-    return (productLib().products || []).filter(function (p) { return !isSpfProduct(p); });
+    return (productLib().products || []).filter(function (p) { return !isHiddenLibraryProduct(p); });
   }
 
   function isHiddenSunSub(subId) {
     var id = ((subId || "") + "").toLowerCase();
-    return id === "sunscreen";
+    return id === "sunscreen" || id === "tooth";
   }
 
   function productById(id) {

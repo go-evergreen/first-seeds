@@ -114,7 +114,7 @@ window.FS.PRODUCT_LIB = {
     {
       "id": "baby",
       "label": "Baby",
-      "blurb": "Full FRESH baby library — 6 products across wash, bum care, cream, oil, sun, and tooth care.",
+      "blurb": "Full FRESH baby library — wash, bum care, cream, oil, and sun.",
       "subs": [
         {
           "id": "wash",
@@ -135,10 +135,6 @@ window.FS.PRODUCT_LIB = {
         {
           "id": "sun",
           "label": "Sun care"
-        },
-        {
-          "id": "tooth",
-          "label": "Tooth care"
         }
       ]
     },
