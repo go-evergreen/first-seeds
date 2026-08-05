@@ -1133,6 +1133,11 @@
       favs.splice(glowIx, 1);
       if (favs.indexOf("fresh-after-sun-tan-booster") < 0) favs.push("fresh-after-sun-tan-booster");
     }
+    var tanIx = favs.indexOf("fresh-tinted-moisturiser-tan");
+    if (tanIx > -1) {
+      favs.splice(tanIx, 1);
+      if (favs.indexOf("fresh-tinted-moisturiser") < 0) favs.push("fresh-tinted-moisturiser");
+    }
     /* Drop favorites that are no longer visible (SPF, pocket, tooth gel, etc.). */
     for (var i = favs.length - 1; i >= 0; i--) {
       if (!productById(favs[i])) favs.splice(i, 1);
@@ -1263,12 +1268,19 @@
     if (p.id === "fresh-baby-tooth-gel") return true;
     /* Golden glow shares packaging art with regular after sun — one card + note. */
     if (p.id === "fresh-after-sun-tan-booster-golden-glow") return true;
+    /* Tan shade shares the tinted moisturiser story — one card + note. */
+    if (p.id === "fresh-tinted-moisturiser-tan") return true;
     return false;
   }
 
   function hasGoldenGlowOption(productOrId) {
     var id = typeof productOrId === "string" ? productOrId : (productOrId && productOrId.id);
     return id === "fresh-after-sun-tan-booster";
+  }
+
+  function hasTanTintOption(productOrId) {
+    var id = typeof productOrId === "string" ? productOrId : (productOrId && productOrId.id);
+    return id === "fresh-tinted-moisturiser";
   }
 
   function visibleProducts() {
@@ -1587,6 +1599,7 @@
     }
     if (hasPocketSize(p)) add("Pocket size");
     if (hasGoldenGlowOption(p)) add("Golden glow option");
+    if (hasTanTintOption(p)) add("Tan option");
     return out.slice(0, 5);
   }
 
@@ -1736,12 +1749,14 @@
       var hero = productCardHero(p);
       var pocket = hasPocketSize(p);
       var glow = hasGoldenGlowOption(p);
+      var tan = hasTanTintOption(p);
       return '<div class="prod-row">' +
         productThumbHtml(p.id, "prod-thumb-row") +
         '<button type="button" class="prod-row-open" data-prod-open="' + esc(p.id) + '">' +
         '<span class="prod-row-name">' + esc(p.name) + "</span>" +
         (pocket ? '<span class="prod-row-pocket">Pocket size available</span>' : "") +
         (glow ? '<span class="prod-row-pocket">Golden glow option</span>' : "") +
+        (tan ? '<span class="prod-row-pocket">Tan option</span>' : "") +
         (hero ? '<span class="prod-row-hero"><em>Heroes</em> ' + esc(hero) + "</span>" : "") +
         "</button>" +
         favHeartBtn(p.id, "prod-fav-row") +
@@ -1763,6 +1778,7 @@
     var img = productImageUrl(p.id);
     var pocket = hasPocketSize(p);
     var glow = hasGoldenGlowOption(p);
+    var tan = hasTanTintOption(p);
 
     var browse = ensureProductBrowse();
     var fromFavorites = browse.scope === "favorites";
@@ -1800,9 +1816,15 @@
     if (glow) {
       html += '<span class="prod-detail-pocket">Golden glow option</span>';
     }
+    if (tan) {
+      html += '<span class="prod-detail-pocket">Tan option</span>';
+    }
     html += "</div></div>";
     if (glow) {
       html += '<p class="prod-detail-variant-note">Same after-sun care with a <strong>Golden glow</strong> option — erythrulose plus red algae for a subtle self-tan, with a soft golden shimmer from mineral pearl pigments. Packaging looks the same; pick golden glow when you want that extra glow.</p>';
+    }
+    if (tan) {
+      html += '<p class="prod-detail-variant-note">Same tinted care in a deeper <strong>Tan</strong> shade — mix the two for a custom match as your skin tone shifts with the seasons. Packaging looks the same; pick tan when you want more depth.</p>';
     }
     if (p.summary) html += '<p class="prod-detail-summary">' + esc(cleanProdSquares(p.summary)) + "</p>";
     var heroChips = productHeroChips(p);

@@ -55,6 +55,7 @@ window.FS.PRODUCT_IMAGES = {
   "fresh-soap-liquid": "assets/products/thumbs/fresh-soap-liquid.webp",
   "fresh-stay-fresh": "assets/products/thumbs/fresh-stay-fresh.webp",
   "fresh-tinted-balm-lip-cheek-rosewood": "assets/products/thumbs/fresh-tinted-balm-lip-cheek-rosewood.webp",
+  "fresh-tinted-moisturiser": "assets/products/thumbs/fresh-tinted-moisturiser.webp",
   "fresh-toner-calm": "assets/products/thumbs/fresh-toner-calm.webp",
   "fresh-toner-pure": "assets/products/thumbs/fresh-toner-pure.webp",
   "fresh-volume-shampoo": "assets/products/thumbs/fresh-volume-shampoo.webp",
