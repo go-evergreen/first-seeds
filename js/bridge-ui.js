@@ -2969,15 +2969,16 @@ window.FS = window.FS || {};
       search.setAttribute("enterkeyhint", "search");
       search.addEventListener("input", function () {
         browse.q = search.value;
-        persist();
         if (kind === "vault") {
           if (vaultSearchTimer) clearTimeout(vaultSearchTimer);
           vaultSearchTimer = setTimeout(function () {
             vaultSearchTimer = null;
+            persist();
             updateVaultSearchResults();
           }, 120);
           return;
         }
+        persist();
         rerender();
       });
     }

@@ -970,7 +970,7 @@
       faqWrap.innerHTML = C.faqs.map(function (f, i) {
         var id = "faq_" + i;
         var isOpen = openFaq === id;
-        return '<div class="faq-item' + (isOpen ? " open" : "") + '">' +
+        return '<div class="faq-item' + (isOpen ? " open" : "") + '" data-faq-item="' + id + '">' +
           '<button type="button" class="faq-q" data-faq="' + id + '">' + esc(f.q) +
           '<span class="faq-chev">' + (isOpen ? "−" : "+") + '</span></button>' +
           (isOpen ? '<div class="faq-a"><p id="' + id + '">' + esc(f.a) + '</p>' +
@@ -1169,6 +1169,24 @@
     var ix = favs.indexOf(id);
     if (ix > -1) favs.splice(ix, 1);
     else favs.push(id);
+  }
+
+  function syncFavHeartButtons(id) {
+    if (!id) return;
+    var on = isProductFavorite(id);
+    var buttons = document.querySelectorAll('[data-prod-fav="' + id + '"]');
+    for (var i = 0; i < buttons.length; i++) {
+      var btn = buttons[i];
+      btn.classList.toggle("on", on);
+      btn.setAttribute("aria-pressed", on ? "true" : "false");
+      btn.setAttribute("aria-label", on ? "Remove from favorites" : "Add to favorites");
+      btn.textContent = on ? "♥" : "♡";
+    }
+    var scopeFav = document.querySelector('#productLibRoot [data-prod-scope="favorites"]');
+    if (scopeFav) {
+      var n = favoriteCount();
+      scopeFav.textContent = "Favorites" + (n ? " · " + n : "");
+    }
   }
 
   function favHeartBtn(id, extraClass) {
@@ -1450,6 +1468,21 @@
     }).filter(Boolean);
   }
 
+  function forWhoDisplayList(list) {
+    var out = [];
+    var seen = {};
+    cleanForWhoList(list).forEach(function (c) {
+      if (/pregnancy|breastfeed/i.test(c)) return;
+      var label = shortenForWhoChip(c) || c;
+      if (!label || /pregnancy|breastfeed/i.test(label)) return;
+      var key = label.toLowerCase();
+      if (seen[key]) return;
+      seen[key] = true;
+      out.push(label);
+    });
+    return out;
+  }
+
   /* Short, useful chips under the product blurb — never pregnancy/breastfeeding. */
   function shortenForWhoChip(raw) {
     var t = (raw || "").trim();
@@ -1688,8 +1721,14 @@
   function renderProductListRows(items) {
     if (!items.length) {
       var browse = ensureProductBrowse();
-      if (browse.scope === "favorites") {
+      if (browse.scope === "favorites" && !browse.q && favoriteCount() < 1) {
         return '<p class="prod-empty">No favorites yet. Browse All and tap the heart on products you’re looking forward to.</p>';
+      }
+      if (browse.q) {
+        return '<p class="prod-empty">No products match that search in this view. Try another word, or clear search.</p>';
+      }
+      if (browse.scope === "favorites") {
+        return '<p class="prod-empty">No favorites match that search. Clear search or heart a few more in All.</p>';
       }
       return '<p class="prod-empty">No products match that search in this view. Try another word, or clear search.</p>';
     }
@@ -1712,7 +1751,7 @@
 
   function renderProductDetail(p) {
     var cat = categoryById(p.category);
-    var forWho = cleanForWhoList(p.forWho);
+    var forWho = forWhoDisplayList(p.forWho);
     var notFor = realNotForList(p.notFor);
     var ing = splitIngredientsDump(p.ingredientsNote);
     var howTo = cleanProdSquares(p.application || "");
@@ -1727,9 +1766,13 @@
 
     var browse = ensureProductBrowse();
     var fromFavorites = browse.scope === "favorites";
+    var returnTo = browse.returnTo && browse.returnTo.panel ? browse.returnTo : null;
     var html = "";
     html += '<div class="prod-nav-bar">';
-    if (fromFavorites) {
+    if (returnTo) {
+      html += '<button type="button" class="prod-pill on" data-prod-nav="return">← ' + esc(returnTo.label || "Back") + "</button>";
+      html += '<button type="button" class="prod-pill" data-prod-nav="hub">All products</button>';
+    } else if (fromFavorites) {
       html += '<button type="button" class="prod-pill on" data-prod-nav="favorites">← Favorites</button>';
       html += '<button type="button" class="prod-pill" data-prod-nav="hub">All products</button>';
     } else {
@@ -1760,6 +1803,9 @@
     html += "</div></div>";
     if (glow) {
       html += '<p class="prod-detail-variant-note">Same after-sun care with a <strong>Golden glow</strong> option — erythrulose plus red algae for a subtle self-tan, with a soft golden shimmer from mineral pearl pigments. Packaging looks the same; pick golden glow when you want that extra glow.</p>';
+    }
+    if (p.id === "fresh-tinted-moisturiser" || p.id === "fresh-tinted-moisturiser-tan") {
+      html += '<p class="prod-detail-variant-note">SPF shade variants aren’t in this library yet — here you’ll find the tinted moisturiser and tan without SPF. Mix the two for a custom match anytime.</p>';
     }
     if (p.summary) html += '<p class="prod-detail-summary">' + esc(cleanProdSquares(p.summary)) + "</p>";
     var heroChips = productHeroChips(p);
@@ -1997,7 +2043,11 @@
     if (opts.tapOpen) {
       items = products.map(function (p) {
         return '<li><button type="button" class="focus-shortlist-item" data-prod-open="' +
-          esc(p.id) + '">' + esc(p.name) + "</button></li>";
+          esc(p.id) + '"' +
+          (opts.returnPanel
+            ? ' data-prod-return="' + esc(opts.returnPanel) + '" data-prod-return-label="' + esc(opts.returnLabel || "Back") + '"'
+            : "") +
+          ">" + esc(p.name) + "</button></li>";
       }).join("");
     } else {
       items = products.map(function (p) {
@@ -2021,7 +2071,9 @@
       emptyGoto: "products",
       emptyCta: "Open products →",
       hint: hint,
-      tapOpen: true
+      tapOpen: true,
+      returnPanel: "share",
+      returnLabel: "Pick Your First Few"
     });
   }
 
@@ -2032,7 +2084,9 @@
       emptyGoto: "products",
       emptyCta: "Open products · heart favorites →",
       hint: "Focus here when you plan posts — tap a name to reopen it in Learn.",
-      tapOpen: true
+      tapOpen: true,
+      returnPanel: "tend",
+      returnLabel: "Content"
     });
   }
 
@@ -2043,7 +2097,9 @@
       emptyGoto: "products",
       emptyCta: "Open products →",
       hint: "These are yours to lean on when you talk or create.",
-      tapOpen: true
+      tapOpen: true,
+      returnPanel: "done",
+      returnLabel: "Finish"
     });
   }
 
@@ -2299,6 +2355,53 @@
   }
 
   var knowSearchTimer = null;
+  var knowSearchSnapshot = null;
+
+  function knowSectionSearchBlob(sec) {
+    var parts = [(sec.textContent || "")];
+    var C = window.FS.CONTENT || {};
+    if (sec.id === "know-faqs" && C.faqs) {
+      C.faqs.forEach(function (f) {
+        parts.push(f.q || "");
+        parts.push(f.a || "");
+      });
+    }
+    if (sec.id === "know-pillars" && C.pillars) {
+      C.pillars.forEach(function (p) {
+        parts.push(p.title || "");
+        parts.push(p.body || "");
+      });
+    }
+    if (sec.id === "know-facts" && C.funFacts) {
+      C.funFacts.forEach(function (f) {
+        parts.push(f.title || "");
+        parts.push(f.body || "");
+      });
+    }
+    if (sec.id === "know-product" && C.productStory && C.productStory.posts) {
+      C.productStory.posts.forEach(function (p) {
+        parts.push(p.title || "");
+        parts.push(p.body || "");
+      });
+    }
+    if (sec.id === "know-business" && C.businessStory) {
+      C.businessStory.forEach(function (p) {
+        parts.push(p.title || "");
+        parts.push(p.body || "");
+      });
+    }
+    return parts.join(" ").toLowerCase();
+  }
+
+  function firstMatchingFaqId(q) {
+    var C = window.FS.CONTENT || {};
+    if (!q || !C.faqs) return "";
+    for (var i = 0; i < C.faqs.length; i++) {
+      var blob = ((C.faqs[i].q || "") + " " + (C.faqs[i].a || "")).toLowerCase();
+      if (blob.indexOf(q) > -1) return "faq_" + i;
+    }
+    return "";
+  }
 
   function filterKnowSearch() {
     var input = document.getElementById("knowSearch");
@@ -2307,17 +2410,59 @@
     var q = (input.value || "").trim().toLowerCase();
     var secs = document.querySelectorAll("#panel-know .know-acc");
     var shown = 0;
+
+    if (q && !knowSearchSnapshot) {
+      knowSearchSnapshot = { open: {}, openFaq: state.data.openFaq || "" };
+      for (var s0 = 0; s0 < secs.length; s0++) {
+        knowSearchSnapshot.open[secs[s0].id] = !!secs[s0].open;
+      }
+    }
+
+    if (!q) {
+      if (knowSearchSnapshot) {
+        for (var s1 = 0; s1 < secs.length; s1++) {
+          var secRestore = secs[s1];
+          if (knowSearchSnapshot.open[secRestore.id] !== undefined) {
+            secRestore.open = knowSearchSnapshot.open[secRestore.id];
+          }
+          secRestore.hidden = false;
+        }
+        if ((state.data.openFaq || "") !== knowSearchSnapshot.openFaq) {
+          state.data.openFaq = knowSearchSnapshot.openFaq;
+          renderKnowPanel();
+        }
+        knowSearchSnapshot = null;
+      } else {
+        for (var s2 = 0; s2 < secs.length; s2++) secs[s2].hidden = false;
+      }
+      if (empty) empty.hidden = true;
+      return;
+    }
+
+    var faqHit = firstMatchingFaqId(q);
     for (var i = 0; i < secs.length; i++) {
       var sec = secs[i];
-      if (!sec._knowSearchText) sec._knowSearchText = (sec.textContent || "").toLowerCase();
-      var match = !q || sec._knowSearchText.indexOf(q) > -1;
+      var blob = knowSectionSearchBlob(sec);
+      var match = blob.indexOf(q) > -1;
       sec.hidden = !match;
       if (match) {
         shown++;
-        if (q) sec.open = true;
+        sec.open = true;
       }
     }
-    if (empty) empty.hidden = !q || shown > 0;
+    if (faqHit && state.data.openFaq !== faqHit) {
+      state.data.openFaq = faqHit;
+      renderKnowPanel();
+      /* Re-hide non-matching sections after FAQ re-render */
+      var secs2 = document.querySelectorAll("#panel-know .know-acc");
+      for (var j = 0; j < secs2.length; j++) {
+        var sec2 = secs2[j];
+        var match2 = knowSectionSearchBlob(sec2).indexOf(q) > -1;
+        sec2.hidden = !match2;
+        if (match2) sec2.open = true;
+      }
+    }
+    if (empty) empty.hidden = shown > 0;
   }
 
   function wireKnowSearch() {
@@ -4284,9 +4429,15 @@
       e.preventDefault();
       e.stopPropagation();
       var beforeSproutFav = lastSprout;
-      toggleProductFavorite(t.getAttribute("data-prod-fav"));
+      var favId = t.getAttribute("data-prod-fav");
+      toggleProductFavorite(favId);
       save();
-      renderProductLibrary();
+      syncFavHeartButtons(favId);
+      var browseFav = ensureProductBrowse();
+      /* Favorites list membership changed — refresh results without remounting thumbs elsewhere. */
+      if (browseFav.scope === "favorites" && !browseFav.productId) {
+        updateProductBrowseResults();
+      }
       refreshAllShortlists();
       refreshButtons();
       renderModuleChecklists();
@@ -4487,20 +4638,46 @@
       var keepScroll = false;
       if (openingDetail) {
         browseNav.productId = t.getAttribute("data-prod-open");
+        var retPanel = t.getAttribute("data-prod-return");
+        if (retPanel) {
+          browseNav.returnTo = {
+            panel: retPanel,
+            label: t.getAttribute("data-prod-return-label") || "Back"
+          };
+        } else {
+          browseNav.returnTo = null;
+        }
       } else {
         var navMode = t.getAttribute("data-prod-nav");
         browseNav.productId = null;
-        if (navMode === "hub") {
+        if (navMode === "return") {
+          var retTo = browseNav.returnTo;
+          browseNav.returnTo = null;
+          if (retTo && retTo.panel) {
+            state.active = retTo.panel;
+            save();
+            renderNav();
+            renderPanels();
+            window.scrollTo(0, 0);
+            return;
+          }
+          browseNav.scope = "favorites";
+          browseNav.category = null;
+          browseNav.subcategory = null;
+        } else if (navMode === "hub") {
           browseNav.category = null;
           browseNav.subcategory = null;
           browseNav.scope = "all";
+          browseNav.returnTo = null;
         } else if (navMode === "favorites") {
           browseNav.scope = "favorites";
           browseNav.category = null;
           browseNav.subcategory = null;
           browseNav.q = "";
+          browseNav.returnTo = null;
         } else if (navMode === "cat") {
           browseNav.scope = "all";
+          browseNav.returnTo = null;
           var nextCat = t.getAttribute("data-prod-cat") || null;
           /* Subcategory chips — stay put instead of jumping to the top */
           keepScroll = wasOnProducts && t.hasAttribute("data-prod-sub") && browseNav.category === nextCat;
