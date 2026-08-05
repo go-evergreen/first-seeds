@@ -1355,13 +1355,59 @@
     return '<img class="prod-thumb' + (cls ? " " + cls : "") + '" src="' + esc(src) + '" alt="" width="56" height="56" loading="lazy" decoding="async">';
   }
 
+  function parseHeroIngredients(raw) {
+    var text = cleanProdSquares(raw || "").trim();
+    if (!text) return [];
+    var blocks = text.split(/\n\s*\n+/);
+    var items = [];
+    for (var i = 0; i < blocks.length; i++) {
+      var block = blocks[i].trim();
+      if (!block) continue;
+      var nl = block.indexOf("\n");
+      if (nl > 0 && nl < 100) {
+        var name = block.slice(0, nl).trim();
+        var blurb = block.slice(nl + 1).trim();
+        /* Section headers (name only) still get a list row */
+        items.push({ name: name, blurb: blurb });
+      } else {
+        items.push({ name: "", blurb: block });
+      }
+    }
+    return items;
+  }
+
+  function heroIngredientsHtml(raw) {
+    var items = parseHeroIngredients(raw);
+    if (!items.length) return "";
+    var html = '<ul class="prod-hero-list">';
+    for (var i = 0; i < items.length; i++) {
+      var it = items[i];
+      html += "<li>";
+      if (it.name) html += "<strong>" + esc(it.name) + "</strong>";
+      if (it.blurb) html += (it.name ? " " : "") + "<span>" + esc(it.blurb) + "</span>";
+      html += "</li>";
+    }
+    html += "</ul>";
+    return html;
+  }
+
   function productCardHero(p) {
-    var hero = cleanProdSquares(p.heroIngredients || "").trim();
-    if (!hero) return "";
-    var end = hero.search(/[.!?]\s/);
-    var first = end > 24 ? hero.slice(0, end + 1) : hero;
-    if (first.length > 110) first = first.slice(0, 107).replace(/\s+\S*$/, "") + "…";
-    return first;
+    var items = parseHeroIngredients(p.heroIngredients || "");
+    if (!items.length) return "";
+    var names = [];
+    for (var i = 0; i < items.length && names.length < 3; i++) {
+      if (items[i].name) names.push(items[i].name);
+      else if (items[i].blurb) {
+        var short = items[i].blurb;
+        if (short.length > 70) short = short.slice(0, 67).replace(/\s+\S*$/, "") + "…";
+        names.push(short);
+      }
+    }
+    if (!names.length) return "";
+    var line = names.join(" · ");
+    if (items.length > names.length) line += " · +";
+    if (line.length > 110) line = line.slice(0, 107).replace(/\s+\S*$/, "") + "…";
+    return line;
   }
 
   function renderProductListRows(items) {
@@ -1452,7 +1498,7 @@
 
     html += '<div class="prod-acc-stack">';
     if (p.heroIngredients) {
-      html += prodAcc("Hero ingredients", "<p>" + esc(cleanProdSquares(p.heroIngredients)) + "</p>", true);
+      html += prodAcc("Hero ingredients", heroIngredientsHtml(p.heroIngredients), true);
     }
     if (claims.length) {
       html += prodAcc(

@@ -1084,6 +1084,10 @@ body.curio-lightbox-open{overflow:hidden}
 .prod-acc-body ul{margin:10px 0 0;padding-left:1.1em}
 .prod-acc-body li{margin:0 0 6px;white-space:normal}
 .prod-acc-body p{margin:10px 0 0}
+.prod-hero-list{list-style:disc;margin:12px 0 0;padding-left:1.15em}
+.prod-hero-list li{margin:0 0 10px;padding-left:2px;line-height:1.45;color:var(--bark);white-space:normal}
+.prod-hero-list strong{display:inline;font-weight:700;color:var(--ink)}
+.prod-hero-list span{display:inline}
 .prod-acc-note{margin-top:8px!important;font-size:12px!important;color:var(--bark-soft)!important;white-space:normal!important}
 .prod-block{background:var(--white);border:1.5px solid var(--sand);border-radius:16px;padding:16px 16px 14px;margin:0 0 12px}
 .prod-block h3{font-family:'Fraunces',serif;font-size:18px;font-weight:500;color:var(--ink);margin:0 0 8px}
