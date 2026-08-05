@@ -449,13 +449,12 @@
     var rh = document.getElementById("rootsHeadline");
     if (rh) rh.textContent = name ? (name + " — plant your roots") : "Plant Your Roots";
 
-    /* section numbers follow Soft start / All in path */
+    /* section numbers follow Soft start / All in path (Content uses a word eyebrow, not 07) */
     var shareNum = document.getElementById("shareNum");
     var groundNum = document.getElementById("groundNum");
     var groveNum = document.getElementById("groveNum");
     var treeNum = document.getElementById("treeNum");
     var plantNum = document.getElementById("plantNum");
-    var tendNum = document.getElementById("tendNum");
     if (shareNum) shareNum.textContent = "02";
     if (groundNum) groundNum.textContent = "03";
     if (isStarter()) {
@@ -464,7 +463,6 @@
       if (groveNum) groveNum.textContent = "04";
       if (treeNum) treeNum.textContent = "05";
       if (plantNum) plantNum.textContent = "06";
-      if (tendNum) tendNum.textContent = "07";
     }
 
     renderFinishCopy();
