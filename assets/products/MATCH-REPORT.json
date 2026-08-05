@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-08-05T06:35:00.396Z",
+  "generatedAt": "2026-08-05T06:38:40.838127Z",
   "visible": 65,
   "matched": 65,
   "missing": [],
@@ -271,5 +271,6 @@
       "reason": "no id"
     }
   ],
-  "thumbKb": 129
+  "thumbKb": 129,
+  "thumbFill": 0.95
 }
