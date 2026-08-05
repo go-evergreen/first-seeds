@@ -1804,9 +1804,6 @@
     if (glow) {
       html += '<p class="prod-detail-variant-note">Same after-sun care with a <strong>Golden glow</strong> option — erythrulose plus red algae for a subtle self-tan, with a soft golden shimmer from mineral pearl pigments. Packaging looks the same; pick golden glow when you want that extra glow.</p>';
     }
-    if (p.id === "fresh-tinted-moisturiser" || p.id === "fresh-tinted-moisturiser-tan") {
-      html += '<p class="prod-detail-variant-note">SPF shade variants aren’t in this library yet — here you’ll find the tinted moisturiser and tan without SPF. Mix the two for a custom match anytime.</p>';
-    }
     if (p.summary) html += '<p class="prod-detail-summary">' + esc(cleanProdSquares(p.summary)) + "</p>";
     var heroChips = productHeroChips(p);
     if (heroChips.length) {
