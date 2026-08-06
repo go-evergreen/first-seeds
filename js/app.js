@@ -3842,7 +3842,10 @@
     onboardingReplay = false;
     offerHowGrowAfterOnboarding = !wasReplay;
     if (!wasReplay && !state.tourDone) startTour();
-    else {
+    else if (wasReplay) {
+      /* Settings → Replay welcome also restarts the app feature tour. */
+      startTour();
+    } else {
       setOverlayOpen(false);
       setTimeout(maybeOfferHowIGrow, 250);
     }
