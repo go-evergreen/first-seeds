@@ -547,7 +547,8 @@ window.FS = window.FS || {};
     if (!rows.length) {
       root.innerHTML = '<p class="body-p">Nobody\'s linked yet. Share your join link — when they sign in, they show up here with live progress.</p>';
       var emptyFlat = flattenTeamGraph(graph.roots);
-      renderLeaderOverview([], unseenTeamJoinRows(emptyFlat), []);
+      var emptyPlace = buildTeamPlacementMap(graph.roots);
+      renderLeaderOverview([], unseenTeamJoinRows(emptyFlat), [], emptyPlace);
       await renderLiveTeamGraph(graph, rows);
       markTeamJoinsSeen(emptyFlat);
       markSupportCompletionsSeen(rows);
@@ -555,6 +556,7 @@ window.FS = window.FS || {};
       return;
     }
     var treeFlat = flattenTeamGraph(graph.roots);
+    var placementMap = buildTeamPlacementMap(graph.roots);
     var newJoinRows = unseenTeamJoinRows(treeFlat);
     var newSupportRows = unseenSupportRows(rows);
     var partnerIds = rows.map(function (r) { return r.profile.id; });
@@ -582,7 +584,7 @@ window.FS = window.FS || {};
         };
       buckets[b].push({ row: row, ctx: ctx, nudge: pickMentorMessage(ctx, b), under: under, bucket: b });
     });
-    renderLeaderOverview(rows, newJoinRows, newSupportRows);
+    renderLeaderOverview(rows, newJoinRows, newSupportRows, placementMap);
     function sortByUnder(a, b) {
       if (b.under !== a.under) return b.under - a.under;
       return String(b.row.profile.last_active_at || "").localeCompare(String(a.row.profile.last_active_at || ""));
@@ -793,6 +795,33 @@ window.FS = window.FS || {};
     return out;
   }
 
+  /* parentId + L1 leg for each person — used for “under X / in Y’s leg under Z”. */
+  function buildTeamPlacementMap(roots) {
+    var map = {};
+    function walk(nodes, parentId, legId) {
+      (nodes || []).forEach(function (p) {
+        if (!p || !p.id) return;
+        var thisLeg = legId || p.id;
+        map[p.id] = { profile: p, parentId: parentId || null, legId: thisLeg };
+        walk(p.children, p.id, thisLeg);
+      });
+    }
+    walk(roots, null, null);
+    return map;
+  }
+
+  function joinPlacementBlurb(placementMap, personId) {
+    var map = placementMap || {};
+    var m = map[personId];
+    if (!m || !m.parentId) return "joined under you";
+    var parent = map[m.parentId];
+    var parentName = parent ? personLabel(parent.profile) : "someone";
+    if (m.legId === m.parentId) return "under " + parentName;
+    var leg = map[m.legId];
+    var legName = leg ? personLabel(leg.profile) : "someone";
+    return "in " + legName + "’s leg · under " + parentName;
+  }
+
   /* If listDownline has someone team_graph missed, plant them as Level 1 so they aren't invisible. */
   function ensureGraphIncludesDownline(graph, rows) {
     var g = graph || { roots: [], depth: 6 };
@@ -925,36 +954,35 @@ window.FS = window.FS || {};
     return (row && row.profile && personLabel(row.profile)) || "A partner";
   }
 
-  function renderLeaderOverview(rows, newJoins, newSupports) {
+  function renderLeaderOverview(rows, newJoins, newSupports, placementMap) {
     var el = $("leaderOverview");
     if (!el) return;
     rows = rows || [];
     newJoins = newJoins || [];
     newSupports = newSupports || [];
+    placementMap = placementMap || {};
     var updateCount = newJoins.length + newSupports.length;
     if (!Cloud.isSignedIn() || !updateCount) {
       el.hidden = true;
       el.innerHTML = "";
       return;
     }
-    var completed = rows.filter(function (row) {
-      return !!(row.support_preferences && row.support_preferences.completed_at);
-    }).length;
     var html = '<div class="leader-overview-head"><div>' +
-      '<div class="leader-overview-kicker">LEADER OVERVIEW</div>' +
-      '<strong>' + rows.length + (rows.length === 1 ? " direct partner" : " direct partners") + "</strong>" +
-      '<span>' + completed + (completed === 1 ? " support map shared" : " support maps shared") + "</span>" +
+      '<div class="leader-overview-kicker">WHAT’S NEW</div>' +
       "</div>" +
       '<span class="leader-overview-new">' + updateCount + " new</span></div>" +
       '<div class="leader-overview-updates">';
+    newJoins.forEach(function (row) {
+      var pid = row && row.profile && row.profile.id;
+      var place = joinPlacementBlurb(placementMap, pid);
+      html += '<div class="leader-overview-update is-join"><span aria-hidden="true">✨</span><span><strong>' +
+        esc(partnerName(row)) + '</strong><span class="leader-overview-place">' + esc(place) +
+        "</span></span></div>";
+    });
     newSupports.forEach(function (row) {
       html += '<button type="button" class="leader-overview-update is-support" data-how-they-grow="' +
         esc(row.profile.id) + '"><span aria-hidden="true">🌱</span><span><strong>' +
-        esc(partnerName(row)) + '</strong> completed How I Grow</span><b aria-hidden="true">→</b></button>';
-    });
-    newJoins.forEach(function (row) {
-      html += '<div class="leader-overview-update is-join"><span aria-hidden="true">✨</span><span><strong>' +
-      esc(partnerName(row)) + "</strong> joined your tree</span></div>";
+        esc(partnerName(row)) + '</strong><span class="leader-overview-place">shared How I Grow</span></span><b aria-hidden="true">→</b></button>';
     });
     html += "</div>";
     el.innerHTML = html;

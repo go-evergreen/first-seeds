@@ -334,7 +334,7 @@ window.FS.CONFIG = {
     },
     {
       title: "Your leader overview",
-      body: "When someone joins your Grove or completes How I Grow, a number appears on the Grove tab. Open Grove to see exactly who is new — and tap a completed support map to read it.",
+      body: "When someone joins your Grove or shares How I Grow, a number appears on the Grove tab. Open Grove to see their names — and where new partners sit on your tree. Tap a How I Grow row to read it.",
       panel: "leader",
       target: '[data-team-tour="overview"]',
       placement: "below",
