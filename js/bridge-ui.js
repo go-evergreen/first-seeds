@@ -197,8 +197,8 @@ window.FS = window.FS || {};
           authLast.value = st2.settings.partnerLastName;
         }
       }
-      /* Last name is for Create account — keep Sign in simple */
-      if (authLastField) authLastField.hidden = false;
+      /* Last name is for Create account — hide on plain Sign in */
+      if (authLastField) authLastField.hidden = true;
     }
     overlay.classList.add("open");
     document.body.classList.add("overlay-open");
@@ -207,9 +207,13 @@ window.FS = window.FS || {};
   function closeAuth() {
     var overlay = $("authOverlay");
     if (overlay) overlay.classList.remove("open");
-    if (!$("onboarding") || !$("onboarding").classList.contains("open")) {
-      if (!$("tour") || !$("tour").classList.contains("open")) {
-        document.body.classList.remove("overlay-open");
+    if (typeof window.FS.syncOverlayBodyLock === "function") {
+      window.FS.syncOverlayBodyLock();
+    } else {
+      if (!$("onboarding") || !$("onboarding").classList.contains("open")) {
+        if (!$("tour") || !$("tour").classList.contains("open")) {
+          document.body.classList.remove("overlay-open");
+        }
       }
     }
   }
@@ -3185,6 +3189,14 @@ window.FS = window.FS || {};
       var rv = remoteData[k];
       if (typeof rv === "string" && typeof lv === "string") {
         if (!lv.trim() && rv.trim()) mergedData[k] = rv;
+      } else if (Array.isArray(rv) && Array.isArray(lv)) {
+        /* Empty local arrays (auto-initialized) must not wipe remote grove picks */
+        if (!lv.length && rv.length) mergedData[k] = rv;
+      } else if (
+        rv && typeof rv === "object" && !Array.isArray(rv) &&
+        lv && typeof lv === "object" && !Array.isArray(lv)
+      ) {
+        if (!Object.keys(lv).length && Object.keys(rv).length) mergedData[k] = rv;
       }
     });
     var remoteDone = remote.done || {};

@@ -1551,6 +1551,9 @@ button.vault-week-day:hover{border-color:var(--moss);box-shadow:0 6px 18px rgba(
 .onboard-name-field input{width:100%;border:1.5px solid var(--sand);border-radius:12px;background:var(--white);padding:14px 16px;font-family:'DM Sans',sans-serif;font-size:16px;color:var(--green);transition:border-color .2s}
 .onboard-name-field input:focus{border-color:var(--moss);outline:none}
 .onboard-name-field input::placeholder{color:#b3a894}
+/* Chrome/Safari: fire animationstart so JS can enable Save after autofill */
+@keyframes onAutoFillStart{from{opacity:.99}to{opacity:1}}
+.onboard-name-field input:-webkit-autofill{animation-name:onAutoFillStart;animation-duration:.001s}
 .mode-pick{display:block;width:100%;text-align:left;border:1.5px solid var(--sand);border-radius:14px;padding:16px 18px;margin:0 0 12px;background:var(--white);cursor:pointer;font-family:inherit;transition:all .2s}
 .mode-pick:last-of-type{margin-bottom:0}
 .mode-pick-tag{display:inline-block;font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--moss);background:#eef2ec;border-radius:999px;padding:4px 9px;margin-bottom:8px}

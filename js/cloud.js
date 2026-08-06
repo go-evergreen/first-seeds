@@ -501,7 +501,8 @@ window.FS = window.FS || {};
         updated_at: new Date().toISOString()
       };
       if (configured() && client) {
-        await client.from("runway_progress").upsert(payload);
+        var up = await client.from("runway_progress").upsert(payload);
+        if (up && up.error) throw up.error;
         var profilePatch = {
           hub_mode: (stateSlice.settings && stateSlice.settings.hubMode) || sessionUser.hub_mode || "",
           display_name: (stateSlice.settings && stateSlice.settings.partnerName) || sessionUser.display_name,
@@ -512,7 +513,8 @@ window.FS = window.FS || {};
         if (!sameLocalCalendarDay(sessionUser.last_active_at, new Date())) {
           profilePatch.last_active_at = new Date().toISOString();
         }
-        await client.from("profiles").update(profilePatch).eq("id", sessionUser.id);
+        var prof = await client.from("profiles").update(profilePatch).eq("id", sessionUser.id);
+        if (prof && prof.error) throw prof.error;
         if (profilePatch.display_name != null) sessionUser.display_name = profilePatch.display_name;
         if (profilePatch.last_name != null) sessionUser.last_name = profilePatch.last_name;
         if (profilePatch.hub_mode != null) sessionUser.hub_mode = profilePatch.hub_mode;
@@ -690,9 +692,9 @@ window.FS = window.FS || {};
       var sp = me.sponsor_id ? store.users[me.sponsor_id] : null;
       return {
         invited_by_id: me.invited_by_id || null,
-        invited_by_name: inv ? (inv.display_name || inv.email) : null,
+        invited_by_name: inv ? Cloud.formatPersonName(inv) : null,
         sponsor_id: me.sponsor_id || null,
-        sponsor_name: sp ? (sp.display_name || sp.email) : null
+        sponsor_name: sp ? Cloud.formatPersonName(sp) : null
       };
     },
 

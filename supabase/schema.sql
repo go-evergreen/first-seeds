@@ -308,9 +308,21 @@ begin
   end if;
   return jsonb_build_object(
     'invited_by_id', row.invited_by_id,
-    'invited_by_name', coalesce(inviter.display_name, inviter.email, null),
+    'invited_by_name', case
+      when inviter.id is null then null
+      when coalesce(trim(inviter.last_name), '') = '' then coalesce(nullif(trim(inviter.display_name), ''), inviter.email)
+      when lower(trim(coalesce(inviter.display_name, ''))) like ('%' || lower(trim(inviter.last_name)))
+        then coalesce(nullif(trim(inviter.display_name), ''), inviter.email)
+      else trim(both from concat_ws(' ', nullif(trim(inviter.display_name), ''), trim(inviter.last_name)))
+    end,
     'sponsor_id', row.sponsor_id,
-    'sponsor_name', coalesce(sponsor.display_name, sponsor.email, null)
+    'sponsor_name', case
+      when sponsor.id is null then null
+      when coalesce(trim(sponsor.last_name), '') = '' then coalesce(nullif(trim(sponsor.display_name), ''), sponsor.email)
+      when lower(trim(coalesce(sponsor.display_name, ''))) like ('%' || lower(trim(sponsor.last_name)))
+        then coalesce(nullif(trim(sponsor.display_name), ''), sponsor.email)
+      else trim(both from concat_ws(' ', nullif(trim(sponsor.display_name), ''), trim(sponsor.last_name)))
+    end
   );
 end;
 $$;

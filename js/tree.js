@@ -165,15 +165,25 @@ window.FS = window.FS || {};
       }
 
       function ensureNode(arr, person) {
-        var name = (person.display_name || person.email || "").trim();
+        var Cloud = window.FS && window.FS.Cloud;
+        var name = (Cloud && Cloud.formatPersonName)
+          ? Cloud.formatPersonName(person)
+          : String((person && (person.display_name || person.email)) || "").trim();
         if (!name) return null;
-        var existing = findByName(arr, name);
+        var existing = null;
+        if (person && person.id) {
+          for (var i = 0; i < arr.length; i++) {
+            if (arr[i].liveId === person.id) { existing = arr[i]; break; }
+          }
+        }
+        if (!existing) existing = findByName(arr, name);
         if (existing) {
+          existing.name = name;
           if (existing.status !== "committed") {
             existing.status = "committed";
             updated++;
           }
-          if (!existing.liveId) existing.liveId = person.id;
+          if (!existing.liveId && person && person.id) existing.liveId = person.id;
           return existing;
         }
         arr.push({ name: name, status: "committed", children: [], liveId: person.id });

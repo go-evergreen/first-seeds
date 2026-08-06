@@ -104,7 +104,10 @@
     try { localStorage.setItem(CFG.storeKey, JSON.stringify(state)); } catch (e) {}
     clearTimeout(cloudSyncTimer);
     var push = function () {
-      if (window.FS.BridgeUI) window.FS.BridgeUI.syncNow();
+      if (!window.FS.BridgeUI || !window.FS.BridgeUI.syncNow) return;
+      Promise.resolve(window.FS.BridgeUI.syncNow()).catch(function (err) {
+        console.warn("[First Seeds] cloud sync:", err);
+      });
     };
     if (opts.immediate) push();
     else {
@@ -342,6 +345,20 @@
   function setOverlayOpen(open) {
     document.body.classList.toggle("overlay-open", !!open);
   }
+
+  function anyBlockingOverlayOpen() {
+    var ids = ["authOverlay", "howGrowOverlay", "lastNameOverlay", "onboarding", "tour"];
+    for (var i = 0; i < ids.length; i++) {
+      var el = document.getElementById(ids[i]);
+      if (el && el.classList.contains("open")) return true;
+    }
+    return false;
+  }
+
+  function syncOverlayBodyLock() {
+    setOverlayOpen(anyBlockingOverlayOpen());
+  }
+  window.FS.syncOverlayBodyLock = syncOverlayBodyLock;
 
   /* ── brand / config into DOM ─────────────────────────── */
   function renderBrand() {
@@ -3805,7 +3822,12 @@
       if (input) input.value = partnerName();
       if (lastInput) lastInput.value = partnerLastName();
       syncNameNext();
-      setTimeout(function () { if (input) input.focus(); }, 50);
+      setTimeout(function () {
+        syncNameNext();
+        if (input) input.focus();
+      }, 50);
+      /* Autofill can fill after paint without firing input */
+      setTimeout(syncNameNext, 400);
     }
     if (onboardingStep === 3) {
       var emailIn = document.getElementById("onboardingEmail");
@@ -3882,7 +3904,7 @@
     var wrap = document.getElementById("onboarding");
     if (wrap && wrap.classList.contains("open")) {
       wrap.classList.remove("open");
-      setOverlayOpen(false);
+      syncOverlayBodyLock();
     }
     return true;
   }
@@ -3929,7 +3951,7 @@
       /* Settings → Replay welcome also restarts the app feature tour. */
       startTour();
     } else {
-      setOverlayOpen(false);
+      syncOverlayBodyLock();
       setTimeout(maybeOfferHowIGrow, 250);
     }
   }
@@ -4161,7 +4183,7 @@
       overlay.classList.remove("open");
       overlay.hidden = true;
     }
-    setOverlayOpen(false);
+    syncOverlayBodyLock();
     setTimeout(maybeOfferLastName, 350);
   }
 
@@ -4236,17 +4258,7 @@
       overlay.classList.remove("open");
       overlay.hidden = true;
     }
-    var auth = document.getElementById("authOverlay");
-    var howGrow = document.getElementById("howGrowOverlay");
-    var tourEl = document.getElementById("tour");
-    var onboard = document.getElementById("onboarding");
-    var otherOpen = !!(
-      (auth && auth.classList.contains("open")) ||
-      (howGrow && howGrow.classList.contains("open")) ||
-      (tourEl && tourEl.classList.contains("open")) ||
-      (onboard && onboard.classList.contains("open"))
-    );
-    if (!otherOpen) setOverlayOpen(false);
+    syncOverlayBodyLock();
   }
 
   function openLastNamePrompt() {
@@ -5006,7 +5018,7 @@
       tourTipsActive = null;
       state.tourDone = true;
       save();
-      setOverlayOpen(false);
+      syncOverlayBodyLock();
       return;
     }
     tourIdx = 0;
@@ -5133,7 +5145,7 @@
     tourKind = "main";
     tourTipsActive = null;
     save();
-    setOverlayOpen(false);
+    syncOverlayBodyLock();
     renderGreetings();
     setTimeout(maybeOfferHowIGrow, 250);
     setTimeout(maybeOfferLastName, 700);
