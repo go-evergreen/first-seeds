@@ -7,6 +7,7 @@ create table if not exists public.profiles (
   id uuid primary key references auth.users (id) on delete cascade,
   email text,
   display_name text not null default '',
+  last_name text not null default '',
   hub_mode text not null default '' check (hub_mode in ('', 'starter', 'full')),
   tour_done boolean not null default false,
   invite_code text unique,
@@ -76,11 +77,12 @@ declare
   code text;
 begin
   code := lower(substr(replace(gen_random_uuid()::text, '-', ''), 1, 8));
-  insert into public.profiles (id, email, display_name, invite_code)
+  insert into public.profiles (id, email, display_name, last_name, invite_code)
   values (
     new.id,
     new.email,
     coalesce(new.raw_user_meta_data->>'display_name', split_part(coalesce(new.email, 'friend'), '@', 1)),
+    coalesce(new.raw_user_meta_data->>'last_name', ''),
     code
   )
   on conflict (id) do nothing;
@@ -460,6 +462,7 @@ as $$
       jsonb_build_object(
         'id', p.id,
         'display_name', p.display_name,
+        'last_name', p.last_name,
         'email', p.email,
         'hub_mode', p.hub_mode,
         'last_active_at', p.last_active_at,

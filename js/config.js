@@ -113,8 +113,9 @@ window.FS.CONFIG = {
 
     nameEyebrow: "Nice to meet you",
     nameTitle: "What should we call you?",
-    nameHint: "First name is perfect — we'll use it on Sprout so this feels like yours.",
+    nameHint: "First + last name — so your leader can tell partners apart when a few share a first name.",
     namePlaceholder: "Your first name",
+    lastNamePlaceholder: "Your last name",
     nameCta: "That's me →",
     hypeLine: "Pre-registration opens October 1. Prep season is right now — and you're already in it.",
 

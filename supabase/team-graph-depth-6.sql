@@ -1,5 +1,5 @@
--- Team graph: include created_at + allow up to 6 levels deep.
--- Run once in Supabase → SQL Editor → Run.
+-- Team graph: include created_at + last_name + allow up to 6 levels deep.
+-- Prefer supabase/profile-last-name.sql if you only need the last_name column + subtree refresh.
 -- Safe to re-run (create or replace).
 
 create or replace function public.profile_subtree(parent_id uuid, remaining integer)
@@ -13,6 +13,7 @@ as $$
       jsonb_build_object(
         'id', p.id,
         'display_name', p.display_name,
+        'last_name', p.last_name,
         'email', p.email,
         'hub_mode', p.hub_mode,
         'last_active_at', p.last_active_at,

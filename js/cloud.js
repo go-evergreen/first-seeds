@@ -197,6 +197,7 @@ window.FS = window.FS || {};
           id: "",
           email: "",
           display_name: "",
+          last_name: "",
           hub_mode: "",
           tour_done: false,
           invite_code: "",
@@ -214,6 +215,7 @@ window.FS = window.FS || {};
         id: u.id,
         email: u.email,
         display_name: u.display_name,
+        last_name: u.last_name || "",
         hub_mode: u.hub_mode || "",
         tour_done: !!u.tour_done,
         invite_code: u.invite_code,
@@ -261,11 +263,16 @@ window.FS = window.FS || {};
       var pending = Cloud.pendingJoinCode();
       if (pending) {
         try {
-          await client.rpc("attach_sponsor", { code: pending });
-          Cloud.clearPendingJoin();
-          var refreshed = await client.from("profiles").select("*").eq("id", authUser.id).maybeSingle();
-          if (refreshed.data) profile = refreshed.data;
-        } catch (e) {}
+          var linked = await client.rpc("attach_sponsor", { code: pending });
+          /* Only clear the invite cookie when a sponsor was actually attached */
+          if (linked && linked.data) {
+            Cloud.clearPendingJoin();
+            var refreshed = await client.from("profiles").select("*").eq("id", authUser.id).maybeSingle();
+            if (refreshed.data) profile = refreshed.data;
+          }
+        } catch (e) {
+          console.warn("[First Seeds] attach_sponsor:", e);
+        }
       }
       /* Do not bump last_active_at here — auth token refresh would fake "active today".
          Presence is touched on real app open (visibility) and progress sync. */
@@ -349,16 +356,17 @@ window.FS = window.FS || {};
       return Cloud._finishLocalSignIn(creds.email, displayName);
     },
 
-    signUp: async function (email, displayName, password) {
+    signUp: async function (email, displayName, password, lastName) {
       var creds = Cloud._assertEmailPassword(email, password);
       displayName = (displayName || creds.email.split("@")[0]).trim();
+      lastName = String(lastName || "").trim();
 
       if (configured() && client) {
         var { data, error } = await client.auth.signUp({
           email: creds.email,
           password: creds.password,
           options: {
-            data: { display_name: displayName }
+            data: { display_name: displayName, last_name: lastName }
           }
         });
         if (error) throw error;
@@ -369,12 +377,24 @@ window.FS = window.FS || {};
         }
         if (data.user) {
           sessionUser = await Cloud._hydrateSupabaseUser(data.user);
+          if (displayName || lastName) {
+            try {
+              await Cloud.updateProfile({
+                display_name: displayName,
+                last_name: lastName
+              });
+            } catch (e) {}
+          }
           emit("auth", sessionUser);
         }
         return { kind: "signed_in", message: "Account created — you’re signed in." };
       }
 
-      return Cloud._finishLocalSignIn(creds.email, displayName);
+      var localRes = Cloud._finishLocalSignIn(creds.email, displayName);
+      if (lastName) {
+        try { await Cloud.updateProfile({ last_name: lastName }); } catch (e) {}
+      }
+      return localRes;
     },
 
     signOut: async function () {
@@ -404,6 +424,22 @@ window.FS = window.FS || {};
       }
       emit("auth", sessionUser);
       return sessionUser;
+    },
+
+    /* First + last for leader-facing lists; falls back gracefully. */
+    formatPersonName: function (person) {
+      if (!person) return "Partner";
+      var first = String(person.display_name || "").trim();
+      var last = String(person.last_name || "").trim();
+      if (first && last) return first + " " + last;
+      return first || last || person.email || "Partner";
+    },
+
+    personFirstName: function (person) {
+      if (!person) return "friend";
+      var first = String(person.display_name || "").trim();
+      if (first) return first.split(/\s+/)[0];
+      return (person.email || "friend").split("@")[0];
     },
 
     pullProgress: async function () {
@@ -440,6 +476,7 @@ window.FS = window.FS || {};
         var profilePatch = {
           hub_mode: (stateSlice.settings && stateSlice.settings.hubMode) || sessionUser.hub_mode || "",
           display_name: (stateSlice.settings && stateSlice.settings.partnerName) || sessionUser.display_name,
+          last_name: (stateSlice.settings && stateSlice.settings.partnerLastName) || sessionUser.last_name || "",
           tour_done: !!stateSlice.tourDone
         };
         /* Presence: at most once per local day, so background syncs don't fake "active today" */
@@ -456,6 +493,7 @@ window.FS = window.FS || {};
         if (stateSlice.settings) {
           if (stateSlice.settings.hubMode) u.hub_mode = stateSlice.settings.hubMode;
           if (stateSlice.settings.partnerName) u.display_name = stateSlice.settings.partnerName;
+          if (stateSlice.settings.partnerLastName != null) u.last_name = stateSlice.settings.partnerLastName;
         }
         u.tour_done = !!stateSlice.tourDone;
         if (!sameLocalCalendarDay(u.last_active_at, new Date())) {
@@ -517,7 +555,7 @@ window.FS = window.FS || {};
       if (!sessionUser) return [];
       if (configured() && client) {
         var { data: people } = await client.from("profiles")
-          .select("id, display_name, email, hub_mode, last_active_at, created_at")
+          .select("id, display_name, last_name, email, hub_mode, last_active_at, created_at")
           .eq("sponsor_id", sessionUser.id)
           .order("last_active_at", { ascending: false });
         if (!people || !people.length) return [];
@@ -553,6 +591,7 @@ window.FS = window.FS || {};
             profile: {
               id: u.id,
               display_name: u.display_name,
+              last_name: u.last_name || "",
               email: u.email,
               hub_mode: u.hub_mode,
               last_active_at: u.last_active_at,
@@ -588,6 +627,7 @@ window.FS = window.FS || {};
           out.push({
             id: u.id,
             display_name: u.display_name,
+            last_name: u.last_name || "",
             email: u.email,
             hub_mode: u.hub_mode,
             last_active_at: u.last_active_at,

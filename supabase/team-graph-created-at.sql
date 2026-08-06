@@ -1,4 +1,4 @@
--- Prefer team-graph-depth-6.sql (same content — created_at + 6 levels).
+-- Prefer team-graph-depth-6.sql or profile-last-name.sql (includes last_name).
 -- Safe to re-run in Supabase SQL Editor.
 
 create or replace function public.profile_subtree(parent_id uuid, remaining integer)
@@ -12,6 +12,7 @@ as $$
       jsonb_build_object(
         'id', p.id,
         'display_name', p.display_name,
+        'last_name', p.last_name,
         'email', p.email,
         'hub_mode', p.hub_mode,
         'last_active_at', p.last_active_at,

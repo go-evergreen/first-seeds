@@ -22,7 +22,7 @@
       data: {},
       done: {},
       active: "welcome",
-      settings: { hubMode: "", partnerName: "", growthMoment: true, growthToast: true, weekStartsOn: "sunday" },
+      settings: { hubMode: "", partnerName: "", partnerLastName: "", growthMoment: true, growthToast: true, weekStartsOn: "sunday" },
       tourDone: false
     };
   }
@@ -33,6 +33,7 @@
     if (!state.settings) state.settings = {};
     if (!state.settings.hubMode) state.settings.hubMode = "";
     if (!state.settings.partnerName) state.settings.partnerName = "";
+    if (!state.settings.partnerLastName) state.settings.partnerLastName = "";
     if (typeof state.settings.growthMoment !== "boolean") state.settings.growthMoment = true;
     if (typeof state.settings.growthToast !== "boolean") state.settings.growthToast = true;
     if (state.settings.weekStartsOn !== "monday" && state.settings.weekStartsOn !== "sunday") {
@@ -213,15 +214,19 @@
     return ((state.settings.partnerName || "") + "").trim();
   }
 
+  function partnerLastName() {
+    return ((state.settings.partnerLastName || "") + "").trim();
+  }
+
   function firstName() {
     var n = partnerName();
     return n ? n.split(/\s+/)[0] : "";
   }
 
   /* ── growth math ────────────────────────────────────────
-     Roots  = the 3 Roots answers (underground)
-     Sprout = each checklist item done outside Roots
-     Bar    = checklist items done / total
+     Roots  = the 3 Roots answers (underground) — shown as Roots x/3
+     Checks = checklist items outside Roots — shown as Checks x/y
+     Bar    = overall progress including Roots (Growth %)
      ───────────────────────────────────────────────────── */
   var ROOT_FIELDS = ["why", "moment", "said_yes"];
   var ROOT_MAX = 3;
@@ -391,6 +396,8 @@
 
     var nameInput = document.getElementById("partnerNameInput");
     if (nameInput && OB.namePlaceholder) nameInput.placeholder = OB.namePlaceholder;
+    var lastInput = document.getElementById("partnerLastNameInput");
+    if (lastInput && OB.lastNamePlaceholder) lastInput.placeholder = OB.lastNamePlaceholder;
 
     if (MODES.starter) {
       setText("modePickStarterTag", MODES.starter.tag || "Essentials");
@@ -1683,12 +1690,13 @@
     var items = [];
     for (var i = 0; i < blocks.length; i++) {
       var block = blocks[i].trim();
-      if (!block) continue;
+      if (!block || block === ".") continue;
       var nl = block.indexOf("\n");
       if (nl > 0 && nl < 100) {
         var name = block.slice(0, nl).trim();
         var blurb = block.slice(nl + 1).trim();
-        /* Section headers (name only) still get a list row */
+        if (!name && !blurb) continue;
+        if (name === ".") continue;
         items.push({ name: name, blurb: blurb });
       } else {
         items.push({ name: "", blurb: block });
@@ -2312,6 +2320,7 @@
     if (!menu) return;
     syncGrowthSettingsUI();
     syncWeekStartSettingsUI();
+    syncSettingsNameUI();
     menu.hidden = false;
     document.body.classList.add("hub-menu-open");
     renderBottomNav();
@@ -2742,6 +2751,58 @@
     }
   }
 
+  function syncSettingsNameUI() {
+    var first = document.getElementById("settingsFirstName");
+    var last = document.getElementById("settingsLastName");
+    if (first) first.value = partnerName();
+    if (last) last.value = partnerLastName();
+    var msg = document.getElementById("settingsNameMsg");
+    if (msg) msg.textContent = "";
+  }
+
+  function wireSettingsName() {
+    var btn = document.getElementById("settingsNameSave");
+    if (!btn || btn.dataset.bound === "1") return;
+    btn.dataset.bound = "1";
+    btn.addEventListener("click", async function () {
+      var firstEl = document.getElementById("settingsFirstName");
+      var lastEl = document.getElementById("settingsLastName");
+      var msg = document.getElementById("settingsNameMsg");
+      var first = firstEl ? firstEl.value.trim() : "";
+      var last = lastEl ? lastEl.value.trim() : "";
+      if (!first) {
+        if (msg) msg.textContent = "Add your first name.";
+        return;
+      }
+      if (!last) {
+        if (msg) msg.textContent = "Add your last name too — it helps on the team tree.";
+        return;
+      }
+      state.settings.partnerName = first;
+      state.settings.partnerLastName = last;
+      save();
+      renderGreetings();
+      try {
+        var Cloud = howGrowCloud();
+        if (Cloud && Cloud.isSignedIn()) {
+          await Cloud.updateProfile({ display_name: first, last_name: last });
+          await Cloud.pushProgress({
+            active: state.active,
+            data: state.data,
+            done: state.done,
+            calendar: state.data.calendar || {},
+            cheers: state.cheers || [],
+            settings: state.settings,
+            tourDone: state.tourDone
+          });
+        }
+        if (msg) msg.textContent = "Saved.";
+      } catch (e) {
+        if (msg) msg.textContent = "Saved on this device. Cloud update can retry next sync.";
+      }
+    });
+  }
+
   function highlightCaption(msg) {
     if (!caption) return;
     caption.textContent = msg;
@@ -2754,10 +2815,10 @@
     if (sproutDone === 0) {
       if (roots === 0) return "Seed on the dirt. Answer the three Roots blurbs to grow underground.";
       if (roots < ROOT_MAX) return "Roots growing · " + roots + " of " + ROOT_MAX + ". Each checklist item after Roots sprouts the plant.";
-      return "Roots are in. Next checklist items grow the sprout above ground.";
+      return "Roots are in. Finish a check above ground to grow your sprout.";
     }
-    if (sproutTotal > 0 && sproutDone >= sproutTotal) return "Full bloom — growth checklist complete.";
-    return "Sprout growing · " + sproutDone + " of " + sproutTotal + " checklist items. Each one grows it more.";
+    if (sproutTotal > 0 && sproutDone >= sproutTotal) return "Full bloom — every check is done.";
+    return sproutDone + " of " + sproutTotal + " checks done — each one grows your sprout.";
   }
 
   function plantVisualStage(sproutDone, sproutTotal) {
@@ -2807,7 +2868,7 @@
     var statRoots = document.getElementById("statRoots");
     var statMods = document.getElementById("statModules");
     if (statRoots) statRoots.innerHTML = "<em>Roots</em> " + roots + "/" + ROOT_MAX;
-    if (statMods) statMods.innerHTML = "<em>Checks</em> " + progress.done + "/" + progress.total;
+    if (statMods) statMods.innerHTML = "<em>Checks</em> " + sproutDone + "/" + sproutTotal;
 
     if (grewRoots) {
       var rootMsg = growthMessage("roots", roots, sproutDone, sproutTotal);
@@ -3719,11 +3780,11 @@
     }
     if (onboardingStep === 2) {
       var input = document.getElementById("partnerNameInput");
-      if (input) {
-        input.value = partnerName();
-        syncNameNext();
-        setTimeout(function () { input.focus(); }, 50);
-      }
+      var lastInput = document.getElementById("partnerLastNameInput");
+      if (input) input.value = partnerName();
+      if (lastInput) lastInput.value = partnerLastName();
+      syncNameNext();
+      setTimeout(function () { if (input) input.focus(); }, 50);
     }
     if (onboardingStep === 3) {
       var emailIn = document.getElementById("onboardingEmail");
@@ -3777,9 +3838,10 @@
 
   function syncNameNext() {
     var input = document.getElementById("partnerNameInput");
+    var last = document.getElementById("partnerLastNameInput");
     var btn = document.getElementById("onboardingNameNext");
     if (!btn) return;
-    var ok = input && input.value.trim().length > 0;
+    var ok = !!(input && input.value.trim() && last && last.value.trim());
     btn.disabled = !ok;
   }
 
@@ -4037,6 +4099,7 @@
       overlay.hidden = true;
     }
     setOverlayOpen(false);
+    setTimeout(maybeOfferLastName, 350);
   }
 
   function validateHowGrowStep(step) {
@@ -4094,6 +4157,111 @@
       if (!ctx || !(ctx.invited_by_id || ctx.sponsor_id)) return;
       openHowIGrow(false);
     } catch (e) {}
+  }
+
+  function lastNameMissing() {
+    if (partnerLastName()) return false;
+    var Cloud = howGrowCloud();
+    var user = Cloud && Cloud.user ? Cloud.user() : null;
+    if (user && String(user.last_name || "").trim()) return false;
+    return true;
+  }
+
+  function closeLastNamePrompt() {
+    var overlay = document.getElementById("lastNameOverlay");
+    if (overlay) {
+      overlay.classList.remove("open");
+      overlay.hidden = true;
+    }
+    setOverlayOpen(false);
+  }
+
+  function openLastNamePrompt() {
+    var overlay = document.getElementById("lastNameOverlay");
+    var input = document.getElementById("lastNamePromptInput");
+    var saveBtn = document.getElementById("lastNameSave");
+    if (!overlay) return;
+    if (input) {
+      input.value = partnerLastName();
+      if (saveBtn) saveBtn.disabled = !input.value.trim();
+    }
+    overlay.hidden = false;
+    overlay.classList.add("open");
+    setOverlayOpen(true);
+    setTimeout(function () { if (input) input.focus(); }, 50);
+  }
+
+  var lastNamePromptSkipped = false;
+
+  async function maybeOfferLastName() {
+    try {
+      var Cloud = howGrowCloud();
+      if (!Cloud || !Cloud.isSignedIn()) return;
+      if (!lastNameMissing()) return;
+      if (lastNamePromptSkipped) return;
+      var howGrow = document.getElementById("howGrowOverlay");
+      if (howGrow && howGrow.classList.contains("open")) return;
+      var tourEl = document.getElementById("tour");
+      if (tourEl && tourEl.classList.contains("open")) return;
+      var onboard = document.getElementById("onboarding");
+      if (onboard && onboard.classList.contains("open")) return;
+      var auth = document.getElementById("authOverlay");
+      if (auth && auth.classList.contains("open")) return;
+      openLastNamePrompt();
+    } catch (e) {}
+  }
+  window.FS.maybeOfferLastName = maybeOfferLastName;
+
+  function wireLastNamePrompt() {
+    var overlay = document.getElementById("lastNameOverlay");
+    if (!overlay || overlay.dataset.wired === "1") return;
+    overlay.dataset.wired = "1";
+    var input = document.getElementById("lastNamePromptInput");
+    var saveBtn = document.getElementById("lastNameSave");
+    var later = document.getElementById("lastNameLater");
+    var closeBtn = document.getElementById("lastNameClose");
+    function syncSave() {
+      if (saveBtn && input) saveBtn.disabled = !input.value.trim();
+    }
+    if (input) {
+      input.addEventListener("input", syncSave);
+      input.addEventListener("keydown", function (e) {
+        if (e.key === "Enter" && input.value.trim() && saveBtn) {
+          e.preventDefault();
+          saveBtn.click();
+        }
+      });
+    }
+    if (saveBtn) {
+      saveBtn.addEventListener("click", async function () {
+        var last = input ? input.value.trim() : "";
+        if (!last) return;
+        state.settings.partnerLastName = last;
+        save();
+        try {
+          var Cloud = howGrowCloud();
+          if (Cloud && Cloud.isSignedIn()) {
+            await Cloud.updateProfile({ last_name: last });
+            await Cloud.pushProgress({
+              active: state.active,
+              data: state.data,
+              done: state.done,
+              calendar: state.data.calendar || {},
+              cheers: state.cheers || [],
+              settings: state.settings,
+              tourDone: state.tourDone
+            });
+          }
+        } catch (e) {}
+        closeLastNamePrompt();
+      });
+    }
+    function skipForNow() {
+      lastNamePromptSkipped = true;
+      closeLastNamePrompt();
+    }
+    if (later) later.addEventListener("click", skipForNow);
+    if (closeBtn) closeBtn.addEventListener("click", skipForNow);
   }
 
   function wireHowIGrow() {
@@ -4222,11 +4390,21 @@
     }
 
     var nameInput = document.getElementById("partnerNameInput");
+    var lastNameInput = document.getElementById("partnerLastNameInput");
     var nameNext = document.getElementById("onboardingNameNext");
     if (nameInput) {
       nameInput.addEventListener("input", syncNameNext);
       nameInput.addEventListener("keydown", function (e) {
         if (e.key === "Enter" && nameInput.value.trim()) {
+          e.preventDefault();
+          if (lastNameInput) lastNameInput.focus();
+        }
+      });
+    }
+    if (lastNameInput) {
+      lastNameInput.addEventListener("input", syncNameNext);
+      lastNameInput.addEventListener("keydown", function (e) {
+        if (e.key === "Enter" && nameInput && nameInput.value.trim() && lastNameInput.value.trim()) {
           e.preventDefault();
           if (nameNext) nameNext.click();
         }
@@ -4235,7 +4413,9 @@
     if (nameNext) {
       nameNext.addEventListener("click", function () {
         if (!nameInput || !nameInput.value.trim()) return;
+        if (!lastNameInput || !lastNameInput.value.trim()) return;
         state.settings.partnerName = nameInput.value.trim();
+        state.settings.partnerLastName = lastNameInput.value.trim();
         save();
         onboardingStep = 3;
         renderOnboardingStep();
@@ -4276,6 +4456,7 @@
       var email = emailInput ? emailInput.value.trim() : "";
       var password = passwordInput ? passwordInput.value : "";
       var name = partnerName() || "friend";
+      var last = partnerLastName();
       if (!window.FS.Cloud) {
         onboardAuthMsg("Sign-in isn’t available right now — continue and try from the top bar later.");
         return;
@@ -4287,11 +4468,19 @@
       try {
         if (btn) btn.disabled = true;
         var res = creating
-          ? await window.FS.Cloud.signUp(email, name, password)
+          ? await window.FS.Cloud.signUp(email, name, password, last)
           : await window.FS.Cloud.signIn(email, name, password);
         onboardAuthMsg(res.message || "You’re signed in.");
         if (res.kind === "local" || res.kind === "signed_in") {
           flushSave();
+          if (creating && last) {
+            try {
+              await window.FS.Cloud.updateProfile({
+                display_name: name,
+                last_name: last
+              });
+            } catch (e) {}
+          }
           if (window.FS.BridgeUI && window.FS.BridgeUI.mergeProgress) {
             try { await window.FS.BridgeUI.mergeProgress(); } catch (e) {}
           }
@@ -4817,6 +5006,7 @@
     setOverlayOpen(false);
     renderGreetings();
     setTimeout(maybeOfferHowIGrow, 250);
+    setTimeout(maybeOfferLastName, 700);
   }
 
   function wireTour() {
@@ -5333,7 +5523,9 @@
   renderBrand();
   wireOnboarding();
   wireHowIGrow();
+  wireLastNamePrompt();
   wireGrowthSettings();
+  wireSettingsName();
   wireWeekStartSettings();
   syncGrowthSettingsUI();
   syncWeekStartSettingsUI();
@@ -5358,12 +5550,23 @@
   window.FS.onAuthReady = function () {
     liveRefresh({ silent: true });
     syncPageStoryToLeadBlurb();
+    if (cloudSignedIn() && !partnerLastName()) {
+      var u = howGrowCloud() && howGrowCloud().user ? howGrowCloud().user() : null;
+      if (u && u.last_name) {
+        state.settings.partnerLastName = String(u.last_name).trim();
+        save();
+      }
+    }
     if (dismissOnboardingIfModeChosen()) {
       if (!state.tourDone) startTour();
+      else setTimeout(maybeOfferLastName, 500);
       return;
     }
     var wrap = document.getElementById("onboarding");
-    if (!wrap || !wrap.classList.contains("open")) return;
+    if (!wrap || !wrap.classList.contains("open")) {
+      setTimeout(maybeOfferLastName, 500);
+      return;
+    }
     if (partnerName() && cloudSignedIn()) {
       onboardingStep = 4;
       renderOnboardingStep();
@@ -5376,7 +5579,10 @@
   function finishBootGate() {
     if (dismissOnboardingIfModeChosen()) {
       if (!state.tourDone) startTour();
-      else refreshHowGrowReminder();
+      else {
+        refreshHowGrowReminder();
+        setTimeout(maybeOfferLastName, 600);
+      }
       return;
     }
     if (!modeChosen()) startOnboarding();

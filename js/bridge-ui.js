@@ -62,7 +62,7 @@ window.FS = window.FS || {};
       weekPosted: stats.posted,
       daysToPreReg: Math.max(0, Math.ceil((pre - now) / 864e5)),
       active: (row.progress && row.progress.active) || "welcome",
-      name: (row.profile.display_name || "friend").split(/\s+/)[0]
+      name: Cloud.personFirstName ? Cloud.personFirstName(row.profile) : (row.profile.display_name || "friend").split(/\s+/)[0]
     };
   }
 
@@ -515,6 +515,8 @@ window.FS = window.FS || {};
     } catch (e) {
       graph = { roots: [], depth: 6 };
     }
+    /* Safety: L1 downline always appears on the tree, even if team_graph lags/fails */
+    graph = ensureGraphIncludesDownline(graph, rows);
     var underById = {};
     suggestedNotesByPartner = {};
     supportProfileByPartner = {};
@@ -530,14 +532,16 @@ window.FS = window.FS || {};
     });
     if (!rows.length) {
       root.innerHTML = '<p class="body-p">Nobody\'s linked yet. Share your join link — when they sign in, they show up here with live progress.</p>';
-      renderLeaderOverview([], [], []);
+      var emptyFlat = flattenTeamGraph(graph.roots);
+      renderLeaderOverview([], unseenTeamJoinRows(emptyFlat), []);
       await renderLiveTeamGraph(graph, rows);
-      markTeamJoinsSeen(rows);
+      markTeamJoinsSeen(emptyFlat);
       markSupportCompletionsSeen(rows);
       paintTeamBadge(0);
       return;
     }
-    var newJoinRows = unseenTeamJoinRows(rows);
+    var treeFlat = flattenTeamGraph(graph.roots);
+    var newJoinRows = unseenTeamJoinRows(treeFlat);
     var newSupportRows = unseenSupportRows(rows);
     var partnerIds = rows.map(function (r) { return r.profile.id; });
     var remoteOutreach = {};
@@ -559,7 +563,7 @@ window.FS = window.FS || {};
       var under = underById[row.profile.id] || 0;
       var b = bucketFor(ctx);
         supportProfileByPartner[row.profile.id] = {
-          name: row.profile.display_name || row.profile.email || "Partner",
+          name: personLabel(row.profile),
           support: row.support_preferences || null
         };
       buckets[b].push({ row: row, ctx: ctx, nudge: pickMentorMessage(ctx, b), under: under, bucket: b });
@@ -601,7 +605,7 @@ window.FS = window.FS || {};
           (cardOpen ? " open" : "") + ">";
         html += '<summary class="leader-card-sum">';
         html += '<div class="leader-card-head">';
-        html += '<div class="leader-card-name">' + esc(p.display_name || p.email) + '</div>';
+        html += '<div class="leader-card-name">' + esc(personLabel(p)) + '</div>';
         if (item.under > 0) {
           html += '<span class="leader-under-chip">' + item.under + " under</span>";
         }
@@ -618,7 +622,7 @@ window.FS = window.FS || {};
         var msg = item.nudge || {};
         suggestedNotesByPartner[p.id] = {
           body: msg.body || "",
-          name: p.display_name || p.email || "Partner",
+          name: personLabel(p),
           when: msg.when || "Check-in"
         };
         if (item.row.progress && item.row.progress.notified_at) {
@@ -647,7 +651,7 @@ window.FS = window.FS || {};
     root.className = "leader-board cols-" + Math.max(1, colCount);
     root.innerHTML = '<div class="leader-board-kicker">MENTORING</div>' + (colsHtml || '<p class="leader-empty">Everyone\'s settled for now.</p>');
     await renderLiveTeamGraph(graph, rows);
-    markTeamJoinsSeen(rows);
+    markTeamJoinsSeen(treeFlat);
     markSupportCompletionsSeen(rows);
     paintTeamBadge(0);
     if (typeof window.FS.maybeStartTeamTour === "function") {
@@ -761,7 +765,71 @@ window.FS = window.FS || {};
     return st.data.teamSeenIds;
   }
 
+  /* Flat list of everyone on the live tree (all depths), shaped like downline rows. */
+  function flattenTeamGraph(roots) {
+    var out = [];
+    function walk(nodes) {
+      (nodes || []).forEach(function (p) {
+        if (!p || !p.id) return;
+        out.push({ profile: p });
+        walk(p.children);
+      });
+    }
+    walk(roots);
+    return out;
+  }
+
+  /* If listDownline has someone team_graph missed, plant them as Level 1 so they aren't invisible. */
+  function ensureGraphIncludesDownline(graph, rows) {
+    var g = graph || { roots: [], depth: 6 };
+    if (!g.roots) g.roots = [];
+    var inGraph = {};
+    function walk(nodes) {
+      (nodes || []).forEach(function (p) {
+        if (!p || !p.id) return;
+        inGraph[p.id] = true;
+        walk(p.children);
+      });
+    }
+    walk(g.roots);
+    (rows || []).forEach(function (row) {
+      var p = row && row.profile;
+      if (!p || !p.id || inGraph[p.id]) return;
+      g.roots.push({
+        id: p.id,
+        display_name: p.display_name,
+        last_name: p.last_name || "",
+        email: p.email,
+        hub_mode: p.hub_mode,
+        last_active_at: p.last_active_at,
+        created_at: p.created_at,
+        children: []
+      });
+      inGraph[p.id] = true;
+    });
+    return g;
+  }
+
+  /* One-time: older L1-only seen map → full tree. Keep recent unseen joins (14d). */
+  function migrateTeamSeenToFullTree(rows) {
+    if (!getState) return;
+    var st = getState();
+    if (!st.data) st.data = {};
+    if (st.data.teamSeenTreeVer >= 2) return;
+    var seen = ensureTeamSeenMap();
+    var cutoff = Date.now() - 14 * 24 * 60 * 60 * 1000;
+    (rows || []).forEach(function (row) {
+      var p = row && row.profile;
+      if (!p || !p.id || seen[p.id]) return;
+      var t = p.created_at ? Date.parse(p.created_at) : 0;
+      if (!t || t < cutoff) seen[p.id] = true;
+    });
+    st.data.teamSeenTreeVer = 2;
+    if (persist) persist();
+  }
+
   function unseenTeamJoinRows(rows) {
+    migrateTeamSeenToFullTree(rows);
     var seen = ensureTeamSeenMap();
     var st = getState ? getState() : null;
     if (!(st && st.data.teamSeenSeeded)) return [];
@@ -771,6 +839,7 @@ window.FS = window.FS || {};
   }
 
   function countUnseenTeamJoins(rows) {
+    migrateTeamSeenToFullTree(rows);
     var seen = ensureTeamSeenMap();
     var st = getState ? getState() : null;
     var seeded = !!(st && st.data.teamSeenSeeded);
@@ -780,6 +849,7 @@ window.FS = window.FS || {};
       });
       if (st) {
         st.data.teamSeenSeeded = true;
+        st.data.teamSeenTreeVer = 2;
         persist();
       }
       return 0;
@@ -796,6 +866,12 @@ window.FS = window.FS || {};
       getState().data.teamSeenSeeded = true;
       persist();
     }
+  }
+
+  function personLabel(person) {
+    return (Cloud.formatPersonName && Cloud.formatPersonName(person)) ||
+      (person && (person.display_name || person.email)) ||
+      "Partner";
   }
 
   function ensureSupportSeenMap() {
@@ -832,7 +908,7 @@ window.FS = window.FS || {};
   }
 
   function partnerName(row) {
-    return (row && row.profile && (row.profile.display_name || row.profile.email)) || "A partner";
+    return (row && row.profile && personLabel(row.profile)) || "A partner";
   }
 
   function renderLeaderOverview(rows, newJoins, newSupports) {
@@ -842,7 +918,7 @@ window.FS = window.FS || {};
     newJoins = newJoins || [];
     newSupports = newSupports || [];
     var updateCount = newJoins.length + newSupports.length;
-    if (!Cloud.isSignedIn() || !rows.length || !updateCount) {
+    if (!Cloud.isSignedIn() || !updateCount) {
       el.hidden = true;
       el.innerHTML = "";
       return;
@@ -864,7 +940,7 @@ window.FS = window.FS || {};
     });
     newJoins.forEach(function (row) {
       html += '<div class="leader-overview-update is-join"><span aria-hidden="true">✨</span><span><strong>' +
-        esc(partnerName(row)) + "</strong> joined your Grove</span></div>";
+      esc(partnerName(row)) + "</strong> joined your tree</span></div>";
     });
     html += "</div>";
     el.innerHTML = html;
@@ -885,7 +961,10 @@ window.FS = window.FS || {};
     }
     try {
       var rows = await Cloud.listDownline();
-      paintTeamBadge(countUnseenTeamJoins(rows) + unseenSupportRows(rows).length);
+      var graph = { roots: [] };
+      try { graph = await Cloud.listTeamGraph(); } catch (e) { graph = { roots: [] }; }
+      var flat = flattenTeamGraph(graph.roots || []);
+      paintTeamBadge(countUnseenTeamJoins(flat) + unseenSupportRows(rows).length);
     } catch (e) {
       paintTeamBadge(0);
     }
@@ -969,7 +1048,7 @@ window.FS = window.FS || {};
     var facts = $("teamPersonFacts");
     var actions = $("teamPersonActions");
     if (!sheet || !nameEl || !chips || !facts || !actions) return;
-    nameEl.textContent = person.display_name || person.email || "Partner";
+    nameEl.textContent = personLabel(person);
     chips.innerHTML = hubModeChipHtml(person.hub_mode) +
       (person.under ? '<span class="live-l1-under on">' + person.under + " under</span>" : "") +
       (person.is_org_admin ? '<span class="team-mode-chip is-full">Org admin</span>' : "") +
@@ -1150,6 +1229,9 @@ window.FS = window.FS || {};
       downlineById[row.profile.id] = row;
     });
     var roots = (graph.roots || []).slice();
+    /* Prefer downline as source of truth for who should appear at L1 */
+    var patched = ensureGraphIncludesDownline({ roots: roots, depth: graph.depth || 6 }, downlineRows || []);
+    roots = (patched.roots || []).slice();
     /* Fill join dates from downline if a node is missing created_at */
     roots.forEach(function (p) {
       if (!p.created_at && downlineById[p.id] && downlineById[p.id].profile) {
@@ -1192,17 +1274,21 @@ window.FS = window.FS || {};
         var hasKids = kids.length > 0;
         cachePerson(p, under, null, false);
         var startOpen = hasKids && under <= COLLAPSE_AT;
+        var stSeen = getState ? getState() : null;
+        var seededSeen = !!(stSeen && stSeen.data && stSeen.data.teamSeenSeeded);
+        var isNew = seededSeen && !ensureTeamSeenMap()[p.id];
         var tag = hasKids ? "details" : "div";
         html += '<li class="live-team-node">';
-        html += "<" + tag + ' class="live-team-branch' + (hasKids ? " has-kids" : "") + '"' +
+        html += "<" + tag + ' class="live-team-branch' + (hasKids ? " has-kids" : "") + (isNew ? " is-new" : "") + '"' +
           (hasKids && startOpen ? " open" : "") + ">";
         html += "<" + (hasKids ? "summary" : "div") + ' class="live-team-sum' +
           (hasKids ? "" : " is-static") + '">';
         html += '<span class="live-team-sprout" aria-hidden="true">🌱</span>';
         html += '<span class="live-team-main">';
         html += '<button type="button" class="live-team-name" data-team-person="' + esc(p.id) + '">' +
-          esc(p.display_name || p.email) + "</button>";
+          esc(personLabel(p)) + "</button>";
         html += hubModeChipHtml(p.hub_mode);
+        if (isNew) html += '<span class="team-new-chip">New</span>';
         if (hasKids) {
           html += '<span class="live-team-under-n">' + under + " under</span>";
         }
@@ -1267,7 +1353,7 @@ window.FS = window.FS || {};
       html += '<span class="live-l1-main">';
       html += '<span class="live-l1-name-row">';
       html += '<button type="button" class="live-l1-name" data-team-person="' + esc(p.id) + '">' +
-        esc(p.display_name || p.email) + "</button>";
+        esc(personLabel(p)) + "</button>";
       html += hubModeChipHtml(p.hub_mode);
       if (isNew) html += '<span class="team-new-chip">New</span>';
       html += "</span>";
@@ -2584,19 +2670,40 @@ window.FS = window.FS || {};
       if (t.id === "authSubmitBtn" || t.id === "authCreateBtn") {
         var email = ($("authEmail") || {}).value;
         var name = ($("authName") || {}).value;
+        var lastName = (($("authLastName") || {}).value || "").trim();
         var password = ($("authPassword") || {}).value;
         var msg = $("authMsg");
         var creating = t.id === "authCreateBtn";
         try {
           t.disabled = true;
+          if (creating) {
+            if (!(name || "").trim()) {
+              if (msg) msg.textContent = "Add your first name.";
+              return;
+            }
+            if (!lastName) {
+              if (msg) msg.textContent = "Add your last name too — it helps leaders tell people apart.";
+              return;
+            }
+          }
+          if (creating && getState) {
+            var st = getState();
+            if (!st.settings) st.settings = {};
+            if (name) st.settings.partnerName = String(name).trim();
+            if (lastName) st.settings.partnerLastName = lastName;
+            persist();
+          }
           var res = creating
-            ? await Cloud.signUp(email, name, password)
+            ? await Cloud.signUp(email, name, password, lastName)
             : await Cloud.signIn(email, name, password);
           if (msg) msg.textContent = res.message;
           if (res.kind === "local" || res.kind === "signed_in") {
             await mergeCloudProgress();
             closeAuth();
             await afterAuth();
+            if (typeof window.FS.maybeOfferLastName === "function") {
+              setTimeout(window.FS.maybeOfferLastName, 400);
+            }
           }
         } catch (err) {
           var friendly = (err && err.message) || "";
@@ -3058,6 +3165,7 @@ window.FS = window.FS || {};
       settings: {
         hubMode: local.settings.hubMode || Cloud.user().hub_mode || "",
         partnerName: local.settings.partnerName || Cloud.user().display_name || "",
+        partnerLastName: local.settings.partnerLastName || Cloud.user().last_name || "",
         growthMoment: typeof local.settings.growthMoment === "boolean" ? local.settings.growthMoment : true,
         growthToast: typeof local.settings.growthToast === "boolean" ? local.settings.growthToast : true,
         weekStartsOn: local.settings.weekStartsOn === "monday" ? "monday" : "sunday"
