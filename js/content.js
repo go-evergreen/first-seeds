@@ -408,6 +408,10 @@ window.FS.CONTENT = {
     },
     principles: [
       {
+        title: "Frame the moment",
+        body: "We're helping an established brand launch in the U.S. We're launch partners. They have a hybrid affiliate model — buy, share, or build, no pressure to perform. That's the reframe when it starts to feel like \"just another shiny MLM\": this is launch-partner legacy, not hype from scratch. Say the opportunity once, calmly — then get back to the product and the person."
+      },
+      {
         title: "Decode, don't defend",
         body: "When someone pushes back, resist the reflex to answer the words. Ask what's underneath first — \"what's making you hesitate?\" The first objection is a placeholder; the second one is the truth."
       },

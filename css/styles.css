@@ -440,10 +440,24 @@ body.overlay-open #cheerSheet .cheer-sheet-backdrop{pointer-events:none}
 .talk-emoji-bubble-lg{width:44px;height:44px;font-size:20px}
 .talk-principle-card .talk-emoji-bubble{margin:0 0 10px}
 .talk-cat-block{margin:18px 0 22px}
-.talk-cat-head{display:flex;align-items:flex-start;gap:12px;margin:0 0 12px;padding:12px 14px;border-radius:16px;background:linear-gradient(160deg,rgba(255,255,255,.85),rgba(232,235,227,.55));border:1px solid rgba(61,69,60,.08)}
-.talk-cat-head-copy{min-width:0;flex:1}
-.talk-cat-title{font-family:'Fraunces',serif;font-size:18px;font-weight:500;color:#000;line-height:1.2;margin:2px 0 4px}
+.talk-cat-head{
+  display:flex;align-items:flex-start;gap:12px;width:100%;margin:0 0 0;padding:12px 14px;
+  border-radius:16px;background:linear-gradient(160deg,rgba(255,255,255,.85),rgba(232,235,227,.55));
+  border:1px solid rgba(61,69,60,.08);text-align:left;font:inherit;color:inherit;cursor:pointer;
+  -webkit-tap-highlight-color:transparent;touch-action:manipulation;transition:border-color .15s,background .15s
+}
+.talk-cat-block.is-open .talk-cat-head{margin-bottom:12px;border-color:rgba(74,106,86,.28);background:linear-gradient(160deg,#fff,rgba(232,235,227,.7))}
+@media (hover:hover) and (pointer:fine){
+  .talk-cat-head:hover{border-color:rgba(74,106,86,.35)}
+}
+.talk-cat-head:focus{outline:none}
+.talk-cat-head:focus-visible{outline:3px solid rgba(200,162,74,.75);outline-offset:2px}
+.talk-cat-head-copy{min-width:0;flex:1;display:flex;flex-direction:column;gap:4px}
+.talk-cat-title{font-family:'Fraunces',serif;font-size:18px;font-weight:500;color:#000;line-height:1.2;margin:2px 0 0}
 .talk-cat-blurb{margin:0;font-size:13px;line-height:1.45;color:var(--bark)}
+.talk-cat-count{font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--moss)}
+.talk-cat-chev{flex:0 0 auto;width:28px;height:28px;margin-top:6px;border-radius:8px;border:1.5px solid var(--sand);background:rgba(255,255,255,.85);color:var(--green);display:grid;place-items:center;font-size:18px;font-weight:600;line-height:1}
+.talk-cat-block.is-open .talk-cat-chev{background:#eef2ec;border-color:var(--moss)}
 .talk-moments .faq-q{align-items:center;gap:10px}
 .talk-q-wrap{min-width:0;flex:1;font-size:14.5px;font-weight:600;line-height:1.35;color:var(--green)}
 .talk-moments .faq-chev{flex:0 0 auto;margin-left:auto}

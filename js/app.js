@@ -1036,7 +1036,7 @@
       Fade: { emoji: "🌙", label: "When it goes quiet", blurb: "One useful deposit — then let silence mean no." }
     };
     var catOrder = ["Warm", "Cold-ish", "Objection", "Business", "Fade"];
-    var principleEmoji = ["🔍", "🌿", "✨", "🎯", "🕊️"];
+    var principleEmoji = ["🌅", "🔍", "🌿", "✨", "🎯", "🕊️"];
 
     var html = "";
     html += '<p class="body-p">' + esc(G.lede || "") + "</p>";
@@ -1079,52 +1079,64 @@
       Object.keys(byCat).forEach(function (c) {
         if (ordered.indexOf(c) < 0) ordered.push(c);
       });
+      if (!state.data.talkCatOpen || typeof state.data.talkCatOpen !== "object") {
+        state.data.talkCatOpen = {};
+      }
+      var talkCatOpen = state.data.talkCatOpen;
 
       ordered.forEach(function (cat) {
         var list = byCat[cat];
         if (!list || !list.length) return;
         var meta = catMeta[cat] || { emoji: "💬", label: cat, blurb: "" };
-        html += '<section class="talk-cat-block">';
-        html += '<div class="talk-cat-head">' +
+        var catOpen = !!talkCatOpen[cat];
+        var countLabel = list.length === 1 ? "1 moment" : list.length + " moments";
+        html += '<section class="talk-cat-block' + (catOpen ? " is-open" : "") + '">';
+        html += '<button type="button" class="talk-cat-head" data-talk-cat="' + esc(cat) + '" aria-expanded="' + (catOpen ? "true" : "false") + '">' +
           '<span class="talk-emoji-bubble talk-emoji-bubble-lg" aria-hidden="true">' + meta.emoji + "</span>" +
-          '<div class="talk-cat-head-copy">' +
-          '<div class="talk-cat-title">' + esc(meta.label) + "</div>" +
-          (meta.blurb ? '<p class="talk-cat-blurb">' + esc(meta.blurb) + "</p>" : "") +
-          "</div></div>";
-        html += '<div class="faq-list talk-moments">';
-        list.forEach(function (m) {
-          var id = "talk_" + m.id;
-          var isOpen = openTalk === id;
-          html += '<div class="faq-item talk-moment-card' + (isOpen ? " open" : "") + '">';
-          html += '<button type="button" class="faq-q" data-talk="' + id + '">' +
-            '<span class="talk-emoji-bubble talk-emoji-bubble-sm" aria-hidden="true">' + meta.emoji + "</span>" +
-            '<span class="talk-q-wrap">' + esc(m.q) + "</span>" +
-            '<span class="faq-chev">' + (isOpen ? "−" : "+") + "</span></button>";
-          if (isOpen) {
-            html += '<div class="faq-a talk-moment-body">';
-            html += '<div class="talk-why"><div class="talk-why-label">The mechanism</div><p>' +
-              esc(m.mechanism) + "</p></div>";
-            if (m.note) html += "<p>" + esc(m.note) + "</p>";
-            html += '<div class="talk-play"><div class="talk-play-label">' + esc(m.playLabel || "The play") + "</div>";
-            html += '<div class="talk-exchange">';
-            (m.lines || []).forEach(function (ln) {
-              var cls = ln.who === "You" ? "you" : "them";
-              html += '<div class="talk-line ' + cls + '"><span class="talk-who">' + esc(ln.who) +
-                "</span><span>" + esc(ln.text) + "</span></div>";
-            });
-            html += "</div>";
-            var copyId = id + "_play";
-            html += '<p class="talk-play-copy" id="' + copyId + '" hidden>' + esc(talkPlayCopy(m)) + "</p>";
-            html += '<button type="button" class="copy-btn small" data-copy="' + copyId + '">Copy the play</button>';
-            html += "</div>";
-            if (m.trap) {
-              html += '<div class="talk-trap"><strong>The trap:</strong> ' + esc(m.trap) + "</div>";
+          '<span class="talk-cat-head-copy">' +
+          '<span class="talk-cat-title">' + esc(meta.label) + "</span>" +
+          (meta.blurb ? '<span class="talk-cat-blurb">' + esc(meta.blurb) + "</span>" : "") +
+          '<span class="talk-cat-count">' + esc(countLabel) + "</span>" +
+          "</span>" +
+          '<span class="talk-cat-chev" aria-hidden="true">' + (catOpen ? "−" : "+") + "</span>" +
+          "</button>";
+        if (catOpen) {
+          html += '<div class="faq-list talk-moments">';
+          list.forEach(function (m) {
+            var id = "talk_" + m.id;
+            var isOpen = openTalk === id;
+            html += '<div class="faq-item talk-moment-card' + (isOpen ? " open" : "") + '">';
+            html += '<button type="button" class="faq-q" data-talk="' + id + '">' +
+              '<span class="talk-emoji-bubble talk-emoji-bubble-sm" aria-hidden="true">' + meta.emoji + "</span>" +
+              '<span class="talk-q-wrap">' + esc(m.q) + "</span>" +
+              '<span class="faq-chev">' + (isOpen ? "−" : "+") + "</span></button>";
+            if (isOpen) {
+              html += '<div class="faq-a talk-moment-body">';
+              html += '<div class="talk-why"><div class="talk-why-label">The mechanism</div><p>' +
+                esc(m.mechanism) + "</p></div>";
+              if (m.note) html += "<p>" + esc(m.note) + "</p>";
+              html += '<div class="talk-play"><div class="talk-play-label">' + esc(m.playLabel || "The play") + "</div>";
+              html += '<div class="talk-exchange">';
+              (m.lines || []).forEach(function (ln) {
+                var cls = ln.who === "You" ? "you" : "them";
+                html += '<div class="talk-line ' + cls + '"><span class="talk-who">' + esc(ln.who) +
+                  "</span><span>" + esc(ln.text) + "</span></div>";
+              });
+              html += "</div>";
+              var copyId = id + "_play";
+              html += '<p class="talk-play-copy" id="' + copyId + '" hidden>' + esc(talkPlayCopy(m)) + "</p>";
+              html += '<button type="button" class="copy-btn small" data-copy="' + copyId + '">Copy the play</button>';
+              html += "</div>";
+              if (m.trap) {
+                html += '<div class="talk-trap"><strong>The trap:</strong> ' + esc(m.trap) + "</div>";
+              }
+              html += "</div>";
             }
             html += "</div>";
-          }
+          });
           html += "</div>";
-        });
-        html += "</div></section>";
+        }
+        html += "</section>";
       });
     }
     if (G.arc && G.arc.length) {
@@ -5185,7 +5197,7 @@
 
   /* ── clicks ──────────────────────────────────────────── */
   document.addEventListener("click", function (e) {
-    var t = e.target.closest("[data-goto],[data-complete],[data-grove-pick],[data-prod-nav],[data-prod-open],[data-prod-fav],[data-prod-scope],[data-choice],[data-rhythm],[data-copy],[data-tadd],[data-tstatus],[data-tdel],[data-seedtype],[data-menu-goto],[data-soft-unlock],[data-faq],[data-talk],[data-copy-toggle],#exportBtn,#exportBtn2,#resetBtn,#replayOnboardingBtn,#replayTeamTourBtn,#modeStarter,#modeFull,#lockToastUnlockFull,#todayUnlockFull,#leadPageBuiltIn,#leadPageCustom,#levelUpBtn,#settingsNavBtn,#menuCloseBtn,#menuCloseBackdrop,#todayAuthBtn,#lockToastClose");
+    var t = e.target.closest("[data-goto],[data-complete],[data-grove-pick],[data-prod-nav],[data-prod-open],[data-prod-fav],[data-prod-scope],[data-choice],[data-rhythm],[data-copy],[data-tadd],[data-tstatus],[data-tdel],[data-seedtype],[data-menu-goto],[data-soft-unlock],[data-faq],[data-talk],[data-talk-cat],[data-copy-toggle],#exportBtn,#exportBtn2,#resetBtn,#replayOnboardingBtn,#replayTeamTourBtn,#modeStarter,#modeFull,#lockToastUnlockFull,#todayUnlockFull,#leadPageBuiltIn,#leadPageCustom,#levelUpBtn,#settingsNavBtn,#menuCloseBtn,#menuCloseBackdrop,#todayAuthBtn,#lockToastClose");
     if (!t) return;
 
     if (t.hasAttribute("data-prod-fav")) {
@@ -5222,6 +5234,16 @@
       }
       save();
       renderProductLibrary();
+      return;
+    }
+    if (t.hasAttribute("data-talk-cat")) {
+      var talkCat = t.getAttribute("data-talk-cat");
+      if (!state.data.talkCatOpen || typeof state.data.talkCatOpen !== "object") {
+        state.data.talkCatOpen = {};
+      }
+      state.data.talkCatOpen[talkCat] = !state.data.talkCatOpen[talkCat];
+      save();
+      renderTalkGuide((window.FS.CONTENT || {}).talkGuide);
       return;
     }
     if (t.hasAttribute("data-talk")) {
