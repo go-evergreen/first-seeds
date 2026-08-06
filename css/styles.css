@@ -1462,6 +1462,7 @@ button.vault-week-day:hover{border-color:var(--moss);box-shadow:0 6px 18px rgba(
 }
 @keyframes tourCardIn{from{opacity:0}to{opacity:1}}
 .overlay.tour.open .tour-card{animation:tourCardIn .25s var(--ease) both}
+#tourBody{white-space:pre-line}
 /* Outline only — never raise page targets above the tip card */
 .tour-target-on{position:relative;border-radius:16px;box-shadow:0 0 0 3px rgba(200,162,74,.55)}
 .bottom-nav-btn.tour-target-on{
