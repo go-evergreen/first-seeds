@@ -2211,13 +2211,27 @@
       ];
     }
     if (id === "ground") {
+      var customPage = usesCustomLanding();
       var items = [
         { done: !!state.data.page_choice, label: "Pick a page option" },
-        { done: filledText("page_story"), label: "Draft your opening line" }
+        { done: filledText("page_story"), label: "Draft your opening line" },
+        /* Always count lead-setup slots so Soft↔custom↔in-app doesn't
+           resize Growth % or plant stage mid-progress. Custom page marks
+           them complete; in-app lead page requires the real steps. */
+        {
+          done: customPage || leadSignedIn(),
+          label: customPage
+            ? "Lead page account (using your own page)"
+            : "Sign in for your lead page"
+        },
+        {
+          done: customPage || leadPageReady(),
+          label: customPage
+            ? "Share link (using your own page)"
+            : "Save the link you'll share"
+        }
       ];
       if (usesBuiltInLeadPage()) {
-        items.push({ done: leadSignedIn(), label: "Sign in for your lead page" });
-        items.push({ done: leadPageReady(), label: "Save the link you'll share" });
         items.push({ done: leadPreviewSeen(), label: "Preview your lead page", optional: true });
       }
       return items;

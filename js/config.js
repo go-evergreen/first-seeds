@@ -142,7 +142,7 @@ window.FS.CONFIG = {
   tour: [
     {
       title: "Sprout is your home base",
-      body: "You'll see a little plant and a Growth % here. Answer the three Roots questions and it starts growing — every real step you finish helps it along. No pressure to finish everything today.",
+      body: "You'll see a little plant and a Growth % here. The three Roots answers grow roots underground — then every checklist step you finish sprouts the plant above. No pressure to finish everything today.",
       panel: "welcome",
       target: ".home-plant-zone",
       placement: "below"
