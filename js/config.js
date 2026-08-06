@@ -322,7 +322,8 @@ window.FS.CONFIG = {
       body: "When someone joins your Grove or completes How I Grow, a number appears on the Grove tab. Open Grove to see exactly who is new — and tap a completed support map to read it.",
       panel: "leader",
       target: '[data-team-tour="overview"]',
-      placement: "below"
+      placement: "below",
+      optional: true
     },
     {
       title: "Mentoring — by how they’re moving",

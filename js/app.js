@@ -3923,8 +3923,8 @@
     if (hint) {
       var picked = Array.isArray(howGrowAnswers.encouragement) ? howGrowAnswers.encouragement.length : 0;
       hint.textContent = picked >= 2
-        ? "That’s your two — tap one again to swap it out."
-        : "Pick the two that feel most like you.";
+        ? "That’s your two — tap one again to swap it out, then hit Next."
+        : "You can pick one or two — then hit Next.";
     }
   }
 

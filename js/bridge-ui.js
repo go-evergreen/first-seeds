@@ -416,27 +416,24 @@ window.FS = window.FS || {};
     closeCheerSheet();
     closeNoteSheet();
     name.textContent = record.name || "Partner";
+    var surpriseList = [].concat(a.surprises || [], a.surprise_other || []).filter(Boolean);
     var html = '<div class="how-they-grow-summary"><dl>';
-    html += supportAnswerRow("Learns best", a.learning_style);
-    html += supportAnswerRow("Questions", a.question_style);
-    html += supportAnswerRow("Accountability", a.accountability);
-    html += supportAnswerRow("Support rhythm", a.support_frequency);
-    html += supportAnswerRow("Feels encouraged by", a.encouragement);
-    html += supportAnswerRow("Recognition", a.recognition);
+    html += supportAnswerRow("When you’re learning something new, you prefer…", a.learning_style);
+    html += supportAnswerRow("If you have a question, you’re most likely to…", a.question_style);
+    html += supportAnswerRow("When you’re struggling, what’s the most helpful thing a leader can do?", a.struggling_support);
+    html += supportAnswerRow("What kind of accountability helps you most?", a.accountability);
+    html += supportAnswerRow("How often would you like support?", a.support_frequency);
+    html += supportAnswerRow("What kind of encouragement lands?", a.encouragement);
+    html += supportAnswerRow("How do you feel about recognition?", a.recognition);
+    html += supportAnswerRow("If we surprised you one day, what would make your heart happiest?", surpriseList);
+    html += supportAnswerRow("One year from now, what would make you say, “I’m so glad I did this”?", a.one_year_vision);
+    html += supportAnswerRow("What’s one thing we should know that would help us be better leaders for you?", a.leader_note);
     html += "</dl></div>";
-    if (a.struggling_support || a.one_year_vision || a.leader_note) {
-      html += '<div class="how-they-grow-notes">';
-      if (a.struggling_support) html += '<section><span>When they’re struggling</span><p>' + esc(a.struggling_support) + "</p></section>";
-      if (a.one_year_vision) html += '<section><span>One year from now</span><p>' + esc(a.one_year_vision) + "</p></section>";
-      if (a.leader_note) html += '<section><span>For their leaders to know</span><p>' + esc(a.leader_note) + "</p></section>";
-      html += "</div>";
-    }
     var joys = a.little_joys || {};
     var joyRows = [
-      ["Snack", joys.snack], ["Drink", joys.drink], ["Birthday", joys.birthday],
-      ["Color", joys.color], ["Hobby", joys.hobby], ["Travel", joys.travel],
-      ["Pets", joys.pets], ["Anything else", joys.anything_else],
-      ["Sweet surprises", [].concat(a.surprises || [], a.surprise_other || []).filter(Boolean)]
+      ["Favorite snack", joys.snack], ["Favorite drink", joys.drink], ["Birthday", joys.birthday],
+      ["Favorite color", joys.color], ["Favorite hobby", joys.hobby], ["Favorite place traveled", joys.travel],
+      ["Dogs, cats… or chickens?", joys.pets], ["Anything else we should know?", joys.anything_else]
     ];
     var joysHtml = "";
     joyRows.forEach(function (row) { joysHtml += supportAnswerRow(row[0], row[1]); });
@@ -801,7 +798,8 @@ window.FS = window.FS || {};
     rows = rows || [];
     newJoins = newJoins || [];
     newSupports = newSupports || [];
-    if (!Cloud.isSignedIn() || !rows.length) {
+    var updateCount = newJoins.length + newSupports.length;
+    if (!Cloud.isSignedIn() || !rows.length || !updateCount) {
       el.hidden = true;
       el.innerHTML = "";
       return;
@@ -813,27 +811,19 @@ window.FS = window.FS || {};
       '<div class="leader-overview-kicker">LEADER OVERVIEW</div>' +
       '<strong>' + rows.length + (rows.length === 1 ? " direct partner" : " direct partners") + "</strong>" +
       '<span>' + completed + (completed === 1 ? " support map shared" : " support maps shared") + "</span>" +
-      "</div>";
-    var updateCount = newJoins.length + newSupports.length;
-    if (updateCount) {
-      html += '<span class="leader-overview-new">' + updateCount + " new</span>";
-    }
+      "</div>" +
+      '<span class="leader-overview-new">' + updateCount + " new</span></div>" +
+      '<div class="leader-overview-updates">';
+    newSupports.forEach(function (row) {
+      html += '<button type="button" class="leader-overview-update is-support" data-how-they-grow="' +
+        esc(row.profile.id) + '"><span aria-hidden="true">🌱</span><span><strong>' +
+        esc(partnerName(row)) + '</strong> completed How I Grow</span><b aria-hidden="true">→</b></button>';
+    });
+    newJoins.forEach(function (row) {
+      html += '<div class="leader-overview-update is-join"><span aria-hidden="true">✨</span><span><strong>' +
+        esc(partnerName(row)) + "</strong> joined your Grove</span></div>";
+    });
     html += "</div>";
-    if (newSupports.length || newJoins.length) {
-      html += '<div class="leader-overview-updates">';
-      newSupports.forEach(function (row) {
-        html += '<button type="button" class="leader-overview-update is-support" data-how-they-grow="' +
-          esc(row.profile.id) + '"><span aria-hidden="true">🌱</span><span><strong>' +
-          esc(partnerName(row)) + '</strong> completed How I Grow</span><b aria-hidden="true">→</b></button>';
-      });
-      newJoins.forEach(function (row) {
-        html += '<div class="leader-overview-update is-join"><span aria-hidden="true">✨</span><span><strong>' +
-          esc(partnerName(row)) + "</strong> joined your Grove</span></div>";
-      });
-      html += "</div>";
-    } else {
-      html += '<p class="leader-overview-quiet">You’re all caught up.</p>';
-    }
     el.innerHTML = html;
     el.hidden = false;
   }
