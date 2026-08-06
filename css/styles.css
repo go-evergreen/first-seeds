@@ -527,7 +527,7 @@ body.overlay-open #cheerSheet .cheer-sheet-backdrop{pointer-events:none}
 /* Badge via ::after — never a DOM child in the flex column (avoids Leads jumping when count loads) */
 .bottom-nav-btn[data-nav-badge]::after{
   content:attr(data-nav-badge);
-  position:absolute;
+  position:absolute !important;
   top:6px;
   left:calc(50% + 6px);
   z-index:3;
@@ -544,6 +544,8 @@ body.overlay-open #cheerSheet .cheer-sheet-backdrop{pointer-events:none}
   pointer-events:none;
   box-sizing:border-box;
 }
+/* Legacy badge nodes from older cached HTML — never let them affect layout */
+.bottom-nav-badge{display:none!important}
 
 /* Lead page inbox (in-app) */
 .ground-lead-setup,.ground-custom-note{margin:16px 0 4px}

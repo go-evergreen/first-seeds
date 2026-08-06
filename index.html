@@ -20,7 +20,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,400;1,9..144,500&family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/styles.css?v=203">
+<link rel="stylesheet" href="css/styles.css?v=204">
 </head>
 <body>
 
@@ -919,6 +919,22 @@
     <span class="bottom-nav-label">Grove</span>
   </button>
 </nav>
+<script>
+/* Strip legacy nav badge nodes from older cached HTML before app JS runs. */
+(function () {
+  var nav = document.getElementById("bottomNav");
+  if (!nav) return;
+  var bad = nav.querySelectorAll(".bottom-nav-badge");
+  for (var i = 0; i < bad.length; i++) bad[i].parentNode.removeChild(bad[i]);
+  var wraps = nav.querySelectorAll(".bottom-nav-ico-wrap");
+  for (var w = 0; w < wraps.length; w++) {
+    var wrap = wraps[w];
+    var ico = wrap.querySelector(".bottom-nav-ico");
+    if (ico) wrap.parentNode.insertBefore(ico, wrap);
+    wrap.parentNode.removeChild(wrap);
+  }
+})();
+</script>
 
 <div class="lock-toast" id="lockToast" hidden role="status"></div>
 
@@ -1393,19 +1409,19 @@
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="js/config.js?v=203"></script>
-<script src="js/supabase-config.js?v=203"></script>
-<script src="js/data.js?v=203"></script>
-<script src="js/content.js?v=203"></script>
-<script src="js/content-vault.js?v=203"></script>
-<script src="js/products.js?v=203"></script>
-<script src="assets/products/manifest.js?v=203"></script>
-<script src="js/plant.js?v=203"></script>
-<script src="js/tree.js?v=203"></script>
-<script src="js/calendar.js?v=203"></script>
-<script src="js/cloud.js?v=203"></script>
-<script src="js/bridge-ui.js?v=203"></script>
-<script src="js/app.js?v=203"></script>
-<script src="js/pwa.js?v=203"></script>
+<script src="js/config.js?v=204"></script>
+<script src="js/supabase-config.js?v=204"></script>
+<script src="js/data.js?v=204"></script>
+<script src="js/content.js?v=204"></script>
+<script src="js/content-vault.js?v=204"></script>
+<script src="js/products.js?v=204"></script>
+<script src="assets/products/manifest.js?v=204"></script>
+<script src="js/plant.js?v=204"></script>
+<script src="js/tree.js?v=204"></script>
+<script src="js/calendar.js?v=204"></script>
+<script src="js/cloud.js?v=204"></script>
+<script src="js/bridge-ui.js?v=204"></script>
+<script src="js/app.js?v=204"></script>
+<script src="js/pwa.js?v=204"></script>
 </body>
 </html>

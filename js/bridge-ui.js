@@ -950,6 +950,18 @@ window.FS = window.FS || {};
   function paintNavBadge(tab, count) {
     var btn = document.querySelector('.bottom-nav-btn[data-tab="' + tab + '"]');
     if (!btn) return;
+    /* Older cached HTML put a flex-child .bottom-nav-badge under the label — remove it. */
+    var leftovers = btn.querySelectorAll(".bottom-nav-badge, .bottom-nav-ico-wrap");
+    for (var i = 0; i < leftovers.length; i++) {
+      var node = leftovers[i];
+      if (node.classList.contains("bottom-nav-ico-wrap")) {
+        var ico = node.querySelector(".bottom-nav-ico");
+        if (ico) node.parentNode.insertBefore(ico, node);
+        node.parentNode.removeChild(node);
+      } else {
+        node.parentNode.removeChild(node);
+      }
+    }
     var n = count | 0;
     if (n < 1) {
       btn.removeAttribute("data-nav-badge");
