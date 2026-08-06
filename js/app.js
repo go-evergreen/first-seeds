@@ -3885,9 +3885,20 @@
 
   function normalizeHowGrowAnswers(answers) {
     var a = answers || {};
+    var recognitionAliases = {
+      "Public celebration": "I love being celebrated publicly",
+      "Small group recognition": "A small group is perfect",
+      "Private recognition": "A private message means more",
+      "No spotlight": "Please don’t put me in the spotlight"
+    };
     ["encouragement", "recognition", "surprises"].forEach(function (key) {
       if (typeof a[key] === "string" && a[key]) a[key] = [a[key]];
     });
+    if (Array.isArray(a.recognition)) {
+      a.recognition = a.recognition.map(function (item) {
+        return recognitionAliases[item] || item;
+      });
+    }
     return a;
   }
 

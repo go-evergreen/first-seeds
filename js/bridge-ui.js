@@ -405,17 +405,21 @@ window.FS = window.FS || {};
     return n + "th";
   }
 
-  function supportAnswerRow(label, value, ranked) {
+  function formatSupportAnswerValue(value, ranked) {
     if (typeof value === "string" && value) value = [value];
     if (!value || (Array.isArray(value) && !value.length)) return "";
-    var shown;
-    if (Array.isArray(value)) {
-      shown = ranked && value.length > 1
-        ? value.map(function (item, i) { return supportAnswerRankLabel(i) + " " + item; }).join(" · ")
-        : value.join(" · ");
-    } else {
-      shown = value;
+    if (!Array.isArray(value)) return String(value);
+    if (ranked && value.length > 1) {
+      return value.map(function (item, i) {
+        return supportAnswerRankLabel(i) + " " + item;
+      }).join(" · ");
     }
+    return value.join(" · ");
+  }
+
+  function supportAnswerRow(label, value, ranked) {
+    var shown = formatSupportAnswerValue(value, ranked);
+    if (!shown) return "";
     return '<div class="how-they-grow-row"><dt>' + esc(label) + "</dt><dd>" + esc(shown) + "</dd></div>";
   }
 
@@ -432,7 +436,27 @@ window.FS = window.FS || {};
     closeCheerSheet();
     closeNoteSheet();
     name.textContent = record.name || "Partner";
-    var surpriseList = [].concat(a.surprises || [], a.surprise_other || []).filter(Boolean);
+    var recognitionAliases = {
+      "Public celebration": "I love being celebrated publicly",
+      "Small group recognition": "A small group is perfect",
+      "Private recognition": "A private message means more",
+      "No spotlight": "Please don’t put me in the spotlight"
+    };
+    var recognition = a.recognition;
+    if (typeof recognition === "string" && recognition) recognition = [recognition];
+    if (Array.isArray(recognition)) {
+      recognition = recognition.map(function (item) { return recognitionAliases[item] || item; });
+    }
+    var surprises = a.surprises;
+    if (typeof surprises === "string" && surprises) surprises = [surprises];
+    if (!Array.isArray(surprises)) surprises = [];
+    var surpriseOther = (a.surprise_other || "").trim();
+    var surpriseShown = formatSupportAnswerValue(surprises, true);
+    if (surpriseOther) {
+      surpriseShown = surpriseShown
+        ? surpriseShown + " · Also: " + surpriseOther
+        : surpriseOther;
+    }
     var html = '<div class="how-they-grow-summary"><dl>';
     html += supportAnswerRow("When you’re learning something new, you prefer…", a.learning_style);
     html += supportAnswerRow("If you have a question, you’re most likely to…", a.question_style);
@@ -440,8 +464,11 @@ window.FS = window.FS || {};
     html += supportAnswerRow("What kind of accountability helps you most?", a.accountability);
     html += supportAnswerRow("How often would you like support?", a.support_frequency);
     html += supportAnswerRow("What kind of encouragement lands?", a.encouragement, true);
-    html += supportAnswerRow("How do you feel about recognition?", a.recognition, true);
-    html += supportAnswerRow("If we surprised you one day, what would make your heart happiest?", surpriseList, true);
+    html += supportAnswerRow("How do you feel about recognition?", recognition, true);
+    if (surpriseShown) {
+      html += '<div class="how-they-grow-row"><dt>' + esc("If we surprised you one day, what would make your heart happiest?") +
+        "</dt><dd>" + esc(surpriseShown) + "</dd></div>";
+    }
     html += supportAnswerRow("One year from now, what would make you say, “I’m so glad I did this”?", a.one_year_vision);
     html += supportAnswerRow("What’s one thing we should know that would help us be better leaders for you?", a.leader_note);
     html += "</dl></div>";
