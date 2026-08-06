@@ -148,6 +148,34 @@ window.FS.CONTENT = {
       alt: "FRESH bottles on a bathroom counter including hydro serum and anti wrinkle serum",
       pairsWith: "Everyday routine · serums · real-life counters",
       body: "Lived-in vanity energy. Good for a noticing post about what stays on the counter."
+    },
+    {
+      id: "hydro-serum-bowl",
+      title: "Hydro serum pouch",
+      alt: "FRESH hydro serum sample pouch in a small ceramic bowl",
+      pairsWith: "Samples · hydro serum · soft product shot",
+      body: "One product, quiet frame. Pair with a short curiosity line — not a full routine."
+    },
+    {
+      id: "travel-bag-spill",
+      title: "Travel bag spill",
+      alt: "Clear travel bag spilling white sample pouches and mini bottles onto a white surface",
+      pairsWith: "Travel · samples · on the go",
+      body: "The spill does the stopping. Ask what they're packing — don't list every product."
+    },
+    {
+      id: "ringana-towel-tag",
+      title: "Towel tag detail",
+      alt: "RINGANA logo on an organic cotton towel tag beside a white bottle",
+      pairsWith: "Packaging · cotton wrap · brand detail",
+      body: "Detail shot energy. Let the tag and glass do the work."
+    },
+    {
+      id: "so-free-notebook",
+      title: "So free notebook",
+      alt: "Phone stacked on notebooks including a RINGANA So free notebook on dark marble",
+      pairsWith: "Lifestyle · founding season · soft brand cue",
+      body: "Aspirational desk moment. Keep the caption unfinished — invite the question."
     }
   ],
 
