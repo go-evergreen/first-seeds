@@ -20,7 +20,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,400;1,9..144,500&family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/styles.css?v=197">
+<link rel="stylesheet" href="css/styles.css?v=199">
 </head>
 <body>
 
@@ -67,11 +67,11 @@
         <p class="hub-menu-note">Shown on your team tree so leaders can tell people apart when first names match.</p>
         <label class="onboard-name-field">
           <span class="field-label">First name</span>
-          <input type="text" id="settingsFirstName" maxlength="40" autocomplete="given-name" placeholder="First name">
+          <input type="text" id="settingsFirstName" maxlength="80" autocomplete="given-name" placeholder="First name">
         </label>
         <label class="onboard-name-field">
           <span class="field-label">Last name</span>
-          <input type="text" id="settingsLastName" maxlength="40" autocomplete="family-name" placeholder="Last name">
+          <input type="text" id="settingsLastName" maxlength="80" autocomplete="family-name" placeholder="Last name">
         </label>
         <button type="button" class="btn" id="settingsNameSave" style="width:100%;margin-top:4px">Save name</button>
         <p class="hub-menu-note" id="settingsNameMsg" role="status" style="margin-top:8px"></p>
@@ -975,11 +975,11 @@
       </div>
       <label class="onboard-name-field">
         <span class="sr-only">First name</span>
-        <input type="text" id="partnerNameInput" maxlength="40" autocomplete="given-name" placeholder="Your first name">
+        <input type="text" id="partnerNameInput" maxlength="80" autocomplete="given-name" placeholder="Your first name">
       </label>
       <label class="onboard-name-field">
         <span class="sr-only">Last name</span>
-        <input type="text" id="partnerLastNameInput" maxlength="40" autocomplete="family-name" placeholder="Your last name">
+        <input type="text" id="partnerLastNameInput" maxlength="80" autocomplete="family-name" placeholder="Your last name">
       </label>
       <button type="button" class="btn overlay-btn" id="onboardingNameNext" disabled>That's me →</button>
     </div>
@@ -1245,7 +1245,7 @@
     <p class="lead">As our Fresh Grove grows so quickly, we’ve already realized we need last names in here — so leaders can tell everyone apart when first names match.</p>
     <label class="onboard-name-field">
       <span class="field-label">Last name</span>
-      <input type="text" id="lastNamePromptInput" maxlength="40" autocomplete="family-name" placeholder="Your last name">
+      <input type="text" id="lastNamePromptInput" maxlength="80" autocomplete="family-name" placeholder="Your last name">
     </label>
     <button type="button" class="btn overlay-btn" id="lastNameSave" disabled>Save →</button>
     <button type="button" class="btn-ghost overlay-btn" id="lastNameLater" style="margin-top:8px">Maybe later</button>
@@ -1262,11 +1262,11 @@
       <p class="lead">Sign in with email + password so your story and calendar stay with you — and so your leader can see how you're doing (progress only, no chat).</p>
       <label class="onboard-name-field">
         <span class="field-label">First name</span>
-        <input type="text" id="authName" maxlength="40" placeholder="Your first name" autocomplete="given-name">
+        <input type="text" id="authName" maxlength="80" placeholder="Your first name" autocomplete="given-name">
       </label>
       <label class="onboard-name-field">
         <span class="field-label">Last name</span>
-        <input type="text" id="authLastName" maxlength="40" placeholder="Your last name" autocomplete="family-name">
+        <input type="text" id="authLastName" maxlength="80" placeholder="Your last name" autocomplete="family-name">
       </label>
       <label class="onboard-name-field">
         <span class="field-label">Email</span>
@@ -1395,19 +1395,19 @@
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="js/config.js?v=197"></script>
-<script src="js/supabase-config.js?v=197"></script>
-<script src="js/data.js?v=197"></script>
-<script src="js/content.js?v=197"></script>
-<script src="js/content-vault.js?v=197"></script>
-<script src="js/products.js?v=197"></script>
-<script src="assets/products/manifest.js?v=197"></script>
-<script src="js/plant.js?v=197"></script>
-<script src="js/tree.js?v=197"></script>
-<script src="js/calendar.js?v=197"></script>
-<script src="js/cloud.js?v=197"></script>
-<script src="js/bridge-ui.js?v=197"></script>
-<script src="js/app.js?v=197"></script>
-<script src="js/pwa.js?v=197"></script>
+<script src="js/config.js?v=199"></script>
+<script src="js/supabase-config.js?v=199"></script>
+<script src="js/data.js?v=199"></script>
+<script src="js/content.js?v=199"></script>
+<script src="js/content-vault.js?v=199"></script>
+<script src="js/products.js?v=199"></script>
+<script src="assets/products/manifest.js?v=199"></script>
+<script src="js/plant.js?v=199"></script>
+<script src="js/tree.js?v=199"></script>
+<script src="js/calendar.js?v=199"></script>
+<script src="js/cloud.js?v=199"></script>
+<script src="js/bridge-ui.js?v=199"></script>
+<script src="js/app.js?v=199"></script>
+<script src="js/pwa.js?v=199"></script>
 </body>
 </html>

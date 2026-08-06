@@ -783,6 +783,7 @@
     renderChoices();
     liveRefresh({ silent: true });
     renderNav();
+    renderBottomNav();
     renderPanels();
   }
 
@@ -5284,7 +5285,10 @@
         }
         return;
       }
-      if (goto === "leads" && usesCustomLanding()) return;
+      if (goto === "leads" && usesCustomLanding()) {
+        showGrowthToast("Leads is off while you use a custom-built page — switch to In-app lead page in Settings.");
+        return;
+      }
       if (goto !== "welcome" && goto !== "done" && goto !== "calendar" && goto !== "leader" && goto !== "know" && goto !== "tend" && goto !== "products" && goto !== "talk" && goto !== "curiosity-photos" && goto !== "content-vault" && goto !== "content-stories" && goto !== "content-week" && goto !== "leads" && !sectionVisible(goto)) return;
       if (goto !== "welcome" && goto !== "done" && goto !== "calendar" && goto !== "leader" && goto !== "know" && goto !== "tend" && goto !== "products" && goto !== "talk" && goto !== "curiosity-photos" && goto !== "content-vault" && goto !== "content-stories" && goto !== "content-week" && goto !== "leads" && !isModuleUnlocked(goto)) {
         showLockToast(goto);
