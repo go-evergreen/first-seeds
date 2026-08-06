@@ -23,6 +23,9 @@ create table if not exists public.profiles (
 create index if not exists profiles_sponsor_idx on public.profiles (sponsor_id);
 create index if not exists profiles_invite_code_idx on public.profiles (invite_code);
 create index if not exists profiles_invited_by_idx on public.profiles (invited_by_id);
+create unique index if not exists profiles_email_unique_ci
+  on public.profiles (lower(trim(email)))
+  where email is not null and length(trim(email)) > 0;
 
 -- ── runway progress (one row per partner) ─────────────────
 create table if not exists public.runway_progress (

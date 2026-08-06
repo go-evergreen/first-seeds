@@ -369,11 +369,32 @@ window.FS = window.FS || {};
             data: { display_name: displayName, last_name: lastName }
           }
         });
-        if (error) throw error;
+        if (error) {
+          var low = String((error && error.message) || "").toLowerCase();
+          /* Same email again → sign them into the existing account instead of a twin profile */
+          if (low.indexOf("already") >= 0 || low.indexOf("registered") >= 0) {
+            try {
+              var existing = await Cloud.signIn(creds.email, displayName, creds.password);
+              existing.message = "Welcome back — that email already had an account, so you’re signed in.";
+              return existing;
+            } catch (signInErr) {
+              throw new Error("That email already has an account — tap Sign in with the same password.");
+            }
+          }
+          throw error;
+        }
+        /* No session: email confirm may be on, or Supabase hid an existing user.
+           Prefer signing in over leaving people to Create account a second time. */
         if (!data.session) {
-          throw new Error(
-            "Account created — try Sign in with that same email and password. (If that fails, ask your leader: email confirmation may still be on.)"
-          );
+          try {
+            var signed = await Cloud.signIn(creds.email, displayName, creds.password);
+            signed.message = signed.message || "You’re signed in.";
+            return signed;
+          } catch (e) {
+            throw new Error(
+              "Account created — try Sign in with that same email and password. (If that fails, ask your leader: email confirmation may still be on.)"
+            );
+          }
         }
         if (data.user) {
           sessionUser = await Cloud._hydrateSupabaseUser(data.user);
