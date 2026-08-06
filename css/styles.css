@@ -514,7 +514,7 @@ body.overlay-open #cheerSheet .cheer-sheet-backdrop{pointer-events:none}
 }
 .bottom-nav-btn{flex:1;max-width:140px;min-height:56px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;border:none;background:transparent;color:var(--green-soft);border-radius:14px;padding:10px 6px;font-family:inherit;font-size:11px;font-weight:600;letter-spacing:.02em;cursor:pointer;transition:color .2s,background .2s;-webkit-tap-highlight-color:transparent;touch-action:manipulation;position:relative}
 /* Expand the real tap target above/below the visible label (helps Leads in the center) */
-.bottom-nav-btn::before{content:"";position:absolute;left:0;right:0;top:-10px;bottom:-8px}
+.bottom-nav-btn::before{content:"";position:absolute;left:0;right:0;top:-4px;bottom:-6px}
 @media (hover:hover) and (pointer:fine){
   .bottom-nav-btn:hover{color:var(--green);background:rgba(171,176,154,.28)}
 }
@@ -727,7 +727,6 @@ body.overlay-open #cheerSheet .cheer-sheet-backdrop{pointer-events:none}
 .growth-moment{position:fixed;inset:0;z-index:95;display:none;align-items:center;justify-content:center;padding:24px;background:rgba(40,52,44,.58);backdrop-filter:blur(4px)}
 .growth-moment.open{display:flex;animation:fadeOverlay .3s var(--ease)}
 .growth-moment[hidden]{display:none!important}
-.growth-moment.open[hidden]{display:flex!important}
 .growth-moment-hit{position:absolute;inset:0;border:none;background:transparent;cursor:pointer}
 .growth-moment-card{position:relative;z-index:1;background:var(--paper);border-radius:20px;padding:22px 22px 18px;max-width:320px;width:100%;text-align:center;box-shadow:0 18px 50px rgba(10,20,14,.35);border:1px solid rgba(107,143,107,.25);animation:fadeUp .4s var(--ease)}
 .moment-plantbox{height:200px;max-width:170px;margin:0 auto 8px;background:linear-gradient(165deg,var(--rail-deep) 0%,var(--moss) 55%,var(--moss-light) 100%);border-radius:18px;padding:8px}
@@ -748,7 +747,7 @@ body.hub-menu-open{overflow:hidden}
 /* Mode-gated content */
 body.mode-starter .full-only{display:none!important}
 /* Main tour: keep Grove visible the whole time so Soft start nav doesn't jump between tips */
-body.tour-reveal-grove .bottom-nav-btn[data-tab="team"]{
+body.tour-reveal-grove .bottom-nav-btn[data-tab="team"]:not([hidden]){
   display:flex!important;
 }
 body.mode-full .starter-only{display:none!important}
@@ -756,6 +755,7 @@ body.mode-full .starter-only{display:none!important}
 /* ── panels ── */
 .panel{display:none;animation:fadeUp .55s var(--ease)}
 .panel.active{display:block}
+.panel[hidden]{display:none!important}
 @keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
 .eyebrow{font-size:12px;letter-spacing:.17em;color:var(--moss);font-weight:700;margin-bottom:14px}
 .sec-num{font-family:'Fraunces',serif;font-size:15px;color:var(--moss);font-weight:600;margin-bottom:7px;letter-spacing:.04em}
@@ -1459,6 +1459,7 @@ button.vault-week-day:hover{border-color:var(--moss);box-shadow:0 6px 18px rgba(
 /* ── overlays: onboarding + tour ── */
 .overlay{position:fixed;inset:0;z-index:60;display:none;background:rgba(40,52,44,.58);backdrop-filter:blur(4px);align-items:center;justify-content:center;padding:max(16px, env(safe-area-inset-top)) 16px max(16px, env(safe-area-inset-bottom));overflow-y:auto;-webkit-overflow-scrolling:touch}
 .overlay.open{display:flex;animation:fadeOverlay .35s var(--ease)}
+.overlay[hidden]{display:none!important}
 @keyframes fadeOverlay{from{opacity:0}to{opacity:1}}
 .overlay-card{background:var(--paper);border-radius:20px;padding:28px 26px 24px;max-width:420px;width:100%;box-shadow:0 18px 50px rgba(10,20,14,.35);margin:auto;animation:fadeUp .45s var(--ease);border:1px solid rgba(107,143,107,.2);flex-shrink:0}
 
@@ -1694,7 +1695,7 @@ html:has(.cheer-sheet:not([hidden])){overflow-y:hidden}
 
 /* ── How I Grow: partner support profile ── */
 .how-grow-reminder{display:flex;align-items:center;justify-content:space-between;gap:16px;margin:0;padding:16px 18px;background:linear-gradient(135deg,#eef2ec,#fbf6e6);border:1.5px solid var(--moss);border-radius:14px;box-shadow:var(--shadow)}
-.how-grow-reminder[hidden]{display:none}
+.how-grow-reminder[hidden]{display:none!important}
 #panel-grove .how-grow-reminder{margin:0 0 24px}
 .how-grow-reminder>div{display:grid;gap:3px;min-width:0}
 .how-grow-reminder strong{font-size:15px;font-weight:700;color:var(--green)}
@@ -1714,7 +1715,7 @@ html:has(.cheer-sheet:not([hidden])){overflow-y:hidden}
 }
 
 .how-grow-progress{display:grid;gap:8px;margin:0 40px 20px}
-.how-grow-progress[hidden]{display:none}
+.how-grow-progress[hidden]{display:none!important}
 .how-grow-progress-meta{display:flex;justify-content:center}
 .how-grow-progress-meta span{font-size:12px;font-weight:700;letter-spacing:.04em;color:var(--bark-soft)}
 .how-grow-progress-track{height:6px;border-radius:99px;background:var(--sand);overflow:hidden}

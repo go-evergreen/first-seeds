@@ -47,7 +47,7 @@ window.FS = window.FS || {};
     html += '<div class="tnode-row' + (isCommitted ? " committed" : " hopeful") + '">';
     html += '<button type="button" class="tnode-status" data-tstatus="' + path + '" title="Tap to flip hopeful / committed" aria-label="Status">' +
       (isCommitted ? "🌳" : "🌱") + '</button>';
-    html += '<input class="tnode-name" type="text" value="' + esc(node.name) + '" placeholder="Name" data-tname="' + path + '" maxlength="40" aria-label="Name">';
+    html += '<input class="tnode-name" type="text" value="' + esc(node.name) + '" placeholder="Name" data-tname="' + path + '" maxlength="80" aria-label="Name">';
     html += '<button type="button" class="tnode-add" data-tadd="' + path + '" title="Add someone under them">＋</button>';
     html += '<button type="button" class="tnode-del" data-tdel="' + path + '" title="Remove" aria-label="Remove">×</button>';
     html += '</div>';

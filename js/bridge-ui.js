@@ -2386,6 +2386,7 @@ window.FS = window.FS || {};
     if (!user) {
       gate.hidden = false;
       studio.hidden = true;
+      paintNavBadge("leads", 0);
       return;
     }
     gate.hidden = true;
@@ -2428,7 +2429,18 @@ window.FS = window.FS || {};
 
   async function afterAuth() {
     renderAuthChrome();
-    if (Cloud.isSignedIn() && Cloud.touchActive) {
+    if (!Cloud.isSignedIn()) {
+      paintNavBadge("leads", 0);
+      paintNavBadge("team", 0);
+      await renderCheers();
+      await renderSupportBanner();
+      await renderLeaderNoteBanner();
+      if (typeof window.FS.onAuthReady === "function") {
+        try { window.FS.onAuthReady(null); } catch (e) {}
+      }
+      return;
+    }
+    if (Cloud.touchActive) {
       Cloud.touchActive().catch(function () {});
     }
     await renderCheers();
@@ -2437,14 +2449,13 @@ window.FS = window.FS || {};
     if (getState && getState().active === "leader") await renderLeader();
     if (getState && (getState().active === "calendar" || getState().active === "tend")) renderCalendar();
     if (getState && getState().active === "leads") await renderLeads();
-    else if (Cloud.isSignedIn()) {
-      /* Quiet badge refresh */
+    else {
       try {
         var n = await Cloud.countNewLeads();
         paintNavBadge("leads", n);
       } catch (e) {}
     }
-    if (Cloud.isSignedIn() && !(getState && getState().active === "leader")) {
+    if (!(getState && getState().active === "leader")) {
       refreshTeamBadge().catch(function () {});
     }
     if (typeof window.FS.onAuthReady === "function") {

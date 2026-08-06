@@ -778,6 +778,7 @@
     state.data.page_choice = value;
     if (value === "custom" && state.active === "leads") state.active = "ground";
     if (value === "generic" && opts.openLeads) state.active = "leads";
+    if (value === "generic") syncPageStoryToLeadBlurb();
     save();
     updateLeadPageSettingUI();
     renderChoices();
@@ -5222,7 +5223,10 @@
     if (t.hasAttribute("data-goto")) {
       var goto = t.getAttribute("data-goto");
       if (goto === "calendar") goto = "tend";
-      if (goto === "leader" && !isFull()) return;
+      if (goto === "leader" && !isFull()) {
+        showGrowthToast("Grove unlocks on All in — switch your pace in Settings anytime.");
+        return;
+      }
       if (isContentSurface(goto) && !isFull()) {
         var lockEl = document.getElementById("lockToast");
         if (lockEl) {
@@ -5409,13 +5413,16 @@
       var beforeSprout = lastSprout;
       var choiceKey = t.getAttribute("data-choice");
       var choiceVal = t.getAttribute("data-value");
+      if (choiceKey === "page_choice") {
+        setPageChoice(choiceVal);
+        if (checklistProgress().sproutDone > beforeSprout) {
+          lastSprout = beforeSprout;
+          renderPlant({});
+        }
+        flash(sectionOf(t));
+        return;
+      }
       state.data[choiceKey] = choiceVal;
-      if (choiceKey === "page_choice" && choiceVal === "custom" && state.active === "leads") {
-        state.active = "ground";
-      }
-      if (choiceKey === "page_choice" && choiceVal === "generic") {
-        syncPageStoryToLeadBlurb();
-      }
       save(); renderChoices(); liveRefresh({ silent: true });
       if (checklistProgress().sproutDone > beforeSprout) {
         lastSprout = beforeSprout;
@@ -5674,7 +5681,8 @@
       persist: function () { save(); },
       gotoPanel: function (id) {
         if (id === "leads" && usesCustomLanding()) {
-          id = "ground";
+          showGrowthToast("Leads is off while you use a custom-built page — switch to In-app lead page in Settings.");
+          return;
         }
         if (id === "calendar") id = "tend";
         if (id === "content-stories") {
