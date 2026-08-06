@@ -4333,8 +4333,51 @@
   var tourPlaceTimer = null;
   var tourTargetEl = null;
   var tourKind = "main"; /* main | team */
+  var tourTipsActive = null;
+
+  function tipSelectorList(tip) {
+    var list = [];
+    if (!tip) return list;
+    if (Array.isArray(tip.target)) list = list.concat(tip.target);
+    else if (tip.target) list.push(tip.target);
+    if (Array.isArray(tip.fallbackTarget)) list = list.concat(tip.fallbackTarget);
+    else if (tip.fallbackTarget) list.push(tip.fallbackTarget);
+    return list;
+  }
+
+  function isTourTargetVisible(el) {
+    if (!el || el.hidden) return false;
+    if (el.closest && el.closest("[hidden]")) return false;
+    var r = el.getBoundingClientRect();
+    return r.width >= 2 && r.height >= 2;
+  }
+
+  function resolveTourTarget(tip) {
+    var sels = tipSelectorList(tip);
+    for (var i = 0; i < sels.length; i++) {
+      var el = document.querySelector(sels[i]);
+      if (isTourTargetVisible(el)) return { el: el, selector: sels[i] };
+    }
+    return null;
+  }
+
+  function tipHasVisibleTarget(tip) {
+    return !!resolveTourTarget(tip);
+  }
+
+  function buildTeamTourTips() {
+    var tips = CFG.teamTour || [];
+    var out = [];
+    for (var i = 0; i < tips.length; i++) {
+      var tip = tips[i];
+      if (tip && tip.optional && !tipHasVisibleTarget(tip)) continue;
+      out.push(tip);
+    }
+    return out;
+  }
 
   function currentTourTips() {
+    if (tourTipsActive) return tourTipsActive;
     if (tourKind === "team") return CFG.teamTour || [];
     return CFG.tour || [];
   }
@@ -4373,8 +4416,8 @@
   /* Open collapsed details only when this tip needs mentoring targets */
   function prepareTeamTourTarget(tip) {
     if (tourKind !== "team") return;
-    var sel = tip && tip.target;
-    if (!sel) return;
+    var sels = tipSelectorList(tip);
+    if (!sels.length && !(tip && (tip.openCheerSheet || tip.openNoteSheet))) return;
     var Bridge = window.FS.BridgeUI;
     if (tip.openCheerSheet && Bridge && typeof Bridge.openCheerSheetForTour === "function") {
       if (Bridge.closeNoteSheet) Bridge.closeNoteSheet();
@@ -4386,14 +4429,16 @@
       if (Bridge && typeof Bridge.closeCheerSheet === "function") Bridge.closeCheerSheet();
       if (Bridge && typeof Bridge.closeNoteSheet === "function") Bridge.closeNoteSheet();
     }
-    var needsMentorOpen = /nudge|cheer|note|mentor|leader-col|leaderLists/.test(sel);
+    var joined = sels.join(" ");
+    var needsMentorOpen = /nudge|cheer|note|mentor|leader-col|leaderLists|how-grow-snapshot/.test(joined);
     if (needsMentorOpen || tip.openCheerSheet || tip.openNoteSheet) {
       var cols = document.querySelectorAll("#leaderLists details.leader-col");
       for (var i = 0; i < cols.length; i++) cols[i].open = true;
       var firstCard = document.querySelector("#leaderLists details.leader-card");
       if (firstCard) firstCard.open = true;
     }
-    var el = document.querySelector(sel);
+    var resolved = resolveTourTarget(tip);
+    var el = resolved && resolved.el;
     if (!el) return;
     var node = el;
     while (node && node !== document.body) {
@@ -4553,19 +4598,14 @@
 
     var tryPlace = function () {
       prepareTeamTourTarget(tip);
-      var el = tip && tip.target ? document.querySelector(tip.target) : null;
-      if (el && el.hidden) el = null;
-      if (el && el.closest && el.closest("[hidden]")) el = null;
-      var rectOk = el && (function () {
-        var r = el.getBoundingClientRect();
-        return r.width >= 2 && r.height >= 2;
-      })();
-      if ((!el || !rectOk) && attempts < 14) {
+      var resolved = resolveTourTarget(tip);
+      var el = resolved && resolved.el;
+      if (!el && attempts < 14) {
         attempts++;
         tourPlaceTimer = setTimeout(tryPlace, 70);
         return;
       }
-      if (!el || !rectOk) {
+      if (!el) {
         centerTourCard({ keepSpot: true });
         return;
       }
@@ -4575,7 +4615,8 @@
       tourPlaceTimer = setTimeout(function () {
         if (!tourTargetEl) return;
         /* Re-query after reveal/layout — Soft start Grove tab can shift nav buttons */
-        var fresh = tip && tip.target ? document.querySelector(tip.target) : tourTargetEl;
+        var freshResolved = resolveTourTarget(tip);
+        var fresh = freshResolved && freshResolved.el;
         if (fresh && fresh !== tourTargetEl) {
           tourTargetEl.classList.remove("tour-target-on");
           tourTargetEl = fresh;
@@ -4595,8 +4636,10 @@
     var wrap = document.getElementById("tour");
     if (wrap && wrap.classList.contains("open")) return;
     tourKind = "main";
+    tourTipsActive = CFG.tour || [];
     var tips = currentTourTips();
     if (!wrap || !tips.length) {
+      tourTipsActive = null;
       state.tourDone = true;
       save();
       setOverlayOpen(false);
@@ -4619,8 +4662,10 @@
     if (wrap.classList.contains("open")) return;
     if (!opts.replay && state.data.teamTourDone) return;
     tourKind = "team";
+    tourTipsActive = buildTeamTourTips();
     var tips = currentTourTips();
     if (!tips.length) {
+      tourTipsActive = null;
       if (!opts.replay) {
         state.data.teamTourDone = true;
         save();
@@ -4722,6 +4767,7 @@
       state.tourDone = true;
     }
     tourKind = "main";
+    tourTipsActive = null;
     save();
     setOverlayOpen(false);
     renderGreetings();

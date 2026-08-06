@@ -291,7 +291,7 @@ window.FS.CONFIG = {
   ],
 
   /* Coachmarks the first time someone appears on Team */
-  teamTourVersion: 11,
+  teamTourVersion: 13,
   teamTour: [
     {
       title: "Your unique team link",
@@ -301,18 +301,35 @@ window.FS.CONFIG = {
       placement: "below"
     },
     {
+      title: "Your support, too",
+      body: "This little band is for you — who invited you, and How I Grow if you haven’t shared your support map yet. Your partners get the same spot on their Grove.",
+      panel: "leader",
+      target: '[data-team-tour="support-band"]',
+      placement: "below",
+      optional: true
+    },
+    {
       title: "Your growing team",
       body: "This is your live tree. Tap a name for their card. A + means they have people under them. Sort by Most legs or Newest.",
       panel: "leader",
       target: '[data-team-tour="tree"]',
+      fallbackTarget: '[data-team-tour="board"]',
       placement: "above",
       fullSpot: true
     },
     {
-      title: "Mentoring — by how they’re moving",
-      body: "Needs a nudge · In motion · Ready. Tap a name to expand — progress, Send cheer, and Leave note. Cards stay clean; drafts only open when you tap those buttons.",
+      title: "Your leader overview",
+      body: "When someone joins your Grove or completes How I Grow, a number appears on the Grove tab. Open Grove to see exactly who is new — and tap a completed support map to read it.",
       panel: "leader",
-      target: "#leaderLists .leader-col",
+      target: '[data-team-tour="overview"]',
+      placement: "below"
+    },
+    {
+      title: "Mentoring — by how they’re moving",
+      body: "Needs a nudge · In motion · Ready. Tap a name to expand — you’ll see their progress and a How they grow snapshot. Tap “See how they grow” for the full answers, then send a cheer or leave a note.",
+      panel: "leader",
+      target: "#leaderLists .how-grow-snapshot",
+      fallbackTarget: "#leaderLists .leader-col",
       placement: "auto"
     },
     {

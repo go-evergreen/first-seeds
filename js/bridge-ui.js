@@ -224,21 +224,24 @@ window.FS = window.FS || {};
   }
 
   async function renderSupportBanner() {
-    var el = $("supportBanner");
-    if (!el) return;
+    var notes = document.querySelectorAll("[data-support-note]");
+    if (!notes.length) return;
+    var hideNotes = function () {
+      for (var h = 0; h < notes.length; h++) notes[h].hidden = true;
+    };
     if (!Cloud.isSignedIn()) {
-      el.hidden = true;
+      hideNotes();
       return;
     }
     var ctx = null;
     try {
       ctx = await Cloud.mySupportContext();
     } catch (e) {
-      el.hidden = true;
+      hideNotes();
       return;
     }
     if (!ctx || (!ctx.invited_by_name && !ctx.sponsor_name)) {
-      el.hidden = true;
+      hideNotes();
       return;
     }
     var inviter = (ctx.invited_by_name || "").trim();
@@ -254,8 +257,10 @@ window.FS = window.FS || {};
     } else {
       line = "<strong>" + esc(inviter) + "</strong> invited you to First Seeds.";
     }
-    el.hidden = false;
-    el.innerHTML = '<div class="live-tag">YOUR SUPPORT</div><p class="support-banner-line">' + line + "</p>";
+    for (var n = 0; n < notes.length; n++) {
+      notes[n].hidden = false;
+      notes[n].innerHTML = '<p class="support-note-line">' + line + "</p>";
+    }
   }
 
   async function renderPulse() {
@@ -430,9 +435,11 @@ window.FS = window.FS || {};
 
   async function renderLeader() {
     var root = $("leaderLists");
+    var overview = $("leaderOverview");
     if (!root) return;
     if (!Cloud.isSignedIn()) {
       root.innerHTML = '<p class="body-p">Sign in to see people who joined with your link — and their real First Seeds progress.</p>';
+      if (overview) overview.hidden = true;
       paintTeamBadge(0);
       return;
     }
@@ -464,11 +471,15 @@ window.FS = window.FS || {};
     });
     if (!rows.length) {
       root.innerHTML = '<p class="body-p">Nobody\'s linked yet. Share your join link — when they sign in, they show up here with live progress.</p>';
+      renderLeaderOverview([], [], []);
       await renderLiveTeamGraph(graph, rows);
       markTeamJoinsSeen(rows);
+      markSupportCompletionsSeen(rows);
       paintTeamBadge(0);
       return;
     }
+    var newJoinRows = unseenTeamJoinRows(rows);
+    var newSupportRows = unseenSupportRows(rows);
     var partnerIds = rows.map(function (r) { return r.profile.id; });
     var remoteOutreach = {};
     try {
@@ -494,6 +505,7 @@ window.FS = window.FS || {};
         };
       buckets[b].push({ row: row, ctx: ctx, nudge: pickMentorMessage(ctx, b), under: under, bucket: b });
     });
+    renderLeaderOverview(rows, newJoinRows, newSupportRows);
     function sortByUnder(a, b) {
       if (b.under !== a.under) return b.under - a.under;
       return String(b.row.profile.last_active_at || "").localeCompare(String(a.row.profile.last_active_at || ""));
@@ -577,6 +589,7 @@ window.FS = window.FS || {};
     root.innerHTML = '<div class="leader-board-kicker">MENTORING</div>' + (colsHtml || '<p class="leader-empty">Everyone\'s settled for now.</p>');
     await renderLiveTeamGraph(graph, rows);
     markTeamJoinsSeen(rows);
+    markSupportCompletionsSeen(rows);
     paintTeamBadge(0);
     if (typeof window.FS.maybeStartTeamTour === "function") {
       window.FS.maybeStartTeamTour(rows.length);
@@ -689,6 +702,15 @@ window.FS = window.FS || {};
     return st.data.teamSeenIds;
   }
 
+  function unseenTeamJoinRows(rows) {
+    var seen = ensureTeamSeenMap();
+    var st = getState ? getState() : null;
+    if (!(st && st.data.teamSeenSeeded)) return [];
+    return (rows || []).filter(function (row) {
+      return row && row.profile && row.profile.id && !seen[row.profile.id];
+    });
+  }
+
   function countUnseenTeamJoins(rows) {
     var seen = ensureTeamSeenMap();
     var st = getState ? getState() : null;
@@ -703,11 +725,7 @@ window.FS = window.FS || {};
       }
       return 0;
     }
-    var n = 0;
-    (rows || []).forEach(function (row) {
-      if (row && row.profile && row.profile.id && !seen[row.profile.id]) n++;
-    });
-    return n;
+    return unseenTeamJoinRows(rows).length;
   }
 
   function markTeamJoinsSeen(rows) {
@@ -719,6 +737,86 @@ window.FS = window.FS || {};
       getState().data.teamSeenSeeded = true;
       persist();
     }
+  }
+
+  function ensureSupportSeenMap() {
+    if (!getState) return {};
+    var st = getState();
+    if (!st.data) st.data = {};
+    if (!st.data.supportSeenCompletions || typeof st.data.supportSeenCompletions !== "object") {
+      st.data.supportSeenCompletions = {};
+    }
+    return st.data.supportSeenCompletions;
+  }
+
+  function unseenSupportRows(rows) {
+    var seen = ensureSupportSeenMap();
+    return (rows || []).filter(function (row) {
+      var support = row && row.support_preferences;
+      var id = row && row.profile && row.profile.id;
+      return !!(id && support && support.completed_at && seen[id] !== support.completed_at);
+    });
+  }
+
+  function markSupportCompletionsSeen(rows) {
+    var seen = ensureSupportSeenMap();
+    var changed = false;
+    (rows || []).forEach(function (row) {
+      var support = row && row.support_preferences;
+      var id = row && row.profile && row.profile.id;
+      if (id && support && support.completed_at && seen[id] !== support.completed_at) {
+        seen[id] = support.completed_at;
+        changed = true;
+      }
+    });
+    if (changed && persist) persist();
+  }
+
+  function partnerName(row) {
+    return (row && row.profile && (row.profile.display_name || row.profile.email)) || "A partner";
+  }
+
+  function renderLeaderOverview(rows, newJoins, newSupports) {
+    var el = $("leaderOverview");
+    if (!el) return;
+    rows = rows || [];
+    newJoins = newJoins || [];
+    newSupports = newSupports || [];
+    if (!Cloud.isSignedIn() || !rows.length) {
+      el.hidden = true;
+      el.innerHTML = "";
+      return;
+    }
+    var completed = rows.filter(function (row) {
+      return !!(row.support_preferences && row.support_preferences.completed_at);
+    }).length;
+    var html = '<div class="leader-overview-head"><div>' +
+      '<div class="leader-overview-kicker">LEADER OVERVIEW</div>' +
+      '<strong>' + rows.length + (rows.length === 1 ? " direct partner" : " direct partners") + "</strong>" +
+      '<span>' + completed + (completed === 1 ? " support map shared" : " support maps shared") + "</span>" +
+      "</div>";
+    var updateCount = newJoins.length + newSupports.length;
+    if (updateCount) {
+      html += '<span class="leader-overview-new">' + updateCount + " new</span>";
+    }
+    html += "</div>";
+    if (newSupports.length || newJoins.length) {
+      html += '<div class="leader-overview-updates">';
+      newSupports.forEach(function (row) {
+        html += '<button type="button" class="leader-overview-update is-support" data-how-they-grow="' +
+          esc(row.profile.id) + '"><span aria-hidden="true">🌱</span><span><strong>' +
+          esc(partnerName(row)) + '</strong> completed How I Grow</span><b aria-hidden="true">→</b></button>';
+      });
+      newJoins.forEach(function (row) {
+        html += '<div class="leader-overview-update is-join"><span aria-hidden="true">✨</span><span><strong>' +
+          esc(partnerName(row)) + "</strong> joined your Grove</span></div>";
+      });
+      html += "</div>";
+    } else {
+      html += '<p class="leader-overview-quiet">You’re all caught up.</p>';
+    }
+    el.innerHTML = html;
+    el.hidden = false;
   }
 
   function paintTeamBadge(count) {
@@ -735,7 +833,7 @@ window.FS = window.FS || {};
     }
     try {
       var rows = await Cloud.listDownline();
-      paintTeamBadge(countUnseenTeamJoins(rows));
+      paintTeamBadge(countUnseenTeamJoins(rows) + unseenSupportRows(rows).length);
     } catch (e) {
       paintTeamBadge(0);
     }
@@ -2193,7 +2291,6 @@ window.FS = window.FS || {};
     }
     await renderCheers();
     await renderSupportBanner();
-    await renderPulse();
     await renderLeaderNoteBanner();
     if (getState && getState().active === "leader") await renderLeader();
     if (getState && (getState().active === "calendar" || getState().active === "tend")) renderCalendar();
@@ -3343,6 +3440,8 @@ window.FS = window.FS || {};
     renderPulse: renderPulse,
     renderCheers: renderCheers,
     renderLeaderNoteBanner: renderLeaderNoteBanner,
+    renderSupportBanner: renderSupportBanner,
+    refreshTeamBadge: refreshTeamBadge,
     refreshIncomingMessages: refreshIncomingMessages,
     renderLeads: renderLeads,
     openAuth: openAuth,

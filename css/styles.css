@@ -84,9 +84,27 @@ button{font-family:inherit;cursor:pointer}
 .cheer-more{letter-spacing:0;text-transform:none;font-weight:600;opacity:.85;margin-left:4px}
 .cheer-body{flex:1;font-family:'Fraunces',serif;font-size:16px;font-style:italic;color:var(--green);line-height:1.45;margin:0}
 .cheer-dismiss{border:none;background:var(--moss);color:var(--green);border-radius:20px;padding:8px 14px;font-size:12px;font-weight:600;font-family:inherit;cursor:pointer;flex-shrink:0}
-.support-banner{margin:0 56px;margin-top:12px;padding:14px 18px}
-.support-banner[hidden]{display:none!important}
-.support-banner-line{margin:0;font-size:14px;line-height:1.5;color:var(--green)}
+.grove-support-band{display:grid;gap:10px;margin:0 0 10px}
+.grove-support-band:not(:has(> :not([hidden]))){display:none}
+.support-note{margin:0;padding:9px 13px;border:1px solid var(--sand);border-left:3px solid var(--moss);border-radius:10px;background:var(--paper-warm)}
+.support-note[hidden]{display:none!important}
+.support-note-line{margin:0;font-size:13px;line-height:1.45;color:var(--bark)}
+.support-note-line strong{font-weight:700;color:var(--green)}
+.leader-overview{margin:0 0 16px;padding:15px 16px;border:1.5px solid var(--sand);border-radius:15px;background:var(--white);box-shadow:var(--shadow)}
+.leader-overview[hidden]{display:none!important}
+.leader-overview-head{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.leader-overview-head>div{display:grid;gap:2px;min-width:0}
+.leader-overview-kicker{font-size:10px;font-weight:700;letter-spacing:.13em;color:var(--moss)}
+.leader-overview-head strong{font-size:15px;color:var(--green)}
+.leader-overview-head span{font-size:12px;color:var(--bark-soft)}
+.leader-overview-new{flex:0 0 auto;padding:5px 9px;border-radius:999px;background:#f5e8dc;color:#9b5e38!important;font-size:11px!important;font-weight:700}
+.leader-overview-updates{display:grid;gap:7px;margin-top:12px;padding-top:11px;border-top:1px solid var(--sand)}
+.leader-overview-update{display:grid;grid-template-columns:22px minmax(0,1fr) auto;align-items:center;gap:8px;width:100%;margin:0;padding:9px 10px;border:0;border-radius:10px;background:var(--paper-warm);font:inherit;font-size:13px;line-height:1.35;color:var(--bark);text-align:left}
+button.leader-overview-update{cursor:pointer}
+button.leader-overview-update:hover{background:#e8ede5}
+.leader-overview-update strong{color:var(--green)}
+.leader-overview-update b{font-size:14px;color:var(--moss)}
+.leader-overview-quiet{margin:10px 0 0;font-size:12.5px;color:var(--bark-soft)}
 .team-admin-hint{font-size:12px;line-height:1.4;color:var(--bark);max-width:36em;margin:0 0 10px}
 .team-rearrange-btn{border:1px solid var(--sand);background:transparent;font:inherit;font-size:11px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--bark);padding:5px 10px;border-radius:8px;cursor:pointer;flex-shrink:0}
 .team-rearrange-btn:hover,.team-rearrange-btn:focus-visible{border-color:var(--moss);color:var(--green);outline:none}
@@ -1603,7 +1621,6 @@ body.overlay-open{overflow:hidden}
   .cdot{width:38px;height:38px;font-size:16px}
   .hook-row{flex-direction:column;align-items:flex-start;gap:8px}
   .cheer-banner{margin:10px 16px 0}
-  .support-banner{margin:10px 16px 0}
   .leader-note-banner{margin:10px 16px 0}
   .leader-board,.leader-board.cols-2,.leader-board.cols-3{grid-template-columns:1fr}
   .cal-grid-week{grid-template-columns:1fr 1fr}
@@ -1634,8 +1651,9 @@ body.overlay-open{overflow:hidden}
 }
 
 /* ── How I Grow: partner support profile ── */
-.how-grow-reminder{display:flex;align-items:center;justify-content:space-between;gap:16px;margin:0 0 24px;padding:16px 18px;background:linear-gradient(135deg,#eef2ec,#fbf6e6);border:1.5px solid var(--moss);border-radius:14px;box-shadow:var(--shadow)}
+.how-grow-reminder{display:flex;align-items:center;justify-content:space-between;gap:16px;margin:0;padding:16px 18px;background:linear-gradient(135deg,#eef2ec,#fbf6e6);border:1.5px solid var(--moss);border-radius:14px;box-shadow:var(--shadow)}
 .how-grow-reminder[hidden]{display:none}
+#panel-grove .how-grow-reminder{margin:0 0 24px}
 .how-grow-reminder>div{display:grid;gap:3px;min-width:0}
 .how-grow-reminder strong{font-size:15px;font-weight:700;color:var(--green)}
 .how-grow-reminder span{font-size:13px;line-height:1.45;color:var(--bark)}
