@@ -523,8 +523,8 @@ body.overlay-open #cheerSheet .cheer-sheet-backdrop{pointer-events:none}
 .bottom-nav-btn.on{color:var(--green);background:rgba(171,176,154,.45)}
 .bottom-nav-btn[hidden]{display:none!important}
 .bottom-nav-ico{font-size:20px;line-height:1;pointer-events:none;position:relative;z-index:1}
-.bottom-nav-btn > span{pointer-events:none;position:relative;z-index:1}
-.bottom-nav-badge{position:absolute;top:6px;right:calc(50% - 24px);min-width:16px;height:16px;padding:0 4px;border-radius:999px;background:#c47a4a;color:#fff;font-size:10px;font-weight:700;line-height:16px;text-align:center;pointer-events:none;z-index:2}
+.bottom-nav-btn > span:not(.bottom-nav-badge){pointer-events:none;position:relative;z-index:1}
+.bottom-nav-badge{position:absolute;top:4px;right:calc(50% - 22px);min-width:16px;height:16px;padding:0 4px;border-radius:999px;background:#c47a4a;color:#fff;font-size:10px;font-weight:700;line-height:16px;text-align:center;pointer-events:none;z-index:2}
 
 /* Lead page inbox (in-app) */
 .ground-lead-setup,.ground-custom-note{margin:16px 0 4px}
