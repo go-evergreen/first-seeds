@@ -134,6 +134,20 @@ window.FS.CONTENT = {
       alt: "Glass of iced water beside a small dark fresh bottle",
       pairsWith: "Supplements · simple ritual",
       body: "Quiet setup shot — invite the question, don't answer it yet."
+    },
+    {
+      id: "fresh-sample-pouches",
+      title: "Fresh sample pouches",
+      alt: "RINGANA sample pouches — FRESH cleanser, cream MEDIUM, tonic pure, and hydro serum",
+      pairsWith: "Freshness · try-before · everyday staples",
+      body: "Samples stop the scroll. Pair with a soft invite to try — not a full routine dump."
+    },
+    {
+      id: "fresh-bathroom-lineup",
+      title: "Bathroom lineup",
+      alt: "FRESH bottles on a bathroom counter including hydro serum and anti wrinkle serum",
+      pairsWith: "Everyday routine · serums · real-life counters",
+      body: "Lived-in vanity energy. Good for a noticing post about what stays on the counter."
     }
   ],
 
