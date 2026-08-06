@@ -3883,7 +3883,16 @@
     writeHowGrowDraft();
   }
 
+  function normalizeHowGrowAnswers(answers) {
+    var a = answers || {};
+    ["encouragement", "recognition", "surprises"].forEach(function (key) {
+      if (typeof a[key] === "string" && a[key]) a[key] = [a[key]];
+    });
+    return a;
+  }
+
   function paintHowGrowForm() {
+    howGrowAnswers = normalizeHowGrowAnswers(howGrowAnswers);
     var singleGroups = document.querySelectorAll("[data-how-grow-group]");
     for (var i = 0; i < singleGroups.length; i++) {
       var key = singleGroups[i].getAttribute("data-how-grow-group");
@@ -3898,7 +3907,11 @@
       var selected = Array.isArray(howGrowAnswers[multiKey]) ? howGrowAnswers[multiKey] : [];
       var multiButtons = multiGroups[m].querySelectorAll("[data-how-grow-value]");
       for (var mb = 0; mb < multiButtons.length; mb++) {
-        multiButtons[mb].classList.toggle("on", selected.indexOf(multiButtons[mb].getAttribute("data-how-grow-value")) >= 0);
+        var value = multiButtons[mb].getAttribute("data-how-grow-value");
+        var rank = selected.indexOf(value);
+        multiButtons[mb].classList.toggle("on", rank >= 0);
+        if (rank >= 0) multiButtons[mb].setAttribute("data-rank", String(rank + 1));
+        else multiButtons[mb].removeAttribute("data-rank");
       }
     }
     var fields = {
@@ -3923,8 +3936,10 @@
     if (hint) {
       var picked = Array.isArray(howGrowAnswers.encouragement) ? howGrowAnswers.encouragement.length : 0;
       hint.textContent = picked >= 2
-        ? "That’s your two — tap one again to swap it out, then hit Next."
-        : "You can pick one or two — then hit Next.";
+        ? "That’s your 1st and 2nd — tap one to remove it, then hit Next."
+        : picked === 1
+          ? "Nice — tap a 2nd if you want, then hit Next."
+          : "Tap your 1st pick, then your 2nd if you have one.";
     }
   }
 
@@ -3961,10 +3976,10 @@
       if (auth) auth.click();
       return;
     }
-    howGrowAnswers = readHowGrowDraft();
+    howGrowAnswers = normalizeHowGrowAnswers(readHowGrowDraft());
     try {
       var saved = await Cloud.loadSupportPreferences();
-      if (saved && saved.answers) howGrowAnswers = Object.assign({}, howGrowAnswers, saved.answers);
+      if (saved && saved.answers) howGrowAnswers = normalizeHowGrowAnswers(Object.assign({}, howGrowAnswers, saved.answers));
     } catch (e) {}
     var ctx = null;
     try { ctx = await Cloud.mySupportContext(); } catch (e) {}
@@ -4076,7 +4091,7 @@
             var max = parseInt(group.getAttribute("data-max"), 10) || 99;
             if (list.length >= max) {
               var hint = document.getElementById("howGrowEncouragementHint");
-              if (hint) hint.textContent = "You’ve picked two — tap one to remove it first.";
+              if (hint) hint.textContent = "You’ve ranked two — tap one to remove it first.";
               return;
             }
             list.push(value);
@@ -4112,7 +4127,9 @@
         if (!validateHowGrowStep(howGrowStep)) {
           alert(howGrowStep === 6
             ? "Pick at least one kind of encouragement before continuing."
-            : "Choose an answer before continuing.");
+            : howGrowStep === 7
+              ? "Pick at least one recognition preference before continuing."
+              : "Choose an answer before continuing.");
           return;
         }
         showHowGrowStep(howGrowStep + 1);

@@ -1722,6 +1722,7 @@ html:has(.cheer-sheet:not([hidden])){overflow-y:hidden}
 .how-grow-choices button.on{background:var(--white);border-color:var(--moss);color:var(--green);box-shadow:var(--shadow)}
 .how-grow-choices button.on::before{content:"✓";background:var(--moss);border-color:var(--moss)}
 .how-grow-choices.multi button::before{border-radius:6px}
+.how-grow-choices.multi button.on::before{content:attr(data-rank);font-size:11px;letter-spacing:0}
 .how-grow-choices[data-how-grow-multi="encouragement"] button{align-items:start;row-gap:0}
 .how-grow-choices[data-how-grow-multi="encouragement"] button::before{grid-row:1 / span 2;align-self:start;margin-top:1px}
 .how-grow-choices[data-how-grow-multi="encouragement"] button strong{grid-column:2;grid-row:1;font-size:14px;font-weight:700;color:var(--green)}

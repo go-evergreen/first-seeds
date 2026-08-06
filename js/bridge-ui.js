@@ -397,9 +397,25 @@ window.FS = window.FS || {};
     return html;
   }
 
-  function supportAnswerRow(label, value) {
+  function supportAnswerRankLabel(index) {
+    var n = index + 1;
+    if (n === 1) return "1st";
+    if (n === 2) return "2nd";
+    if (n === 3) return "3rd";
+    return n + "th";
+  }
+
+  function supportAnswerRow(label, value, ranked) {
+    if (typeof value === "string" && value) value = [value];
     if (!value || (Array.isArray(value) && !value.length)) return "";
-    var shown = Array.isArray(value) ? value.join(" · ") : value;
+    var shown;
+    if (Array.isArray(value)) {
+      shown = ranked && value.length > 1
+        ? value.map(function (item, i) { return supportAnswerRankLabel(i) + " " + item; }).join(" · ")
+        : value.join(" · ");
+    } else {
+      shown = value;
+    }
     return '<div class="how-they-grow-row"><dt>' + esc(label) + "</dt><dd>" + esc(shown) + "</dd></div>";
   }
 
@@ -423,9 +439,9 @@ window.FS = window.FS || {};
     html += supportAnswerRow("When you’re struggling, what’s the most helpful thing a leader can do?", a.struggling_support);
     html += supportAnswerRow("What kind of accountability helps you most?", a.accountability);
     html += supportAnswerRow("How often would you like support?", a.support_frequency);
-    html += supportAnswerRow("What kind of encouragement lands?", a.encouragement);
-    html += supportAnswerRow("How do you feel about recognition?", a.recognition);
-    html += supportAnswerRow("If we surprised you one day, what would make your heart happiest?", surpriseList);
+    html += supportAnswerRow("What kind of encouragement lands?", a.encouragement, true);
+    html += supportAnswerRow("How do you feel about recognition?", a.recognition, true);
+    html += supportAnswerRow("If we surprised you one day, what would make your heart happiest?", surpriseList, true);
     html += supportAnswerRow("One year from now, what would make you say, “I’m so glad I did this”?", a.one_year_vision);
     html += supportAnswerRow("What’s one thing we should know that would help us be better leaders for you?", a.leader_note);
     html += "</dl></div>";
