@@ -4766,7 +4766,7 @@
       if (tourKind === "team") {
         next.textContent = tourIdx >= tips.length - 1 ? "Got it — let's mentor →" : "Next";
       } else {
-        next.textContent = tourIdx >= tips.length - 1 ? "Let's grow →" : "Next";
+        next.textContent = tourIdx >= tips.length - 1 ? "Let's start on Sprout →" : "Next";
       }
     }
     var dots = document.getElementById("tourDots");

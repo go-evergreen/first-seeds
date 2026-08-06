@@ -168,6 +168,13 @@ window.FS.CONFIG = {
       target: '#bottomNav [data-tab="team"]',
       placement: "above",
       revealGroveTab: true
+    },
+    {
+      title: "Start on Sprout",
+      body: "Sprout is where you’ll build a solid foundation for your business — and it’s the best place to begin. It walks you through the app in a specific order so nothing important gets skipped.\n\nFeel free to explore before you finish every Sprout step, though. A few spots you might peek at: the product guide in Learn, the Leads tab when you’re ready to start sharing, and Grove if friends already want to join you.",
+      panel: "welcome",
+      target: '#bottomNav [data-tab="home"]',
+      placement: "above"
     }
   ],
 
