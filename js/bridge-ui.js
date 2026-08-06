@@ -947,11 +947,19 @@ window.FS = window.FS || {};
     el.hidden = false;
   }
 
+  function paintNavBadge(tab, count) {
+    var btn = document.querySelector('.bottom-nav-btn[data-tab="' + tab + '"]');
+    if (!btn) return;
+    var n = count | 0;
+    if (n < 1) {
+      btn.removeAttribute("data-nav-badge");
+      return;
+    }
+    btn.setAttribute("data-nav-badge", n > 9 ? "9+" : String(n));
+  }
+
   function paintTeamBadge(count) {
-    var badge = document.querySelector('[data-tab="team"] .bottom-nav-badge');
-    if (!badge) return;
-    badge.hidden = count < 1;
-    badge.textContent = count > 9 ? "9+" : String(count);
+    paintNavBadge("team", count);
   }
 
   async function refreshTeamBadge() {
@@ -2409,13 +2417,9 @@ window.FS = window.FS || {};
       }
       leadsCache = await Cloud.listMyLeads();
       renderLeadsList();
-      var badge = document.querySelector('[data-tab="leads"] .bottom-nav-badge');
       var nNew = 0;
       leadsCache.forEach(function (r) { if (r.status === "new") nNew++; });
-      if (badge) {
-        badge.hidden = nNew < 1;
-        badge.textContent = nNew > 9 ? "9+" : String(nNew);
-      }
+      paintNavBadge("leads", nNew);
     } catch (err) {
       var msg = $("leadsSlugMsg");
       if (msg) msg.textContent = (err && err.message) || "Could not load leads.";
@@ -2437,11 +2441,7 @@ window.FS = window.FS || {};
       /* Quiet badge refresh */
       try {
         var n = await Cloud.countNewLeads();
-        var badge = document.querySelector('[data-tab="leads"] .bottom-nav-badge');
-        if (badge) {
-          badge.hidden = n < 1;
-          badge.textContent = n > 9 ? "9+" : String(n);
-        }
+        paintNavBadge("leads", n);
       } catch (e) {}
     }
     if (Cloud.isSignedIn() && !(getState && getState().active === "leader")) {
