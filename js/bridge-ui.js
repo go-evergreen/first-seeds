@@ -362,18 +362,33 @@ window.FS = window.FS || {};
     return html;
   }
 
+  function supportSnapshotChips(answers) {
+    var a = answers || {};
+    var chips = [];
+    function push(value) {
+      if (!value || chips.indexOf(value) >= 0) return;
+      chips.push(value);
+    }
+    push(a.learning_style);
+    push(a.question_style);
+    push(a.accountability);
+    push(a.support_frequency);
+    if (Array.isArray(a.encouragement) && a.encouragement.length) push(a.encouragement[0]);
+    else push(a.encouragement);
+    return chips.slice(0, 5);
+  }
+
   function supportSnapshotHtml(partnerId, support) {
     if (!support || !support.completed_at) {
       return '<div class="how-grow-snapshot is-empty">' +
         '<div><strong>How they grow</strong><span>Not filled out yet</span></div>' +
         "</div>";
     }
-    var a = support.answers || {};
-    var chips = [a.learning_style, a.accountability, a.support_frequency].filter(Boolean);
+    var chips = supportSnapshotChips(support.answers);
     var html = '<div class="how-grow-snapshot">';
-    html += '<div class="how-grow-snapshot-head"><div><strong>How they grow</strong><span>A quick support snapshot</span></div>';
-    html += '<button type="button" class="btn-ghost" data-how-they-grow="' + esc(partnerId) + '">See how they grow →</button></div>';
+    html += '<button type="button" class="how-grow-snapshot-btn" data-how-they-grow="' + esc(partnerId) + '">See how they grow →</button>';
     if (chips.length) {
+      html += '<p class="how-grow-snapshot-label">Support snapshot:</p>';
       html += '<div class="how-grow-snapshot-chips">';
       chips.forEach(function (chip) { html += "<span>" + esc(chip) + "</span>"; });
       html += "</div>";
@@ -396,6 +411,10 @@ window.FS = window.FS || {};
     var name = $("howTheyGrowName");
     var body = $("howTheyGrowBody");
     if (!sheet || !name || !body) return;
+    closeTeamPersonSheet();
+    closeTeamMoveSheet();
+    closeCheerSheet();
+    closeNoteSheet();
     name.textContent = record.name || "Partner";
     var html = '<div class="how-they-grow-summary"><dl>';
     html += supportAnswerRow("Learns best", a.learning_style);
@@ -2332,6 +2351,16 @@ window.FS = window.FS || {};
         var growSheet = $("howTheyGrowSheet");
         if (growSheet && !growSheet.hidden) {
           closeHowTheyGrowSheet();
+          return;
+        }
+        var cheer = $("cheerSheet");
+        if (cheer && !cheer.hidden) {
+          closeCheerSheet();
+          return;
+        }
+        var note = $("noteSheet");
+        if (note && !note.hidden) {
+          closeNoteSheet();
           return;
         }
         var box = $("curiosityLightbox");
