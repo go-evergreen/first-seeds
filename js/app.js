@@ -3920,6 +3920,7 @@
 
   /* ── How I Grow support profile ─────────────────────── */
   var HOW_GROW_DRAFT_KEY = "firstSeeds_how_i_grow_draft_v1";
+  var HOW_GROW_STEP_KEY = "firstSeeds_how_i_grow_step_v1";
   var HOW_GROW_TOTAL = 11;
   var howGrowStep = 0;
   var howGrowAnswers = {};
@@ -3937,6 +3938,33 @@
 
   function writeHowGrowDraft() {
     try { localStorage.setItem(HOW_GROW_DRAFT_KEY, JSON.stringify(howGrowAnswers)); } catch (e) {}
+  }
+
+  function persistHowGrowResumeStep(step) {
+    var n = Math.max(0, Math.min(HOW_GROW_TOTAL, step | 0));
+    try { localStorage.setItem(HOW_GROW_STEP_KEY, String(n)); } catch (e) {}
+    if (state.data) state.data.howGrowResumeStep = n;
+  }
+
+  function inferHowGrowResumeStep() {
+    var s;
+    for (s = 1; s <= HOW_GROW_TOTAL; s++) {
+      if (!validateHowGrowStep(s)) return s;
+    }
+    if (!(howGrowAnswers.surprises && howGrowAnswers.surprises.length) && !howGrowAnswers.surprise_other) return 8;
+    if (!howGrowAnswers.one_year_vision) return 9;
+    if (!howGrowAnswers.leader_note) return 10;
+    return HOW_GROW_TOTAL;
+  }
+
+  function readHowGrowResumeStep() {
+    var fromState = state.data && parseInt(state.data.howGrowResumeStep, 10);
+    if (fromState >= 1 && fromState <= HOW_GROW_TOTAL) return fromState;
+    try {
+      var stored = parseInt(localStorage.getItem(HOW_GROW_STEP_KEY) || "0", 10);
+      if (stored >= 1 && stored <= HOW_GROW_TOTAL) return stored;
+    } catch (e) {}
+    return inferHowGrowResumeStep();
   }
 
   function howGrowInput(id) {
@@ -4043,6 +4071,7 @@
   function showHowGrowStep(step) {
     clearHowGrowAdvance();
     howGrowStep = Math.max(0, Math.min(HOW_GROW_TOTAL, step));
+    if (howGrowStep > 0) persistHowGrowResumeStep(howGrowStep);
     var panes = document.querySelectorAll("#howGrowOverlay [data-how-grow-step]");
     for (var i = 0; i < panes.length; i++) {
       panes[i].classList.toggle("on", parseInt(panes[i].getAttribute("data-how-grow-step"), 10) === howGrowStep);
@@ -4067,9 +4096,11 @@
       return;
     }
     howGrowAnswers = normalizeHowGrowAnswers(readHowGrowDraft());
+    var completed = false;
     try {
       var saved = await Cloud.loadSupportPreferences();
       if (saved && saved.answers) howGrowAnswers = normalizeHowGrowAnswers(Object.assign({}, howGrowAnswers, saved.answers));
+      completed = !!(saved && saved.completed_at);
     } catch (e) {}
     var ctx = null;
     try { ctx = await Cloud.mySupportContext(); } catch (e) {}
@@ -4081,7 +4112,12 @@
         : "Your leader would love to know how to best support you on this journey.";
     }
     paintHowGrowForm();
-    showHowGrowStep(skipIntro ? 1 : 0);
+    var resume = readHowGrowResumeStep();
+    if (!completed && resume >= 1) {
+      showHowGrowStep(resume);
+    } else {
+      showHowGrowStep(skipIntro ? 1 : 0);
+    }
     var overlay = document.getElementById("howGrowOverlay");
     if (overlay) {
       overlay.hidden = false;
@@ -4092,7 +4128,13 @@
 
   function closeHowIGrow(opts) {
     clearHowGrowAdvance();
-    if (!opts || !opts.skipDraftSave) collectHowGrowText();
+    if (!opts || !opts.skipDraftSave) {
+      collectHowGrowText();
+      if (howGrowStep > 0) {
+        persistHowGrowResumeStep(howGrowStep);
+        save();
+      }
+    }
     var overlay = document.getElementById("howGrowOverlay");
     if (overlay) {
       overlay.classList.remove("open");
@@ -4343,11 +4385,13 @@
           if (msg) msg.textContent = "Sharing your support map…";
           await howGrowCloud().saveSupportPreferences(howGrowAnswers, true);
           state.data.howGrowDeferred = false;
+          persistHowGrowResumeStep(0);
           save();
           if (msg) msg.textContent = "Shared! Your leader can now see how to best support you.";
           setTimeout(function () {
             closeHowIGrow({ skipDraftSave: true });
             try { localStorage.removeItem(HOW_GROW_DRAFT_KEY); } catch (e) {}
+            try { localStorage.removeItem(HOW_GROW_STEP_KEY); } catch (e) {}
             refreshHowGrowReminder();
           }, 900);
         } catch (err) {
