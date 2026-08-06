@@ -141,6 +141,13 @@ window.FS.CONFIG = {
 
   tour: [
     {
+      title: "Please don’t skip this!",
+      body: "This quick walkthrough shows you the features of the app so you know where everything lives.\n\n(But if you do skip it, you can always replay it in Settings 😉)",
+      panel: "welcome",
+      target: ".home-plant-zone",
+      placement: "below"
+    },
+    {
       title: "Sprout is your home base",
       body: "You'll see a little plant and a Growth % here. The three Roots answers grow roots underground — then every checklist step you finish sprouts the plant above. No pressure to finish everything today.",
       panel: "welcome",
