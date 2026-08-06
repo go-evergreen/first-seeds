@@ -218,6 +218,18 @@
     return ((state.settings.partnerLastName || "") + "").trim();
   }
 
+  /* If someone typed "First Last" into the first-name field before we asked for last name, split it. */
+  function splitFullNameIfNeeded() {
+    var first = partnerName();
+    var last = partnerLastName();
+    if (last || !first) return false;
+    var parts = first.split(/\s+/).filter(Boolean);
+    if (parts.length < 2) return false;
+    state.settings.partnerName = parts[0];
+    state.settings.partnerLastName = parts.slice(1).join(" ");
+    return true;
+  }
+
   function firstName() {
     var n = partnerName();
     return n ? n.split(/\s+/)[0] : "";
@@ -2782,12 +2794,19 @@
       }
       state.settings.partnerName = first;
       state.settings.partnerLastName = last;
-      save();
+      /* Avoid "Jessica Smith" + last "Smith" staying doubled in first name */
+      var fl = first.toLowerCase();
+      var ll = last.toLowerCase();
+      if (fl.endsWith(" " + ll)) {
+        state.settings.partnerName = first.slice(0, first.length - last.length).trim();
+      }
+      save({ immediate: true });
       renderGreetings();
+      syncSettingsNameUI();
       try {
         var Cloud = howGrowCloud();
         if (Cloud && Cloud.isSignedIn()) {
-          await Cloud.updateProfile({ display_name: first, last_name: last });
+          await Cloud.updateProfile({ display_name: partnerName(), last_name: last });
           await Cloud.pushProgress({
             active: state.active,
             data: state.data,
@@ -3843,7 +3862,7 @@
     var last = document.getElementById("partnerLastNameInput");
     var btn = document.getElementById("onboardingNameNext");
     if (!btn) return;
-    var ok = !!(input && input.value.trim() && last && last.value.trim());
+    var ok = !!(input && String(input.value || "").trim() && last && String(last.value || "").trim());
     btn.disabled = !ok;
   }
 
@@ -4217,14 +4236,28 @@
       overlay.classList.remove("open");
       overlay.hidden = true;
     }
-    setOverlayOpen(false);
+    var auth = document.getElementById("authOverlay");
+    var howGrow = document.getElementById("howGrowOverlay");
+    var tourEl = document.getElementById("tour");
+    var onboard = document.getElementById("onboarding");
+    var otherOpen = !!(
+      (auth && auth.classList.contains("open")) ||
+      (howGrow && howGrow.classList.contains("open")) ||
+      (tourEl && tourEl.classList.contains("open")) ||
+      (onboard && onboard.classList.contains("open"))
+    );
+    if (!otherOpen) setOverlayOpen(false);
   }
 
   function openLastNamePrompt() {
     var overlay = document.getElementById("lastNameOverlay");
     var input = document.getElementById("lastNamePromptInput");
     var saveBtn = document.getElementById("lastNameSave");
+    var msg = document.getElementById("lastNameMsg");
     if (!overlay) return;
+    splitFullNameIfNeeded();
+    if (partnerLastName()) save();
+    if (msg) msg.textContent = "";
     if (input) {
       input.value = partnerLastName();
       if (saveBtn) saveBtn.disabled = !input.value.trim();
@@ -4232,7 +4265,16 @@
     overlay.hidden = false;
     overlay.classList.add("open");
     setOverlayOpen(true);
-    setTimeout(function () { if (input) input.focus(); }, 50);
+    setTimeout(function () {
+      if (input) {
+        /* Autofill often fills without firing input — re-check after paint */
+        if (saveBtn) saveBtn.disabled = !input.value.trim();
+        input.focus();
+      }
+    }, 50);
+    setTimeout(function () {
+      if (input && saveBtn) saveBtn.disabled = !input.value.trim();
+    }, 400);
   }
 
   var lastNamePromptSkipped = false;
@@ -4241,6 +4283,7 @@
     try {
       var Cloud = howGrowCloud();
       if (!Cloud || !Cloud.isSignedIn()) return;
+      splitFullNameIfNeeded();
       if (!lastNameMissing()) return;
       if (lastNamePromptSkipped) return;
       var howGrow = document.getElementById("howGrowOverlay");
@@ -4251,6 +4294,8 @@
       if (onboard && onboard.classList.contains("open")) return;
       var auth = document.getElementById("authOverlay");
       if (auth && auth.classList.contains("open")) return;
+      var already = document.getElementById("lastNameOverlay");
+      if (already && already.classList.contains("open")) return;
       openLastNamePrompt();
     } catch (e) {}
   }
@@ -4264,13 +4309,20 @@
     var saveBtn = document.getElementById("lastNameSave");
     var later = document.getElementById("lastNameLater");
     var closeBtn = document.getElementById("lastNameClose");
+    var msg = document.getElementById("lastNameMsg");
     function syncSave() {
-      if (saveBtn && input) saveBtn.disabled = !input.value.trim();
+      if (saveBtn && input) saveBtn.disabled = !String(input.value || "").trim();
     }
     if (input) {
-      input.addEventListener("input", syncSave);
+      ["input", "change", "blur", "keyup"].forEach(function (ev) {
+        input.addEventListener(ev, syncSave);
+      });
+      /* Chrome/Safari autofill often skips input events */
+      input.addEventListener("animationstart", function (e) {
+        if (e.animationName === "onAutoFillStart" || e.animationName === "autofill") syncSave();
+      });
       input.addEventListener("keydown", function (e) {
-        if (e.key === "Enter" && input.value.trim() && saveBtn) {
+        if (e.key === "Enter" && input.value.trim() && saveBtn && !saveBtn.disabled) {
           e.preventDefault();
           saveBtn.click();
         }
@@ -4278,14 +4330,31 @@
     }
     if (saveBtn) {
       saveBtn.addEventListener("click", async function () {
+        syncSave();
         var last = input ? input.value.trim() : "";
         if (!last) return;
+        if (saveBtn.disabled) return;
+        saveBtn.disabled = true;
+        if (msg) msg.textContent = "";
+        var first = partnerName();
+        /* Don't keep a duplicated surname sitting in the first-name field */
+        if (first) {
+          var fl = first.toLowerCase();
+          var ll = last.toLowerCase();
+          if (fl.endsWith(" " + ll)) {
+            state.settings.partnerName = first.slice(0, first.length - last.length).trim();
+          }
+        }
         state.settings.partnerLastName = last;
-        save();
+        save({ immediate: true });
+        renderGreetings();
         try {
           var Cloud = howGrowCloud();
           if (Cloud && Cloud.isSignedIn()) {
-            await Cloud.updateProfile({ last_name: last });
+            var patch = { last_name: last };
+            var pn = partnerName();
+            if (pn) patch.display_name = pn;
+            await Cloud.updateProfile(patch);
             await Cloud.pushProgress({
               active: state.active,
               data: state.data,
@@ -4296,8 +4365,16 @@
               tourDone: state.tourDone
             });
           }
-        } catch (e) {}
-        closeLastNamePrompt();
+          lastNamePromptSkipped = false;
+          closeLastNamePrompt();
+        } catch (e) {
+          if (msg) {
+            msg.textContent = "Saved on this device. Cloud sync can retry next time you’re online.";
+          }
+          closeLastNamePrompt();
+        } finally {
+          syncSave();
+        }
       });
     }
     function skipForNow() {
@@ -4438,8 +4515,15 @@
     var nameInput = document.getElementById("partnerNameInput");
     var lastNameInput = document.getElementById("partnerLastNameInput");
     var nameNext = document.getElementById("onboardingNameNext");
+    function bindNameSync(el) {
+      if (!el) return;
+      ["input", "change", "blur", "keyup"].forEach(function (ev) {
+        el.addEventListener(ev, syncNameNext);
+      });
+    }
+    bindNameSync(nameInput);
+    bindNameSync(lastNameInput);
     if (nameInput) {
-      nameInput.addEventListener("input", syncNameNext);
       nameInput.addEventListener("keydown", function (e) {
         if (e.key === "Enter" && nameInput.value.trim()) {
           e.preventDefault();
@@ -4448,7 +4532,6 @@
       });
     }
     if (lastNameInput) {
-      lastNameInput.addEventListener("input", syncNameNext);
       lastNameInput.addEventListener("keydown", function (e) {
         if (e.key === "Enter" && nameInput && nameInput.value.trim() && lastNameInput.value.trim()) {
           e.preventDefault();
@@ -4458,6 +4541,7 @@
     }
     if (nameNext) {
       nameNext.addEventListener("click", function () {
+        syncNameNext();
         if (!nameInput || !nameInput.value.trim()) return;
         if (!lastNameInput || !lastNameInput.value.trim()) return;
         state.settings.partnerName = nameInput.value.trim();
@@ -5605,12 +5689,25 @@
   window.FS.onAuthReady = function () {
     liveRefresh({ silent: true });
     syncPageStoryToLeadBlurb();
+    var split = splitFullNameIfNeeded();
     if (cloudSignedIn() && !partnerLastName()) {
       var u = howGrowCloud() && howGrowCloud().user ? howGrowCloud().user() : null;
       if (u && u.last_name) {
         state.settings.partnerLastName = String(u.last_name).trim();
-        save();
+        split = true;
       }
+    }
+    if (split) {
+      save();
+      try {
+        var Cloud = howGrowCloud();
+        if (Cloud && Cloud.isSignedIn() && partnerLastName()) {
+          Cloud.updateProfile({
+            display_name: partnerName(),
+            last_name: partnerLastName()
+          }).catch(function () {});
+        }
+      } catch (e) {}
     }
     if (dismissOnboardingIfModeChosen()) {
       if (!state.tourDone) startTour();

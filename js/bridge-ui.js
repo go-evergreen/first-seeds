@@ -189,6 +189,16 @@ window.FS = window.FS || {};
           authName.value = st.settings.partnerName;
         }
       }
+      var authLast = $("authLastName");
+      var authLastField = $("authLastNameField");
+      if (authLast && getState) {
+        var st2 = getState();
+        if (st2 && st2.settings && st2.settings.partnerLastName && !authLast.value) {
+          authLast.value = st2.settings.partnerLastName;
+        }
+      }
+      /* Last name is for Create account — keep Sign in simple */
+      if (authLastField) authLastField.hidden = false;
     }
     overlay.classList.add("open");
     document.body.classList.add("overlay-open");
@@ -2697,6 +2707,8 @@ window.FS = window.FS || {};
         var password = ($("authPassword") || {}).value;
         var msg = $("authMsg");
         var creating = t.id === "authCreateBtn";
+        var lastField = $("authLastNameField");
+        if (creating && lastField) lastField.hidden = false;
         try {
           t.disabled = true;
           if (creating) {
@@ -2706,6 +2718,9 @@ window.FS = window.FS || {};
             }
             if (!lastName) {
               if (msg) msg.textContent = "Add your last name too — it helps leaders tell people apart.";
+              if (lastField) lastField.hidden = false;
+              var lastIn = $("authLastName");
+              if (lastIn) lastIn.focus();
               return;
             }
           }

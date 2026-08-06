@@ -149,7 +149,7 @@ button.leader-overview-update:hover{background:#e8ede5}
 .live-l1-rank{flex-shrink:0;width:28px;height:28px;border-radius:50%;background:#eef2ec;color:var(--green);display:grid;place-items:center;font-size:12px;font-weight:700}
 .live-l1-main{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
 .live-l1-name-row{display:flex;flex-wrap:wrap;align-items:center;gap:6px 8px}
-.live-l1-name{font-family:'Fraunces',serif;font-weight:600;font-size:16px;color:var(--green);line-height:1.2;border:none;background:transparent;padding:0;margin:0;cursor:pointer;text-align:left}
+.live-l1-name{font-family:'Fraunces',serif;font-weight:600;font-size:16px;color:var(--green);line-height:1.2;border:none;background:transparent;padding:0;margin:0;cursor:pointer;text-align:left;overflow-wrap:anywhere;word-break:break-word;max-width:100%}
 .live-l1-name:hover,.live-l1-name:focus-visible{text-decoration:underline;outline:none}
 .live-l1-meta{font-size:12px;color:var(--bark);line-height:1.35}
 .live-l1-expand{flex-shrink:0;width:28px;height:28px;border-radius:8px;border:1.5px solid var(--sand);background:rgba(255,255,255,.85);color:var(--green);display:grid;place-items:center;font-size:18px;font-weight:600;line-height:1;user-select:none}
@@ -164,7 +164,7 @@ button.leader-overview-update:hover{background:#e8ede5}
 .team-mode-chip.is-full{background:#eef2ec;color:var(--green);border:1px solid rgba(74,106,86,.3)}
 .team-mode-chip.is-unknown{background:rgba(61,69,60,.06);color:var(--bark);border:1px solid var(--sand)}
 .team-new-chip{background:#c47a4a;color:#fff;border:none}
-.live-team-name{font-family:inherit;font-weight:600;font-size:14px;color:var(--green);min-width:0;overflow:hidden;text-overflow:ellipsis;border:none;background:transparent;padding:0;margin:0;cursor:pointer;text-align:left;line-height:1.25}
+.live-team-name{font-family:inherit;font-weight:600;font-size:14px;color:var(--green);min-width:0;overflow:hidden;text-overflow:ellipsis;overflow-wrap:anywhere;border:none;background:transparent;padding:0;margin:0;cursor:pointer;text-align:left;line-height:1.25;white-space:normal}
 .live-team-name:hover,.live-team-name:focus-visible{text-decoration:underline;outline:none}
 .live-team-count{font-weight:600;font-size:11px;color:var(--moss);margin-left:auto;flex-shrink:0}
 .live-team-kids{margin:0;padding:4px 10px 12px 18px;list-style:none}
@@ -1547,6 +1547,7 @@ button.vault-week-day:hover{border-color:var(--moss);box-shadow:0 6px 18px rgba(
 .onboard-hype-label{font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#b88928;margin-bottom:4px}
 .onboard-hype-line{font-size:13px;color:var(--green);line-height:1.45}
 .onboard-name-field{display:block;margin:0 0 12px}
+.onboard-name-field[hidden]{display:none!important}
 .onboard-name-field input{width:100%;border:1.5px solid var(--sand);border-radius:12px;background:var(--white);padding:14px 16px;font-family:'DM Sans',sans-serif;font-size:16px;color:var(--green);transition:border-color .2s}
 .onboard-name-field input:focus{border-color:var(--moss);outline:none}
 .onboard-name-field input::placeholder{color:#b3a894}

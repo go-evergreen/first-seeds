@@ -248,10 +248,12 @@ window.FS = window.FS || {};
       if (!profile) {
         /* trigger may lag — upsert */
         var code = makeCode();
+        var meta = authUser.user_metadata || {};
         var up = await client.from("profiles").upsert({
           id: authUser.id,
           email: authUser.email,
-          display_name: (authUser.user_metadata && authUser.user_metadata.display_name) || (authUser.email || "friend").split("@")[0],
+          display_name: meta.display_name || (authUser.email || "friend").split("@")[0],
+          last_name: meta.last_name || "",
           invite_code: code
         });
         if (up.error) throw up.error;
@@ -447,12 +449,18 @@ window.FS = window.FS || {};
       return sessionUser;
     },
 
-    /* First + last for leader-facing lists; falls back gracefully. */
+    /* First + last for leader-facing lists; falls back gracefully.
+       Avoids "Jessica Smith Smith" when display_name already included the surname. */
     formatPersonName: function (person) {
       if (!person) return "Partner";
       var first = String(person.display_name || "").trim();
       var last = String(person.last_name || "").trim();
-      if (first && last) return first + " " + last;
+      if (first && last) {
+        var fl = first.toLowerCase();
+        var ll = last.toLowerCase();
+        if (fl === ll || fl.endsWith(" " + ll)) return first;
+        return first + " " + last;
+      }
       return first || last || person.email || "Partner";
     },
 
@@ -505,6 +513,10 @@ window.FS = window.FS || {};
           profilePatch.last_active_at = new Date().toISOString();
         }
         await client.from("profiles").update(profilePatch).eq("id", sessionUser.id);
+        if (profilePatch.display_name != null) sessionUser.display_name = profilePatch.display_name;
+        if (profilePatch.last_name != null) sessionUser.last_name = profilePatch.last_name;
+        if (profilePatch.hub_mode != null) sessionUser.hub_mode = profilePatch.hub_mode;
+        if (profilePatch.tour_done != null) sessionUser.tour_done = !!profilePatch.tour_done;
         if (profilePatch.last_active_at) sessionUser.last_active_at = profilePatch.last_active_at;
       } else {
         var store = localStore();
