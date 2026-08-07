@@ -14,6 +14,7 @@ window.FS = window.FS || {};
   var setStateFromCloud = null;
   var persist = null;
   var gotoPanel = null;
+  var bindProgressAccount = null;
   var wired = false;
   var supportProfileByPartner = {};
 
@@ -134,9 +135,13 @@ window.FS = window.FS || {};
       signBtn.textContent = user ? "Account" : "Sign in";
     }
     if (syncLabel) {
-      syncLabel.textContent = user
-        ? (Cloud.mode() === "supabase" ? "You're signed in — progress syncs." : "Signed in · local demo mode (this browser).")
-        : "Answers save on this device. Sign in anytime to sync.";
+      if (typeof window.FS.paintSyncChrome === "function") {
+        window.FS.paintSyncChrome();
+      } else {
+        syncLabel.textContent = user
+          ? (Cloud.mode() === "supabase" ? "You're signed in — progress syncs." : "Signed in · local demo mode (this browser).")
+          : "Answers save on this device. Sign in anytime to sync.";
+      }
     }
     var inviteWrap = $("inviteBlock");
     if (inviteWrap) {
@@ -2490,6 +2495,9 @@ window.FS = window.FS || {};
   async function afterAuth() {
     renderAuthChrome();
     if (!Cloud.isSignedIn()) {
+      if (bindProgressAccount) {
+        try { bindProgressAccount(""); } catch (e) {}
+      }
       paintNavBadge("leads", 0);
       paintNavBadge("team", 0);
       await renderCheers();
@@ -2499,6 +2507,9 @@ window.FS = window.FS || {};
         try { window.FS.onAuthReady(null); } catch (e) {}
       }
       return;
+    }
+    if (bindProgressAccount && Cloud.user()) {
+      try { bindProgressAccount(Cloud.user().id); } catch (e) {}
     }
     if (Cloud.touchActive) {
       Cloud.touchActive().catch(function () {});
@@ -3227,8 +3238,19 @@ window.FS = window.FS || {};
 
   async function mergeCloudProgress() {
     if (!Cloud.isSignedIn() || !setStateFromCloud) return;
-    var remote = await Cloud.pullProgress();
+    var user = Cloud.user();
+    if (bindProgressAccount && user && user.id) {
+      try { bindProgressAccount(user.id); } catch (e) {
+        console.warn("[First Seeds] bind account:", e);
+      }
+    }
     var local = getState();
+    if (local && local.settings && local.settings.boundUserId && user && local.settings.boundUserId !== user.id) {
+      console.warn("[First Seeds] refusing sync — local bucket belongs to another account");
+      return;
+    }
+    var remote = await Cloud.pullProgress();
+    local = getState();
     if (!remote) {
       await Cloud.pushProgress({
         active: local.active,
@@ -3675,6 +3697,7 @@ window.FS = window.FS || {};
       setStateFromCloud = hooks.setStateFromCloud;
       persist = hooks.persist;
       gotoPanel = hooks.gotoPanel;
+      bindProgressAccount = hooks.bindProgressAccount || null;
       wire();
       try {
         await Cloud.init();
@@ -3682,9 +3705,22 @@ window.FS = window.FS || {};
         console.warn("[First Seeds] cloud init:", err);
       }
       try {
+        if (Cloud.isSignedIn() && bindProgressAccount && Cloud.user()) {
+          bindProgressAccount(Cloud.user().id);
+        } else if (!Cloud.isSignedIn() && bindProgressAccount) {
+          /* Keep guest bucket if already guest; only switch when leaving an account. */
+          var st0 = getState && getState();
+          if (st0 && st0.settings && st0.settings.boundUserId) bindProgressAccount("");
+        }
+      } catch (err) {
+        console.warn("[First Seeds] bind account:", err);
+      }
+      try {
         if (Cloud.isSignedIn()) await mergeCloudProgress();
+        if (window.FS.markCloudSyncOk) window.FS.markCloudSyncOk();
       } catch (err) {
         console.warn("[First Seeds] progress merge:", err);
+        if (window.FS.markCloudSyncError) window.FS.markCloudSyncError(err);
       }
       try {
         await afterAuth();
@@ -3707,6 +3743,10 @@ window.FS = window.FS || {};
     syncNow: async function () {
       if (!Cloud.isSignedIn()) return;
       var s = getState();
+      var u = Cloud.user();
+      if (s && s.settings && s.settings.boundUserId && u && s.settings.boundUserId !== u.id) {
+        throw new Error("Signed-in account doesn’t match this device’s saved progress.");
+      }
       await Cloud.pushProgress({
         active: s.active,
         data: s.data,

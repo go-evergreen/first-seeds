@@ -22,18 +22,21 @@
       data: {},
       done: {},
       active: "welcome",
-      settings: { hubMode: "", partnerName: "", partnerLastName: "", growthMoment: true, growthToast: true, weekStartsOn: "sunday" },
-      tourDone: false
+      settings: { hubMode: "", partnerName: "", partnerLastName: "", growthMoment: true, growthToast: true, weekStartsOn: "sunday", boundUserId: "" },
+      tourDone: false,
+      cheers: []
     };
   }
 
   var state = blankState();
+  var syncFail = null; /* { message, at } when cloud push fails */
 
   function ensureSettings() {
     if (!state.settings) state.settings = {};
     if (!state.settings.hubMode) state.settings.hubMode = "";
     if (!state.settings.partnerName) state.settings.partnerName = "";
     if (!state.settings.partnerLastName) state.settings.partnerLastName = "";
+    if (typeof state.settings.boundUserId !== "string") state.settings.boundUserId = "";
     if (typeof state.settings.growthMoment !== "boolean") state.settings.growthMoment = true;
     if (typeof state.settings.growthToast !== "boolean") state.settings.growthToast = true;
     if (state.settings.weekStartsOn !== "monday" && state.settings.weekStartsOn !== "sunday") {
@@ -45,37 +48,83 @@
     return state.settings.weekStartsOn === "monday" ? 1 : 0;
   }
 
+  function boundUserId() {
+    return ((state.settings && state.settings.boundUserId) || "").trim();
+  }
+
+  function progressKeyFor(userId) {
+    var id = (userId || "").trim();
+    return id ? (CFG.storeKey + "__u_" + id) : CFG.storeKey;
+  }
+
+  function activeAccountKey() {
+    return CFG.storeKey + "_active";
+  }
+
+  function snapshotFromState() {
+    return {
+      data: state.data,
+      done: state.done,
+      active: state.active,
+      settings: state.settings,
+      tourDone: state.tourDone,
+      cheers: state.cheers || []
+    };
+  }
+
+  function applyStateSnapshot(p) {
+    p = p || {};
+    state.data = p.data || {};
+    state.done = p.done || {};
+    state.active = p.active || "welcome";
+    state.settings = p.settings || { hubMode: "", partnerName: "", partnerLastName: "", boundUserId: "" };
+    state.tourDone = !!p.tourDone;
+    state.cheers = p.cheers || [];
+    if (!state.data.calendar) state.data.calendar = {};
+    if (state.active === "calendar") state.active = "tend";
+    ensureSettings();
+    migrateGrovePicks();
+  }
+
+  function readSnapshot(key) {
+    try {
+      var raw = localStorage.getItem(key);
+      if (!raw) return null;
+      return JSON.parse(raw);
+    } catch (e) {
+      return null;
+    }
+  }
+
+  function writeSnapshot(key, snap) {
+    try { localStorage.setItem(key, JSON.stringify(snap)); } catch (e) {}
+  }
+
   function loadState() {
     try {
-      var raw = localStorage.getItem(CFG.storeKey);
-      if (!raw && CFG.legacyStoreKey) {
-        var legacy = localStorage.getItem(CFG.legacyStoreKey);
-        if (legacy) {
-          var old = JSON.parse(legacy);
-          state.data = old.data || {};
-          state.done = old.done || {};
-          state.active = old.active || "welcome";
-          state.settings = old.settings || { hubMode: "", partnerName: "" };
-          state.tourDone = !!old.tourDone;
-          if (!state.data.calendar) state.data.calendar = {};
-          ensureSettings();
-          migrateGrovePicks();
-          save();
-          return;
+      var active = "";
+      try { active = localStorage.getItem(activeAccountKey()) || ""; } catch (e) {}
+      var key = progressKeyFor(active);
+      var snap = readSnapshot(key);
+      if (!snap && !active) {
+        snap = readSnapshot(CFG.storeKey);
+        if (!snap && CFG.legacyStoreKey) {
+          var legacy = readSnapshot(CFG.legacyStoreKey);
+          if (legacy) {
+            applyStateSnapshot(legacy);
+            ensureSettings();
+            state.settings.boundUserId = "";
+            writeSnapshot(progressKeyFor(null), snapshotFromState());
+            return;
+          }
         }
       }
-      if (raw) {
-        var p = JSON.parse(raw);
-        state.data = p.data || {};
-        state.done = p.done || {};
-        state.active = p.active || "welcome";
-        state.settings = p.settings || { hubMode: "", partnerName: "" };
-        state.tourDone = !!p.tourDone;
+      if (snap) applyStateSnapshot(snap);
+      else {
+        ensureSettings();
+        migrateGrovePicks();
       }
-      if (!state.data.calendar) state.data.calendar = {};
-      if (state.active === "calendar") state.active = "tend";
-      ensureSettings();
-      migrateGrovePicks();
+      if (active && !boundUserId()) state.settings.boundUserId = active;
     } catch (e) {
       ensureSettings();
       migrateGrovePicks();
@@ -98,15 +147,73 @@
     }
   }
 
+  function paintSyncChrome() {
+    var banner = document.getElementById("syncBanner");
+    var text = document.getElementById("syncBannerText");
+    var syncLabel = document.getElementById("syncLabel");
+    var Cloud = window.FS.Cloud;
+    var signedIn = !!(Cloud && Cloud.isSignedIn && Cloud.isSignedIn());
+    if (banner) {
+      if (syncFail && signedIn) {
+        banner.hidden = false;
+        if (text) text.textContent = syncFail.message || "Couldn’t sync your progress to the cloud.";
+      } else {
+        banner.hidden = true;
+      }
+    }
+    if (syncLabel) {
+      if (syncFail && signedIn) {
+        syncLabel.textContent = "Sync issue — open Settings or tap Retry below.";
+        syncLabel.classList.add("is-error");
+      } else {
+        syncLabel.classList.remove("is-error");
+        if (signedIn) {
+          syncLabel.textContent = Cloud.mode && Cloud.mode() === "supabase"
+            ? "You're signed in — progress syncs."
+            : "Signed in · local demo mode (this browser).";
+        } else {
+          syncLabel.textContent = "Answers save on this device. Sign in anytime to sync.";
+        }
+      }
+    }
+  }
+
+  function markCloudSyncOk() {
+    syncFail = null;
+    paintSyncChrome();
+  }
+
+  function markCloudSyncError(err) {
+    var msg = (err && err.message) ? String(err.message) : "Couldn’t sync your progress to the cloud.";
+    if (/Failed to fetch|NetworkError|network/i.test(msg)) {
+      msg = "You’re offline or the network hiccuped — progress is saved on this device.";
+    }
+    syncFail = { message: msg, at: Date.now() };
+    paintSyncChrome();
+  }
+
   var cloudSyncTimer;
   function save(opts) {
     opts = opts || {};
-    try { localStorage.setItem(CFG.storeKey, JSON.stringify(state)); } catch (e) {}
+    ensureSettings();
+    var uid = boundUserId();
+    try {
+      var Cloud = window.FS.Cloud;
+      if (Cloud && Cloud.isSignedIn && Cloud.isSignedIn() && Cloud.user && Cloud.user()) {
+        uid = Cloud.user().id;
+        state.settings.boundUserId = uid;
+      }
+    } catch (e) {}
+    writeSnapshot(progressKeyFor(uid || null), snapshotFromState());
+    try { localStorage.setItem(activeAccountKey(), uid || ""); } catch (e) {}
     clearTimeout(cloudSyncTimer);
     var push = function () {
       if (!window.FS.BridgeUI || !window.FS.BridgeUI.syncNow) return;
-      Promise.resolve(window.FS.BridgeUI.syncNow()).catch(function (err) {
+      Promise.resolve(window.FS.BridgeUI.syncNow()).then(function () {
+        markCloudSyncOk();
+      }).catch(function (err) {
         console.warn("[First Seeds] cloud sync:", err);
+        markCloudSyncError(err);
       });
     };
     if (opts.immediate) push();
@@ -117,6 +224,67 @@
 
   function flushSave() {
     save({ immediate: true });
+  }
+
+  function rehydrateDomFromState() {
+    var fs = document.querySelectorAll("[data-key]");
+    for (var j = 0; j < fs.length; j++) {
+      var k = fs[j].getAttribute("data-key");
+      fs[j].value = state.data[k] != null ? state.data[k] : "";
+    }
+    try { updateModeUI(); } catch (e) {}
+    try { renderNav(); } catch (e) {}
+    try { renderPanels(); } catch (e) {}
+    try { renderChoices(); } catch (e) {}
+    try { renderRhythms(); } catch (e) {}
+    try { renderSeedTypes(); } catch (e) {}
+    try { if (Tree && Tree.render) Tree.render(state); } catch (e) {}
+    try { liveRefresh({ silent: true }); } catch (e) {}
+    try { renderGreetings(); } catch (e) {}
+    paintSyncChrome();
+  }
+
+  /* Switch local runway bucket when the signed-in account changes.
+     Guest → first account keeps current draft. Account A → B loads B’s bucket (or blank). */
+  function bindProgressAccount(userId) {
+    userId = (userId || "").trim();
+    ensureSettings();
+    var prev = boundUserId();
+    if (prev === userId) {
+      if (userId) {
+        state.settings.boundUserId = userId;
+        try { localStorage.setItem(activeAccountKey(), userId); } catch (e) {}
+      }
+      return { switched: false };
+    }
+    writeSnapshot(progressKeyFor(prev || null), snapshotFromState());
+    if (userId) {
+      var existing = readSnapshot(progressKeyFor(userId));
+      if (existing) {
+        applyStateSnapshot(existing);
+        state.settings.boundUserId = userId;
+      } else if (!prev) {
+        /* First sign-in from guest: keep what they already typed. */
+        state.settings.boundUserId = userId;
+      } else {
+        applyStateSnapshot(blankState());
+        state.settings.boundUserId = userId;
+      }
+    } else {
+      var guest = readSnapshot(progressKeyFor(null));
+      if (guest) {
+        applyStateSnapshot(guest);
+        state.settings.boundUserId = "";
+      } else {
+        applyStateSnapshot(blankState());
+        state.settings.boundUserId = "";
+      }
+    }
+    try { localStorage.setItem(activeAccountKey(), userId || ""); } catch (e) {}
+    writeSnapshot(progressKeyFor(userId || null), snapshotFromState());
+    howGrowAnswers = {};
+    rehydrateDomFromState();
+    return { switched: true };
   }
 
   /* Don’t lose the last Roots keystrokes if the tab/app closes mid-debounce. */
@@ -4035,8 +4203,8 @@
   }
 
   /* ── How I Grow support profile ─────────────────────── */
-  var HOW_GROW_DRAFT_KEY = "firstSeeds_how_i_grow_draft_v1";
-  var HOW_GROW_STEP_KEY = "firstSeeds_how_i_grow_step_v1";
+  var HOW_GROW_DRAFT_PREFIX = "firstSeeds_how_i_grow_draft_v1";
+  var HOW_GROW_STEP_PREFIX = "firstSeeds_how_i_grow_step_v1";
   var HOW_GROW_TOTAL = 11;
   var howGrowStep = 0;
   var howGrowAnswers = {};
@@ -4047,18 +4215,60 @@
     return window.FS && window.FS.Cloud;
   }
 
+  function howGrowScopeId() {
+    var id = boundUserId();
+    if (!id) {
+      try {
+        var Cloud = howGrowCloud();
+        var u = Cloud && Cloud.user && Cloud.user();
+        if (u && u.id) id = u.id;
+      } catch (e) {}
+    }
+    return id || "guest";
+  }
+
+  function howGrowDraftKey() {
+    return HOW_GROW_DRAFT_PREFIX + "__" + howGrowScopeId();
+  }
+
+  function howGrowStepKey() {
+    return HOW_GROW_STEP_PREFIX + "__" + howGrowScopeId();
+  }
+
+  function migrateLegacyHowGrowKeys() {
+    var scopedDraft = howGrowDraftKey();
+    var scopedStep = howGrowStepKey();
+    try {
+      if (!localStorage.getItem(scopedDraft)) {
+        var legacy = localStorage.getItem(HOW_GROW_DRAFT_PREFIX);
+        if (legacy && howGrowScopeId() !== "guest") {
+          localStorage.setItem(scopedDraft, legacy);
+          localStorage.removeItem(HOW_GROW_DRAFT_PREFIX);
+        }
+      }
+      if (!localStorage.getItem(scopedStep)) {
+        var legacyStep = localStorage.getItem(HOW_GROW_STEP_PREFIX);
+        if (legacyStep && howGrowScopeId() !== "guest") {
+          localStorage.setItem(scopedStep, legacyStep);
+          localStorage.removeItem(HOW_GROW_STEP_PREFIX);
+        }
+      }
+    } catch (e) {}
+  }
+
   function readHowGrowDraft() {
-    try { return JSON.parse(localStorage.getItem(HOW_GROW_DRAFT_KEY) || "{}") || {}; }
+    migrateLegacyHowGrowKeys();
+    try { return JSON.parse(localStorage.getItem(howGrowDraftKey()) || "{}") || {}; }
     catch (e) { return {}; }
   }
 
   function writeHowGrowDraft() {
-    try { localStorage.setItem(HOW_GROW_DRAFT_KEY, JSON.stringify(howGrowAnswers)); } catch (e) {}
+    try { localStorage.setItem(howGrowDraftKey(), JSON.stringify(howGrowAnswers)); } catch (e) {}
   }
 
   function persistHowGrowResumeStep(step) {
     var n = Math.max(0, Math.min(HOW_GROW_TOTAL, step | 0));
-    try { localStorage.setItem(HOW_GROW_STEP_KEY, String(n)); } catch (e) {}
+    try { localStorage.setItem(howGrowStepKey(), String(n)); } catch (e) {}
     if (state.data) state.data.howGrowResumeStep = n;
   }
 
@@ -4077,7 +4287,7 @@
     var fromState = state.data && parseInt(state.data.howGrowResumeStep, 10);
     if (fromState >= 1 && fromState <= HOW_GROW_TOTAL) return fromState;
     try {
-      var stored = parseInt(localStorage.getItem(HOW_GROW_STEP_KEY) || "0", 10);
+      var stored = parseInt(localStorage.getItem(howGrowStepKey()) || "0", 10);
       if (stored >= 1 && stored <= HOW_GROW_TOTAL) return stored;
     } catch (e) {}
     return inferHowGrowResumeStep();
@@ -4218,7 +4428,12 @@
     var completed = false;
     try {
       var saved = await Cloud.loadSupportPreferences();
-      if (saved && saved.answers) howGrowAnswers = normalizeHowGrowAnswers(Object.assign({}, howGrowAnswers, saved.answers));
+      if (saved && saved.completed_at && saved.answers) {
+        /* Completed cloud answers win over a leftover device draft. */
+        howGrowAnswers = normalizeHowGrowAnswers(saved.answers);
+      } else if (saved && saved.answers) {
+        howGrowAnswers = normalizeHowGrowAnswers(Object.assign({}, howGrowAnswers, saved.answers));
+      }
       completed = !!(saved && saved.completed_at);
     } catch (e) {}
     var ctx = null;
@@ -4558,8 +4773,10 @@
           if (msg) msg.textContent = "Shared! Your leader can now see how to best support you.";
           setTimeout(function () {
             closeHowIGrow({ skipDraftSave: true });
-            try { localStorage.removeItem(HOW_GROW_DRAFT_KEY); } catch (e) {}
-            try { localStorage.removeItem(HOW_GROW_STEP_KEY); } catch (e) {}
+            try { localStorage.removeItem(howGrowDraftKey()); } catch (e) {}
+            try { localStorage.removeItem(howGrowStepKey()); } catch (e) {}
+            try { localStorage.removeItem(HOW_GROW_DRAFT_PREFIX); } catch (e) {}
+            try { localStorage.removeItem(HOW_GROW_STEP_PREFIX); } catch (e) {}
             refreshHowGrowReminder();
           }, 900);
         } catch (err) {
@@ -5675,18 +5892,26 @@
     if (t.id === "replayTeamTourBtn") { replayTeamTourFromSettings(); return; }
     if (t.id === "resetBtn") {
       if (confirm("Start over? This clears all your saved answers on this device.")) {
+        var uid = boundUserId();
+        try { localStorage.removeItem(progressKeyFor(uid || null)); } catch (err) {}
         try { localStorage.removeItem(CFG.storeKey); } catch (err) {}
+        try { localStorage.removeItem(howGrowDraftKey()); } catch (err) {}
+        try { localStorage.removeItem(howGrowStepKey()); } catch (err) {}
         state = blankState();
+        if (uid) state.settings.boundUserId = uid;
+        ensureSettings();
         var fs = document.querySelectorAll("[data-key]");
         for (var j = 0; j < fs.length; j++) fs[j].value = "";
         var checks = document.querySelectorAll(".claim-check");
         for (var c2 = 0; c2 < checks.length; c2++) checks[c2].innerHTML = "";
         updateModeUI();
         renderNav(); renderPanels(); renderChoices(); renderRhythms(); renderSeedTypes(); Tree.render(state); liveRefresh();
-        startOnboarding();
+        startOnboarding({ force: true });
         /* If signed in, push the blank slate so cloud can't resurrect old Growth. */
         if (window.FS.BridgeUI && window.FS.BridgeUI.syncNow) {
-          window.FS.BridgeUI.syncNow().catch(function () {});
+          window.FS.BridgeUI.syncNow().then(markCloudSyncOk).catch(function (err) {
+            markCloudSyncError(err);
+          });
         }
       }
       return;
@@ -5875,6 +6100,10 @@
         if (state.active === "calendar") state.active = "tend";
         state.settings = next.settings || state.settings;
         ensureSettings();
+        if (cloudSignedIn()) {
+          var u = howGrowCloud() && howGrowCloud().user ? howGrowCloud().user() : null;
+          if (u && u.id) state.settings.boundUserId = u.id;
+        }
         state.tourDone = !!next.tourDone;
         state.cheers = next.cheers || [];
         if (!state.data.calendar) state.data.calendar = {};
@@ -5899,6 +6128,7 @@
         dismissOnboardingIfModeChosen();
       },
       persist: function () { save(); },
+      bindProgressAccount: bindProgressAccount,
       gotoPanel: function (id) {
         if (id === "leads" && usesCustomLanding()) {
           showGrowthToast("Leads is off while you use a custom-built page — switch to In-app lead page in Settings.");
@@ -5957,4 +6187,38 @@
     state.active = "welcome";
     save();
   }
+
+  window.FS.paintSyncChrome = paintSyncChrome;
+  window.FS.markCloudSyncOk = markCloudSyncOk;
+  window.FS.markCloudSyncError = markCloudSyncError;
+  window.FS.bindProgressAccount = bindProgressAccount;
+
+  (function wireSyncBanner() {
+    var retry = document.getElementById("syncBannerRetry");
+    var dismiss = document.getElementById("syncBannerDismiss");
+    if (retry && !retry.dataset.bound) {
+      retry.dataset.bound = "1";
+      retry.addEventListener("click", function () {
+        if (!window.FS.BridgeUI || !window.FS.BridgeUI.syncNow) return;
+        retry.disabled = true;
+        Promise.resolve(window.FS.BridgeUI.syncNow()).then(function () {
+          markCloudSyncOk();
+        }).catch(function (err) {
+          markCloudSyncError(err);
+        }).then(function () {
+          retry.disabled = false;
+        });
+      });
+    }
+    if (dismiss && !dismiss.dataset.bound) {
+      dismiss.dataset.bound = "1";
+      dismiss.addEventListener("click", function () {
+        syncFail = null;
+        var banner = document.getElementById("syncBanner");
+        if (banner) banner.hidden = true;
+        paintSyncChrome();
+      });
+    }
+    paintSyncChrome();
+  })();
 })();
