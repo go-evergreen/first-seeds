@@ -3673,9 +3673,9 @@
   var ONBOARD_THEMES = [
     "onboarding-welcome",
     "onboarding-circle",
+    "onboarding-install",
     "onboarding-name",
     "onboarding-auth",
-    "onboarding-install",
     "onboarding-mode"
   ];
   var installPlatform = "";
@@ -3705,7 +3705,18 @@
     return "desktop";
   }
 
+  /* Step map: 0 welcome · 1 circle · 2 install · 3 name · 4 auth · 5 mode */
   function advanceToInstallStep() {
+    onboardingStep = 2;
+    renderOnboardingStep();
+  }
+
+  function advanceToNameStep() {
+    onboardingStep = 3;
+    renderOnboardingStep();
+  }
+
+  function advanceToAuthStep() {
     onboardingStep = 4;
     renderOnboardingStep();
   }
@@ -3716,11 +3727,11 @@
   }
 
   function installGuideHtml(platform) {
-    var head = '<p class="onboard-install-do">Do this now — before you continue</p>';
+    var head = '<p class="onboard-install-do">Do this now — before you type anything</p>';
     var switchNote =
       '<p class="onboard-install-switch">' +
-      "<strong>Then leave this browser.</strong> Close this tab, open First Seeds from your Home Screen icon, and keep going there. " +
-      "If you fill things out here and later open the icon, it can look like you’re starting over — and your Roots answers may be missing." +
+      "<strong>Then leave this browser.</strong> Close this tab, open First Seeds from your Home Screen icon, and finish setup there. " +
+      "Safari and the Home Screen app don’t always share the same saved answers — so type your name and Roots <em>after</em> you’re in the app." +
       "</p>";
     if (platform === "ios") {
       return head +
@@ -3731,10 +3742,10 @@
         "at the bottom of Safari (or top on iPad).</li>" +
         '<li class="onboard-install-key">Scroll and tap <strong>Add to Home Screen</strong>.</li>' +
         "<li>Tap <strong>Add</strong> in the top right — you should see a First Seeds icon on your Home Screen.</li>" +
-        '<li class="onboard-install-key">Close Safari. Open First Seeds from that new icon and finish setup there.</li>' +
+        '<li class="onboard-install-key">Close Safari. Open First Seeds from that new icon and continue there.</li>' +
         "</ol>" +
         switchNote +
-        '<p class="onboard-install-note">If you don’t see “Add to Home Screen,” scroll the share sheet all the way down. Already signed in? Use the same email in the app if it asks again.</p>';
+        '<p class="onboard-install-note">If you don’t see “Add to Home Screen,” scroll the share sheet all the way down.</p>';
     }
     if (platform === "android") {
       var installBtn = deferredInstallPrompt
@@ -3746,10 +3757,10 @@
         "<li>Tap the <strong>⋮</strong> menu (top right).</li>" +
         '<li class="onboard-install-key">Tap <strong>Install app</strong> or <strong>Add to Home screen</strong>.</li>' +
         "<li>Confirm — then look for the First Seeds icon on your Home Screen.</li>" +
-        '<li class="onboard-install-key">Close Chrome. Open First Seeds from that icon and finish setup there.</li>' +
+        '<li class="onboard-install-key">Close Chrome. Open First Seeds from that icon and continue there.</li>' +
         "</ol>" +
         switchNote +
-        '<p class="onboard-install-note">On some Androids it says “Install” in the address bar instead of the menu. Already signed in? Use the same email in the app if it asks again.</p>';
+        '<p class="onboard-install-note">On some Androids it says “Install” in the address bar instead of the menu.</p>';
     }
     /* desktop */
     var deskBtn = deferredInstallPrompt
@@ -3846,41 +3857,6 @@
       }
     }
     if (onboardingStep === 2) {
-      var input = document.getElementById("partnerNameInput");
-      var lastInput = document.getElementById("partnerLastNameInput");
-      if (input) input.value = partnerName();
-      if (lastInput) lastInput.value = partnerLastName();
-      syncNameNext();
-      setTimeout(function () {
-        syncNameNext();
-        if (input) input.focus();
-      }, 50);
-      /* Autofill can fill after paint without firing input */
-      setTimeout(syncNameNext, 400);
-    }
-    if (onboardingStep === 3) {
-      var emailIn = document.getElementById("onboardingEmail");
-      var passIn = document.getElementById("onboardingPassword");
-      var msg = document.getElementById("onboardingAuthMsg");
-      var title = document.getElementById("obAuthTitle");
-      var eyebrow = document.getElementById("obAuthEyebrow");
-      var body = document.getElementById("obAuthBody");
-      if (msg) msg.textContent = "";
-      if (cloudSignedIn()) {
-        advanceToInstallStep();
-        return;
-      }
-      if (hasLocalRootsProgress()) {
-        if (eyebrow) eyebrow.textContent = "Welcome back";
-        if (title) title.textContent = "Sign in to keep going";
-        if (body) {
-          body.textContent = "Your Roots answers stay on this device — sign in so they also save to your account if the app closes.";
-        }
-      }
-      if (passIn) passIn.setAttribute("autocomplete", "current-password");
-      if (emailIn) setTimeout(function () { emailIn.focus(); }, 50);
-    }
-    if (onboardingStep === 4) {
       if (isRunningAsInstalledApp()) {
         var guide = document.getElementById("onboardInstallGuide");
         var lead = document.getElementById("obInstallLead");
@@ -3892,7 +3868,7 @@
         if (confirmWrap) confirmWrap.hidden = true;
         if (guide) {
           guide.hidden = false;
-          guide.innerHTML = '<p class="onboard-install-note" style="margin:0">You’re set. Continue to pick how deep you want your runway.</p>';
+          guide.innerHTML = '<p class="onboard-install-note" style="margin:0">You’re set. Continue and tell us your name.</p>';
         }
         if (next) {
           next.disabled = false;
@@ -3905,6 +3881,41 @@
       if (choiceWrap) choiceWrap.hidden = false;
       var guessed = state.data.installPlatform || guessInstallPlatform();
       selectInstallPlatform(guessed);
+    }
+    if (onboardingStep === 3) {
+      var input = document.getElementById("partnerNameInput");
+      var lastInput = document.getElementById("partnerLastNameInput");
+      if (input) input.value = partnerName();
+      if (lastInput) lastInput.value = partnerLastName();
+      syncNameNext();
+      setTimeout(function () {
+        syncNameNext();
+        if (input) input.focus();
+      }, 50);
+      /* Autofill can fill after paint without firing input */
+      setTimeout(syncNameNext, 400);
+    }
+    if (onboardingStep === 4) {
+      var emailIn = document.getElementById("onboardingEmail");
+      var passIn = document.getElementById("onboardingPassword");
+      var msg = document.getElementById("onboardingAuthMsg");
+      var title = document.getElementById("obAuthTitle");
+      var eyebrow = document.getElementById("obAuthEyebrow");
+      var body = document.getElementById("obAuthBody");
+      if (msg) msg.textContent = "";
+      if (cloudSignedIn()) {
+        advanceToModeStep();
+        return;
+      }
+      if (hasLocalRootsProgress()) {
+        if (eyebrow) eyebrow.textContent = "Welcome back";
+        if (title) title.textContent = "Sign in to keep going";
+        if (body) {
+          body.textContent = "Your Roots answers stay on this device — sign in so they also save to your account if the app closes.";
+        }
+      }
+      if (passIn) passIn.setAttribute("autocomplete", "current-password");
+      if (emailIn) setTimeout(function () { emailIn.focus(); }, 50);
     }
   }
 
@@ -3952,10 +3963,12 @@
       var confirmWrap = document.getElementById("onboardInstallConfirmWrap");
       if (confirmWrap) confirmWrap.hidden = true;
     } else if (partnerName() && cloudSignedIn()) {
-      onboardingStep = 4;
-    } else if (partnerName() || hasLocalRootsProgress()) {
-      /* Welcome-back: skip intro fluff; land on name or sign-in so Roots text isn’t “restarted”. */
-      onboardingStep = partnerName() ? 3 : 2;
+      onboardingStep = 5; /* mode */
+    } else if (partnerName()) {
+      onboardingStep = 4; /* auth */
+    } else if (isRunningAsInstalledApp() || hasLocalRootsProgress()) {
+      /* Already on Home Screen (or mid-progress) — skip install, collect name. */
+      onboardingStep = 3;
     } else {
       onboardingStep = 0;
     }
@@ -4588,8 +4601,7 @@
         state.settings.partnerName = nameInput.value.trim();
         state.settings.partnerLastName = lastNameInput.value.trim();
         save();
-        onboardingStep = 3;
-        renderOnboardingStep();
+        advanceToAuthStep();
       });
     }
 
@@ -4656,7 +4668,7 @@
             try { await window.FS.BridgeUI.mergeProgress(); } catch (e) {}
           }
           if (dismissOnboardingIfModeChosen()) return;
-          advanceToInstallStep();
+          advanceToModeStep();
         }
       } catch (err) {
         onboardAuthMsg(friendlyAuthError(err, creating));
@@ -4685,7 +4697,7 @@
     if (createBtn) createBtn.addEventListener("click", function () { runOnboardAuth(true); });
     if (skipAuth) {
       skipAuth.addEventListener("click", function () {
-        advanceToInstallStep();
+        advanceToModeStep();
       });
     }
 
@@ -4714,13 +4726,13 @@
           if (msg) msg.textContent = note;
           return;
         }
-        advanceToModeStep();
+        advanceToNameStep();
       });
     }
     var installSkip = document.getElementById("onboardingInstallSkip");
     if (installSkip) {
       installSkip.addEventListener("click", function () {
-        advanceToModeStep();
+        advanceToNameStep();
       });
     }
 
@@ -5771,10 +5783,13 @@
       return;
     }
     if (partnerName() && cloudSignedIn()) {
+      onboardingStep = 5;
+      renderOnboardingStep();
+    } else if (partnerName()) {
       onboardingStep = 4;
       renderOnboardingStep();
-    } else if (partnerName() || hasLocalRootsProgress()) {
-      onboardingStep = partnerName() ? 3 : 2;
+    } else if (isRunningAsInstalledApp() || hasLocalRootsProgress()) {
+      onboardingStep = 3;
       renderOnboardingStep();
     }
   };
