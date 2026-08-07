@@ -1314,6 +1314,7 @@ window.FS = window.FS || {};
       teamPersonCache[p.id] = {
         id: p.id,
         display_name: p.display_name,
+        last_name: p.last_name || "",
         email: p.email,
         hub_mode: p.hub_mode,
         created_at: p.created_at || (downlineById[p.id] && downlineById[p.id].profile.created_at) || "",
@@ -2215,10 +2216,12 @@ window.FS = window.FS || {};
     if (!detail || !st || !st.data.calendarEditing) return;
     var date = st.data.calendarEditing.date;
     var itemId = st.data.calendarEditing.itemId;
-    var dayRow = Cal.ensureDay(st.data.calendar, date);
+    var dayRow = (st.data.calendar && st.data.calendar[date]) || null;
     var item = null;
-    for (var i = 0; i < dayRow.items.length; i++) {
-      if (dayRow.items[i].id === itemId) item = dayRow.items[i];
+    if (dayRow && dayRow.items) {
+      for (var i = 0; i < dayRow.items.length; i++) {
+        if (dayRow.items[i].id === itemId) item = dayRow.items[i];
+      }
     }
     if (!item) {
       closeCalSheet();
@@ -2556,6 +2559,11 @@ window.FS = window.FS || {};
         var box = $("curiosityLightbox");
         if (box && !box.hidden) {
           closeCuriosityLightbox();
+          return;
+        }
+        var calSheet = $("calSheet");
+        if (calSheet && !calSheet.hidden) {
+          closeCalSheet();
           return;
         }
       }
@@ -3197,6 +3205,26 @@ window.FS = window.FS || {};
     });
   }
 
+  function mergeCalendars(remoteCal, localCal) {
+    remoteCal = remoteCal || {};
+    localCal = localCal || {};
+    var out = Object.assign({}, remoteCal);
+    Object.keys(localCal).forEach(function (date) {
+      var loc = localCal[date];
+      var rem = remoteCal[date];
+      if (!loc) return;
+      var locItems = loc.items || [];
+      var remItems = (rem && rem.items) || [];
+      /* Empty local day stubs must not wipe a filled remote day. */
+      if (!locItems.length && remItems.length) {
+        out[date] = rem;
+        return;
+      }
+      out[date] = loc;
+    });
+    return out;
+  }
+
   async function mergeCloudProgress() {
     if (!Cloud.isSignedIn() || !setStateFromCloud) return;
     var remote = await Cloud.pullProgress();
@@ -3241,7 +3269,7 @@ window.FS = window.FS || {};
       if (Object.prototype.hasOwnProperty.call(localDone, k)) mergedDone[k] = !!localDone[k];
       else mergedDone[k] = !!remoteDone[k];
     });
-    var mergedCal = Object.assign({}, remote.calendar || {}, (local.data && local.data.calendar) || {});
+    var mergedCal = mergeCalendars(remote.calendar || {}, (local.data && local.data.calendar) || {});
     setStateFromCloud({
       data: Object.assign(mergedData, { calendar: mergedCal }),
       done: mergedDone,
@@ -3444,6 +3472,11 @@ window.FS = window.FS || {};
   function renderContentVault() {
     var root = $("contentVaultRoot");
     if (!root || !getState) return;
+    var ae = document.activeElement;
+    if (ae && root.contains(ae) && (ae.id === "vaultSearch" || ae.tagName === "INPUT" || ae.tagName === "TEXTAREA")) {
+      updateVaultSearchResults();
+      return;
+    }
     var browse = ensureVaultBrowse("vault");
     var list = filterVaultList(allVaultItems(), browse);
     var html =
@@ -3483,11 +3516,11 @@ window.FS = window.FS || {};
 
   function parseWeekDayNote(note) {
     var text = note || "";
-    var idMatch = text.match(/\b([PMBLS]\d+[a-z]?)\b/);
+    var idMatch = text.match(/\b((?:ST|[PMBLS])\d+[a-z]?)\b/i);
     var goal = "";
     var parts = text.split("·");
     if (parts.length > 1) goal = parts[parts.length - 1].trim().replace(/\[.*?\]/g, "").trim();
-    return { vaultId: idMatch ? idMatch[1] : null, goal: goal, isRest: /^\s*rest\b/i.test(text) };
+    return { vaultId: idMatch ? idMatch[1].toUpperCase() : null, goal: goal, isRest: /^\s*rest\b/i.test(text) };
   }
 
   function weekDayCardHtml(d) {
@@ -3688,6 +3721,7 @@ window.FS = window.FS || {};
     renderCalendar: renderCalendar,
     renderCuriosityPhotos: renderCuriosityPhotos,
     closeCuriosityLightbox: closeCuriosityLightbox,
+    closeCalSheet: closeCalSheet,
     renderContentVault: renderContentVault,
     renderContentStories: renderContentStories,
     renderContentWeek: renderContentWeek,

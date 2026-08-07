@@ -3188,7 +3188,7 @@ window.FS.CONTENT_VAULT = {
         },
         {
           "dow": "TUE",
-          "note": "Story AMA about the launch · engagement"
+          "note": "Story L05 (AMA) · engagement"
         },
         {
           "dow": "WED",
@@ -3256,7 +3256,7 @@ window.FS.CONTENT_VAULT = {
         },
         {
           "dow": "TUE",
-          "note": "Story AMA (business questions) · engagement"
+          "note": "Story ST20 (AMA) · engagement"
         },
         {
           "dow": "WED",

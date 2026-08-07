@@ -2025,6 +2025,11 @@
   function renderProductLibrary() {
     var root = document.getElementById("productLibRoot");
     if (!root) return;
+    var ae = document.activeElement;
+    if (ae && root.contains(ae) && (ae.id === "productSearch" || ae.tagName === "INPUT" || ae.tagName === "TEXTAREA")) {
+      updateProductBrowseResults();
+      return;
+    }
     wireProductLibrarySearch();
     var lib = productLib();
     var browse = ensureProductBrowse();
@@ -2239,8 +2244,13 @@
       ];
     }
     if (id === "grove") {
-      var c = customerNames().length;
-      var cp = grovePicks("customer_first").length;
+      var cNames = customerNames();
+      var c = cNames.length;
+      var pickSet = {};
+      cNames.forEach(function (n) { pickSet[n.toLowerCase()] = true; });
+      var cp = grovePicks("customer_first").filter(function (n) {
+        return pickSet[(n || "").toLowerCase()];
+      }).length;
       var need = Math.min(5, Math.max(c, 0));
       var n = groveNames().length;
       var wp = grovePicks("warm_first").length;
@@ -2964,6 +2974,7 @@
       document.body.classList.contains("curio-lightbox-open")
     ) return;
     if (document.querySelector(".cheer-sheet:not([hidden])")) return;
+    if (document.querySelector("#growthMoment.open")) return;
     var ae = document.activeElement;
     if (ae) {
       var tag = (ae.tagName || "").toLowerCase();
@@ -2975,14 +2986,29 @@
     window.scrollTo({ top: 0, left: 0, behavior: "auto" });
   }
 
+  function closeOpenContentSheets() {
+    if (window.FS.BridgeUI && window.FS.BridgeUI.closeCalSheet) {
+      try { window.FS.BridgeUI.closeCalSheet(); } catch (e) {}
+    }
+    if (window.FS.BridgeUI && window.FS.BridgeUI.closeCuriosityLightbox) {
+      try { window.FS.BridgeUI.closeCuriosityLightbox(); } catch (e) {}
+    }
+  }
+
   function renderPanels() {
     var panels = document.querySelectorAll(".panel");
+    /* calendar is an alias of tend — never activate the empty stub panel */
+    var activeId = state.active === "calendar" ? "tend" : state.active;
     for (var i = 0; i < panels.length; i++) {
-      panels[i].classList.toggle("active", panels[i].id === "panel-" + state.active);
+      panels[i].classList.toggle("active", panels[i].id === "panel-" + activeId);
     }
     var mainContent = document.getElementById("mainContent");
     if (mainContent) {
-      mainContent.classList.toggle("content-wide", state.active === "tend" || state.active === "calendar");
+      mainContent.classList.toggle("content-wide", activeId === "tend" || state.active === "calendar");
+    }
+    /* Leaving Content / vault should never leave the card sheet scroll-locked. */
+    if (!isContentSurface(activeId) && activeId !== "curiosity-photos") {
+      closeOpenContentSheets();
     }
     settleViewTop();
     renderModuleChecklists();
@@ -3940,6 +3966,7 @@
   }
 
   function dismissOnboardingIfModeChosen() {
+    if (onboardingReplay) return false;
     if (!modeChosen()) return false;
     var wrap = document.getElementById("onboarding");
     if (wrap && wrap.classList.contains("open")) {
@@ -3955,6 +3982,8 @@
     if (!wrap) return;
     /* Normal boot only shows onboarding until a path is chosen; Settings replay bypasses that. */
     if (!opts.replay && modeChosen()) return;
+    /* Boot/auth re-entry must not reset someone mid-flow (welcome → install). */
+    if (!opts.replay && !opts.force && wrap.classList.contains("open")) return;
     onboardingReplay = !!opts.replay;
     if (opts.replay) {
       onboardingStep = 0;
@@ -3966,8 +3995,10 @@
       onboardingStep = 5; /* mode */
     } else if (partnerName()) {
       onboardingStep = 4; /* auth */
-    } else if (isRunningAsInstalledApp() || hasLocalRootsProgress()) {
-      /* Already on Home Screen (or mid-progress) — skip install, collect name. */
+    } else if (hasLocalRootsProgress()) {
+      onboardingStep = 3; /* name */
+    } else if (isRunningAsInstalledApp() && state.data.onboardCircleAck) {
+      /* Saw welcome/circle already (usually in Safari) — skip to name in the app. */
       onboardingStep = 3;
     } else {
       onboardingStep = 0;
@@ -4133,7 +4164,10 @@
     };
     Object.keys(fields).forEach(function (id) {
       var el = document.getElementById(id);
-      if (el) el.value = fields[id] || "";
+      if (!el) return;
+      /* Don't wipe mid-edit text when a choice chip re-paints the form. */
+      if (document.activeElement === el) return;
+      el.value = fields[id] || "";
     });
     var hint = document.getElementById("howGrowEncouragementHint");
     if (hint) {
@@ -4469,6 +4503,7 @@
           }
           howGrowAnswers[key] = list;
         }
+        collectHowGrowText();
         writeHowGrowDraft();
         paintHowGrowForm();
         if (isSingle && howGrowStep > 0 && howGrowStep < HOW_GROW_TOTAL) {
@@ -4561,6 +4596,8 @@
     var circleNext = document.getElementById("onboardingCircleNext");
     if (circleNext) {
       circleNext.addEventListener("click", function () {
+        state.data.onboardCircleAck = true;
+        save();
         onboardingStep = 2;
         renderOnboardingStep();
       });
@@ -4732,6 +4769,19 @@
     var installSkip = document.getElementById("onboardingInstallSkip");
     if (installSkip) {
       installSkip.addEventListener("click", function () {
+        /* On phones, skipping install often forks storage — steer them to the icon first. */
+        if (!isRunningAsInstalledApp()) {
+          var ua = navigator.userAgent || "";
+          if (/iPhone|iPad|iPod|Android/i.test(ua)) {
+            var msg = document.getElementById("onboardingInstallMsg");
+            var note = (OB && OB.installSwitchNote) ||
+              "On your phone, add First Seeds to Home Screen and open it from there before typing your name.";
+            if (msg) msg.textContent = note;
+            return;
+          }
+        }
+        state.data.installSkipped = true;
+        save();
         advanceToNameStep();
       });
     }
@@ -5788,7 +5838,10 @@
     } else if (partnerName()) {
       onboardingStep = 4;
       renderOnboardingStep();
-    } else if (isRunningAsInstalledApp() || hasLocalRootsProgress()) {
+    } else if (hasLocalRootsProgress()) {
+      onboardingStep = 3;
+      renderOnboardingStep();
+    } else if (isRunningAsInstalledApp() && state.data.onboardCircleAck) {
       onboardingStep = 3;
       renderOnboardingStep();
     }
@@ -5803,7 +5856,10 @@
       }
       return;
     }
-    if (!modeChosen()) startOnboarding();
+    if (!modeChosen()) {
+      var gate = document.getElementById("onboarding");
+      if (!gate || !gate.classList.contains("open")) startOnboarding();
+    }
     refreshHowGrowReminder();
   }
 

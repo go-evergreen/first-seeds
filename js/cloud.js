@@ -474,7 +474,8 @@ window.FS = window.FS || {};
     pullProgress: async function () {
       if (!sessionUser) return null;
       if (configured() && client) {
-        var { data } = await client.from("runway_progress").select("*").eq("partner_id", sessionUser.id).maybeSingle();
+        var { data, error } = await client.from("runway_progress").select("*").eq("partner_id", sessionUser.id).maybeSingle();
+        if (error) throw error;
         if (!data) return null;
         return {
           active: data.active,
@@ -589,15 +590,17 @@ window.FS = window.FS || {};
     listDownline: async function () {
       if (!sessionUser) return [];
       if (configured() && client) {
-        var { data: people } = await client.from("profiles")
+        var { data: people, error: peopleErr } = await client.from("profiles")
           .select("id, display_name, last_name, email, hub_mode, last_active_at, created_at")
           .eq("sponsor_id", sessionUser.id)
           .order("last_active_at", { ascending: false });
+        if (peopleErr) throw peopleErr;
         if (!people || !people.length) return [];
         var ids = people.map(function (p) { return p.id; });
-        var { data: progressRows } = await client.from("runway_progress")
+        var { data: progressRows, error: progErr } = await client.from("runway_progress")
           .select("partner_id, active, data, done, calendar, updated_at")
           .in("partner_id", ids);
+        if (progErr) throw progErr;
         var supportRows = [];
         try {
           var supportRes = await client.from("support_preferences")
@@ -1080,8 +1083,16 @@ window.FS = window.FS || {};
     },
 
     leadUrl: function (slug) {
-      var dir = window.location.pathname.replace(/[^/]+$/, "");
-      return window.location.origin + dir + "lead.html?p=" + encodeURIComponent(slug || "");
+      /* Pathname without a trailing slash (e.g. /first-seeds) must not drop the folder. */
+      var href = String(window.location.href || "").split(/[?#]/)[0];
+      if (!/\/[^/]+\.[a-z0-9]+$/i.test(href) && !/\/$/.test(href)) href += "/";
+      try {
+        return new URL("lead.html?p=" + encodeURIComponent(slug || ""), href).href;
+      } catch (e) {
+        var dir = window.location.pathname.replace(/[^/]+$/, "");
+        if (dir && dir.charAt(dir.length - 1) !== "/") dir += "/";
+        return window.location.origin + dir + "lead.html?p=" + encodeURIComponent(slug || "");
+      }
     },
 
     ensureLeadSlug: async function (preferredName) {

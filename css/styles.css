@@ -1644,7 +1644,8 @@ html:has(body.overlay-open),
 html:has(body.hub-menu-open),
 html:has(body.cal-sheet-open),
 html:has(body.curio-lightbox-open),
-html:has(.cheer-sheet:not([hidden])){overflow-y:hidden}
+html:has(.cheer-sheet:not([hidden])),
+html:has(#growthMoment.open){overflow-y:hidden}
 
 /* ── mobile ── */
 @media (max-width:900px){
