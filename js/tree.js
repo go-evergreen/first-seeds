@@ -75,6 +75,8 @@ window.FS = window.FS || {};
       var wrap = document.getElementById("familyTree");
       var stats = document.getElementById("treeStats");
       if (!wrap) return;
+      var ae = document.activeElement;
+      if (ae && wrap.contains(ae) && ae.getAttribute && ae.getAttribute("data-tname") != null) return;
 
       var c = countAll(tree);
       if (stats) {

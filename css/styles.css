@@ -788,6 +788,35 @@ textarea{width:100%;border:1.5px solid var(--sand);border-radius:11px;background
 textarea:focus{border-color:var(--moss);outline:none}
 textarea::placeholder{color:#b3a894}
 .field.filled .field-label{color:var(--green-mid)}
+/* Body uses touch-action:manipulation (kills double-tap zoom). Re-enable
+   select/copy on typing surfaces and script banks partners actually copy from. */
+textarea,
+input[type="text"],
+input[type="search"],
+input[type="email"],
+input[type="password"],
+input[type="tel"],
+input.cal-input,
+input.tnode-name,
+input.prod-search,
+input.know-search,
+input.invite-input{
+  touch-action:auto;
+  -webkit-user-select:text;
+  user-select:text;
+}
+.hook-text,
+.seed-example,
+.starter-text,
+.copy-card-text,
+.faq-a p,
+.talk-line,
+.talk-why p,
+.cheer-sheet-preview{
+  -webkit-user-select:text;
+  user-select:text;
+  touch-action:auto;
+}
 
 /* ── claim checker ── */
 .claim-check{margin-top:8px;font-size:12.5px;line-height:1.6;min-height:18px;display:block}

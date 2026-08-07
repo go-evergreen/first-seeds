@@ -20,7 +20,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,400;1,9..144,500&family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/styles.css?v=213">
+<link rel="stylesheet" href="css/styles.css?v=214">
 </head>
 <body>
 
@@ -65,14 +65,14 @@
       <div class="hub-menu-section">
         <div class="hub-menu-label">Your name</div>
         <p class="hub-menu-note">Shown on your team tree so leaders can tell people apart when first names match.</p>
-        <label class="onboard-name-field">
+        <div class="onboard-name-field">
           <span class="field-label">First name</span>
           <input type="text" id="settingsFirstName" maxlength="100" autocomplete="given-name" placeholder="First name">
-        </label>
-        <label class="onboard-name-field">
+        </div>
+        <div class="onboard-name-field">
           <span class="field-label">Last name</span>
           <input type="text" id="settingsLastName" maxlength="100" autocomplete="family-name" placeholder="Last name">
-        </label>
+        </div>
         <button type="button" class="btn" id="settingsNameSave" style="width:100%;margin-top:4px">Save name</button>
         <p class="hub-menu-note" id="settingsNameMsg" role="status" style="margin-top:8px"></p>
       </div>
@@ -239,26 +239,26 @@
         <p class="sec-sub">Before you share a single thing, get clear on your own story.</p>
         <p class="body-p">Everything you'll share later grows from this. Not a brand script — <em>your</em> words. Why this, why now, why you. These three answers grow roots underground as you write. After Roots, each checklist item you finish sprouts the plant above ground.</p>
 
-        <label class="field" data-field="why">
+        <div class="field" data-field="why">
           <span class="field-label">Your why — what made you start caring about what's in your products?</span>
           <span class="field-hint">Kids, a weird ingredient list, wanting simpler routines — whatever is true for you. Messy is fine.</span>
           <textarea data-key="why" rows="4" placeholder="I started paying more attention when…"></textarea>
           <span class="claim-check" data-check="why"></span>
-        </label>
+        </div>
 
-        <label class="field" data-field="moment">
+        <div class="field" data-field="moment">
           <span class="field-label">Your moment — when did this click for you?</span>
           <span class="field-hint">How you heard about it, what made you pause, what felt different. Keep it ordinary and true.</span>
           <textarea data-key="moment" rows="4" placeholder="A friend mentioned it / I saw a post / I got curious when…"></textarea>
           <span class="claim-check" data-check="moment"></span>
-        </label>
+        </div>
 
-        <label class="field" data-field="said_yes">
+        <div class="field" data-field="said_yes">
           <span class="field-label">Why you said yes — in one or two sentences you'd actually text a friend.</span>
           <span class="field-hint">This is your go-to when someone asks "wait… what are you doing?"</span>
           <textarea data-key="said_yes" rows="2" placeholder="Honestly? I said yes because…"></textarea>
           <span class="claim-check" data-check="said_yes"></span>
-        </label>
+        </div>
 
         <div class="live-card">
           <div class="live-tag">YOUR STORY SO FAR — SAY IT OUT LOUD ONCE</div>
@@ -342,12 +342,12 @@
           </div>
         </div>
 
-        <label class="field" data-field="page_story" style="margin-top:24px">
+        <div class="field" data-field="page_story" style="margin-top:24px">
           <span class="field-label">Draft your page’s opening line — the first personal thing a visitor reads.</span>
           <span class="field-hint" id="pageStoryHint">Pull straight from your Roots. Your why, in one warm sentence. Watch it appear on the preview below.</span>
           <textarea data-key="page_story" rows="3" placeholder="e.g. I've spent years helping people swap the questionable stuff — here's the one I've been waiting to share…"></textarea>
           <span class="claim-check" data-check="page_story"></span>
-        </label>
+        </div>
 
         <div class="mini-page mini-lead" aria-hidden="true">
           <div class="mini-lead-arcs"></div>
@@ -396,11 +396,11 @@
             <h2 class="grove-lane-title">Who'd love the products?</h2>
             <p class="grove-lane-sub">People who'd care about fresh formulas, clean ingredients, or what you're using — even if business talk isn't their thing.</p>
           </div>
-          <label class="field" data-field="customers">
+          <div class="field" data-field="customers">
             <span class="field-label">Brain-dump product-curious names — one per line.</span>
             <span class="field-hint">Label-readers, skincare friends, the coworker who always asks what you're drinking, neighbors who care about what's in their cabinet.</span>
             <textarea data-key="customers" rows="6" placeholder="Priya&#10;Mom&#10;Sam from yoga&#10;…"></textarea>
-          </label>
+          </div>
           <div class="grove-visual customer">
             <div class="grove-count" id="customerCount"></div>
             <div class="grove-trees" id="customerTrees"></div>
@@ -419,11 +419,11 @@
             <h2 class="grove-lane-title">Who might grow with you?</h2>
             <p class="grove-lane-sub">For business builders — people you'd want beside you in The Fresh Grove. Skip this if you're mostly sharing products for now.</p>
           </div>
-          <label class="field" data-field="warm">
+          <div class="field" data-field="warm">
             <span class="field-label">Brain-dump partner names — one per line. Don't filter yet.</span>
             <span class="field-hint">Close friends, that group chat, someone always curious about what you're building.</span>
             <textarea data-key="warm" rows="5" placeholder="Jess&#10;Aunt Carol&#10;Megan from the gym&#10;…"></textarea>
-          </label>
+          </div>
           <div class="grove-visual">
             <div class="grove-count" id="groveCount"></div>
             <div class="grove-trees" id="groveTrees"></div>
@@ -619,10 +619,10 @@
         <p class="sec-sub">Fresh Grove facts for informed, confident decisions.</p>
         <p class="body-p">Are we excited? Absolutely. Excitement doesn't replace due diligence. We want everyone here equipped to decide with clarity — not pressure.</p>
 
-        <label class="know-search-wrap">
+        <div class="know-search-wrap">
           <span class="sr-only">Search Learn</span>
           <input type="search" id="knowSearch" class="know-search" placeholder="Search facts, FAQs, pillars…" autocomplete="off">
-        </label>
+        </div>
         <p class="know-search-empty" id="knowSearchEmpty" hidden>No sections match that search.</p>
 
         <div class="callout compliance know-acc-static">
@@ -812,23 +812,23 @@
               <div class="leads-settings-label">Lead page settings</div>
               <p class="hub-menu-note" style="margin:0 0 12px">Customize your short link and the words visitors see.</p>
 
-              <label class="leads-blurb-field" style="margin-bottom:14px">
+              <div class="leads-blurb-field" style="margin-bottom:14px">
                 <span class="field-label">Short link name</span>
                 <div class="leads-slug-row">
                   <span class="leads-slug-prefix">…/lead.html?p=</span>
                   <input class="invite-input light" id="leadsSlugInput" maxlength="30" spellcheck="false" autocomplete="off">
                 </div>
-              </label>
+              </div>
 
-              <label class="leads-blurb-field" style="margin-bottom:14px">
+              <div class="leads-blurb-field" style="margin-bottom:14px">
                 <span class="field-label">Intro on your page</span>
                 <textarea id="leadsBlurbInput" rows="2" maxlength="280" placeholder="I’m gathering a small founding circle before launch…"></textarea>
-              </label>
+              </div>
 
-              <label class="leads-blurb-field" style="margin-bottom:14px">
+              <div class="leads-blurb-field" style="margin-bottom:14px">
                 <span class="field-label">Success message (after they submit)</span>
                 <textarea id="leadsThanksInput" rows="2" maxlength="280" placeholder="Thanks for adding your info! I’ll be in touch with some exciting Ringana details soon!"></textarea>
-              </label>
+              </div>
 
               <button type="button" class="btn" id="leadsPageSettingsSave" style="width:100%">Save page settings</button>
             </div>
@@ -990,14 +990,14 @@
           <div class="onboard-hype-line" id="obHypeLine"></div>
         </div>
       </div>
-      <label class="onboard-name-field">
+      <div class="onboard-name-field">
         <span class="sr-only">First name</span>
         <input type="text" id="partnerNameInput" maxlength="100" autocomplete="given-name" placeholder="Your first name">
-      </label>
-      <label class="onboard-name-field">
+      </div>
+      <div class="onboard-name-field">
         <span class="sr-only">Last name</span>
         <input type="text" id="partnerLastNameInput" maxlength="100" autocomplete="family-name" placeholder="Your last name">
-      </label>
+      </div>
       <button type="button" class="btn overlay-btn" id="onboardingNameNext" disabled>That's me →</button>
     </div>
 
@@ -1005,14 +1005,14 @@
       <p class="onboarding-eyebrow" id="obAuthEyebrow">Save your spot</p>
       <h3 id="obAuthTitle">Sign in so nothing gets lost</h3>
       <p class="lead" id="obAuthBody"></p>
-      <label class="onboard-name-field">
+      <div class="onboard-name-field">
         <span class="field-label">Email</span>
         <input type="email" id="onboardingEmail" placeholder="you@email.com" autocomplete="email">
-      </label>
-      <label class="onboard-name-field">
+      </div>
+      <div class="onboard-name-field">
         <span class="field-label">Password</span>
         <input type="password" id="onboardingPassword" placeholder="At least 6 characters" autocomplete="current-password" minlength="6">
-      </label>
+      </div>
       <button type="button" class="btn overlay-btn" id="onboardingSignInBtn">Sign in →</button>
       <button type="button" class="btn-ghost overlay-btn" id="onboardingCreateBtn" style="margin-top:8px">Create account →</button>
       <p class="auth-msg" id="onboardingAuthMsg" role="status"></p>
@@ -1111,9 +1111,9 @@
     <section class="how-grow-pane" data-how-grow-step="3">
       <span class="how-grow-chip">How to show up for me</span>
       <h3>When you’re struggling, what’s the most helpful thing a leader can do?</h3>
-      <label class="field">
+      <div class="field">
         <textarea id="howGrowStruggling" rows="4" maxlength="500" placeholder="A check-in, help me make a plan, give me space…"></textarea>
-      </label>
+      </div>
       <p class="field-hint">Optional — skip if you’re not sure yet.</p>
       <div class="how-grow-actions">
         <button type="button" class="btn-ghost" data-how-grow-back>Back</button>
@@ -1209,9 +1209,9 @@
     <section class="how-grow-pane" data-how-grow-step="9">
       <span class="how-grow-chip">Looking ahead</span>
       <h3>One year from now, what would make you say, “I’m so glad I did this”?</h3>
-      <label class="field">
+      <div class="field">
         <textarea id="howGrowOneYear" rows="4" maxlength="700" placeholder="Optional — share as much or as little as you like."></textarea>
-      </label>
+      </div>
       <div class="how-grow-actions">
         <button type="button" class="btn-ghost" data-how-grow-back>Back</button>
         <button type="button" class="btn" data-how-grow-next>Next →</button>
@@ -1221,9 +1221,9 @@
     <section class="how-grow-pane" data-how-grow-step="10">
       <span class="how-grow-chip">Looking ahead</span>
       <h3>What’s one thing we should know that would help us be better leaders for you?</h3>
-      <label class="field">
+      <div class="field">
         <textarea id="howGrowLeaderNote" rows="4" maxlength="700" placeholder="Optional — honesty helps more than polish."></textarea>
-      </label>
+      </div>
       <div class="how-grow-actions">
         <button type="button" class="btn-ghost" data-how-grow-back>Back</button>
         <button type="button" class="btn" data-how-grow-next>Next →</button>
@@ -1235,14 +1235,14 @@
       <h3>A few fun things, if you want.</h3>
       <p class="lead how-grow-joys-lead">Totally optional — leaders love these for thoughtful check-ins and surprises.</p>
       <div class="how-grow-joy-grid how-grow-joy-grid-open">
-        <label class="field"><span class="field-label">Favorite snack</span><input id="howGrowSnack" maxlength="100"></label>
-        <label class="field"><span class="field-label">Favorite drink</span><input id="howGrowDrink" maxlength="100"></label>
-        <label class="field"><span class="field-label">Birthday</span><input id="howGrowBirthday" maxlength="40" placeholder="Month + day"></label>
-        <label class="field"><span class="field-label">Favorite color</span><input id="howGrowColor" maxlength="80"></label>
-        <label class="field"><span class="field-label">Favorite hobby</span><input id="howGrowHobby" maxlength="120"></label>
-        <label class="field"><span class="field-label">Favorite place traveled</span><input id="howGrowTravel" maxlength="160"></label>
-        <label class="field"><span class="field-label">Dogs, cats… or chickens?</span><input id="howGrowPets" maxlength="120"></label>
-        <label class="field full"><span class="field-label">Anything else we should know?</span><textarea id="howGrowAnything" rows="3" maxlength="500"></textarea></label>
+        <div class="field"><span class="field-label">Favorite snack</span><input id="howGrowSnack" maxlength="100"></div>
+        <div class="field"><span class="field-label">Favorite drink</span><input id="howGrowDrink" maxlength="100"></div>
+        <div class="field"><span class="field-label">Birthday</span><input id="howGrowBirthday" maxlength="40" placeholder="Month + day"></div>
+        <div class="field"><span class="field-label">Favorite color</span><input id="howGrowColor" maxlength="80"></div>
+        <div class="field"><span class="field-label">Favorite hobby</span><input id="howGrowHobby" maxlength="120"></div>
+        <div class="field"><span class="field-label">Favorite place traveled</span><input id="howGrowTravel" maxlength="160"></div>
+        <div class="field"><span class="field-label">Dogs, cats… or chickens?</span><input id="howGrowPets" maxlength="120"></div>
+        <div class="field full"><span class="field-label">Anything else we should know?</span><textarea id="howGrowAnything" rows="3" maxlength="500"></textarea></div>
       </div>
       <p class="auth-msg" id="howGrowMsg" role="status"></p>
       <div class="how-grow-actions">
@@ -1260,10 +1260,10 @@
     <p class="onboarding-eyebrow">Quick one</p>
     <h3 id="lastNameTitle">What’s your last name?</h3>
     <p class="lead">As our Fresh Grove grows so quickly, we’ve already realized we need last names in here — so leaders can tell everyone apart when first names match.</p>
-    <label class="onboard-name-field">
+    <div class="onboard-name-field">
       <span class="field-label">Last name</span>
       <input type="text" id="lastNamePromptInput" maxlength="100" autocomplete="family-name" placeholder="Your last name">
-    </label>
+    </div>
     <button type="button" class="btn overlay-btn" id="lastNameSave" disabled>Save →</button>
     <button type="button" class="btn-ghost overlay-btn" id="lastNameLater" style="margin-top:8px">Maybe later</button>
     <p class="auth-msg" id="lastNameMsg" role="status"></p>
@@ -1278,22 +1278,22 @@
       <p class="onboarding-eyebrow">First Seeds</p>
       <h3 id="authTitle">Save your progress</h3>
       <p class="lead">Sign in with email + password so your story and calendar stay with you — and so your leader can see how you're doing (progress only, no chat).</p>
-      <label class="onboard-name-field">
+      <div class="onboard-name-field">
         <span class="field-label">First name</span>
         <input type="text" id="authName" maxlength="100" placeholder="Your first name" autocomplete="given-name">
-      </label>
-      <label class="onboard-name-field" id="authLastNameField">
+      </div>
+      <div class="onboard-name-field" id="authLastNameField">
         <span class="field-label">Last name</span>
         <input type="text" id="authLastName" maxlength="100" placeholder="Your last name" autocomplete="family-name">
-      </label>
-      <label class="onboard-name-field">
+      </div>
+      <div class="onboard-name-field">
         <span class="field-label">Email</span>
         <input type="email" id="authEmail" placeholder="you@email.com" autocomplete="email">
-      </label>
-      <label class="onboard-name-field">
+      </div>
+      <div class="onboard-name-field">
         <span class="field-label">Password</span>
         <input type="password" id="authPassword" placeholder="At least 6 characters" autocomplete="current-password" minlength="6">
-      </label>
+      </div>
       <button type="button" class="btn overlay-btn" id="authSubmitBtn">Sign in →</button>
       <button type="button" class="btn-ghost overlay-btn" id="authCreateBtn" style="margin-top:8px">Create account →</button>
       <p class="auth-msg" id="authMsg"></p>
@@ -1304,10 +1304,10 @@
       <h3 id="authDisplayName"></h3>
       <p class="lead" id="authEmailLine"></p>
       <p class="auth-hint" id="authModeLine"></p>
-      <label class="onboard-name-field">
+      <div class="onboard-name-field">
         <span class="field-label">Your join link</span>
         <input type="text" id="authInviteInput" readonly>
-      </label>
+      </div>
       <button type="button" class="btn overlay-btn" id="authCopyInvite">Copy join link</button>
       <button type="button" class="btn-ghost overlay-btn" id="authSignOutBtn" style="margin-top:10px">Sign out</button>
     </div>
@@ -1336,10 +1336,10 @@
   <div class="cheer-sheet-card" role="dialog" aria-modal="true" aria-labelledby="noteSheetTitle">
     <div class="live-tag" id="noteSheetTitle">LEAVE A NOTE</div>
     <p class="cheer-sheet-meta" id="noteSheetMeta"></p>
-    <label class="field note-sheet-field">
+    <div class="field note-sheet-field">
       <span class="field-label">Your note</span>
       <textarea class="note-sheet-input" id="noteSheetBody" rows="5" maxlength="500" placeholder="A short personal note…"></textarea>
-    </label>
+    </div>
     <p class="cheer-sheet-hint">They’ll see this at the top of their runway — even if they open First Seeds later.</p>
     <div class="cheer-sheet-actions note-sheet-actions">
       <div class="note-sheet-copy-wrap">
@@ -1392,10 +1392,10 @@
     </div>
     <h3 id="teamMoveTitle">Choose a new Level 1</h3>
     <p class="team-person-hint" id="teamMoveLead"></p>
-    <label class="field">
+    <div class="field">
       <span class="field-label">Search</span>
       <input type="search" class="cal-input" id="teamMoveSearch" placeholder="Name or email" autocomplete="off">
-    </label>
+    </div>
     <div class="team-move-list" id="teamMoveList" role="listbox"></div>
     <button type="button" class="cheer-sheet-cancel" id="teamMoveCancel">Cancel</button>
   </div>
@@ -1413,19 +1413,19 @@
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="js/config.js?v=213"></script>
-<script src="js/supabase-config.js?v=213"></script>
-<script src="js/data.js?v=213"></script>
-<script src="js/content.js?v=213"></script>
-<script src="js/content-vault.js?v=213"></script>
-<script src="js/products.js?v=213"></script>
-<script src="assets/products/manifest.js?v=213"></script>
-<script src="js/plant.js?v=213"></script>
-<script src="js/tree.js?v=213"></script>
-<script src="js/calendar.js?v=213"></script>
-<script src="js/cloud.js?v=213"></script>
-<script src="js/bridge-ui.js?v=213"></script>
-<script src="js/app.js?v=213"></script>
-<script src="js/pwa.js?v=213"></script>
+<script src="js/config.js?v=214"></script>
+<script src="js/supabase-config.js?v=214"></script>
+<script src="js/data.js?v=214"></script>
+<script src="js/content.js?v=214"></script>
+<script src="js/content-vault.js?v=214"></script>
+<script src="js/products.js?v=214"></script>
+<script src="assets/products/manifest.js?v=214"></script>
+<script src="js/plant.js?v=214"></script>
+<script src="js/tree.js?v=214"></script>
+<script src="js/calendar.js?v=214"></script>
+<script src="js/cloud.js?v=214"></script>
+<script src="js/bridge-ui.js?v=214"></script>
+<script src="js/app.js?v=214"></script>
+<script src="js/pwa.js?v=214"></script>
 </body>
 </html>

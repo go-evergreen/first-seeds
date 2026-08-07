@@ -882,6 +882,9 @@
   function renderSeedTypes() {
     var wrap = document.getElementById("seedTypes");
     if (!wrap) return;
+    /* Don't rebuild while they're typing/selecting in a draft — wipes selection. */
+    var ae = document.activeElement;
+    if (ae && wrap.contains(ae) && (ae.tagName === "TEXTAREA" || ae.tagName === "INPUT")) return;
     var open = state.data.seedTypeOpen || "";
     var html = "";
     var types = window.FS.SEED_TYPES;
@@ -2952,10 +2955,22 @@
   }
 
   function settleViewTop() {
-    /* Never steal focus from an open calendar/vault card — that clears copy selection. */
-    if (document.body.classList.contains("cal-sheet-open")) return;
+    /* Never steal focus while typing or while a sheet/overlay is open —
+       blur/scroll kills iOS text selection mid-copy. */
+    if (
+      document.body.classList.contains("cal-sheet-open") ||
+      document.body.classList.contains("overlay-open") ||
+      document.body.classList.contains("hub-menu-open") ||
+      document.body.classList.contains("curio-lightbox-open")
+    ) return;
+    if (document.querySelector(".cheer-sheet:not([hidden])")) return;
+    var ae = document.activeElement;
+    if (ae) {
+      var tag = (ae.tagName || "").toLowerCase();
+      if (tag === "textarea" || tag === "input" || ae.isContentEditable) return;
+    }
     try {
-      if (document.activeElement && document.activeElement.blur) document.activeElement.blur();
+      if (ae && ae.blur) ae.blur();
     } catch (e) {}
     window.scrollTo({ top: 0, left: 0, behavior: "auto" });
   }
@@ -5792,9 +5807,10 @@
         state.tourDone = !!next.tourDone;
         state.cheers = next.cheers || [];
         if (!state.data.calendar) state.data.calendar = {};
-        /* hydrate fields */
+        /* hydrate fields — don't clobber a focused input mid-edit */
         var fs = document.querySelectorAll("[data-key]");
         for (var j = 0; j < fs.length; j++) {
+          if (document.activeElement === fs[j]) continue;
           var k = fs[j].getAttribute("data-key");
           if (state.data[k] != null) fs[j].value = state.data[k];
         }

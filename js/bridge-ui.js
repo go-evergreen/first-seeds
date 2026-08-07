@@ -2504,7 +2504,10 @@ window.FS = window.FS || {};
     await renderSupportBanner();
     await renderLeaderNoteBanner();
     if (getState && getState().active === "leader") await renderLeader();
-    if (getState && (getState().active === "calendar" || getState().active === "tend")) renderCalendar();
+    if (getState && (getState().active === "calendar" || getState().active === "tend")) {
+      /* Refresh the grid behind an open card, but never rebuild the editor. */
+      if (!document.body.classList.contains("cal-sheet-open")) renderCalendar();
+    }
     if (getState && getState().active === "leads") await renderLeads();
     else {
       try {
@@ -3367,7 +3370,7 @@ window.FS = window.FS || {};
 
   function renderVaultFilters(browse) {
     var html = '<div class="vault-filters">';
-    html += '<label class="vault-filter"><span class="sr-only">Search</span><input type="search" class="prod-search" id="vaultSearch" placeholder="Search hooks, products, topics…" value="' + esc(browse.q || "") + '" autocomplete="off"></label>';
+    html += '<div class="vault-filter"><span class="sr-only">Search</span><input type="search" class="prod-search" id="vaultSearch" placeholder="Search hooks, products, topics…" value="' + esc(browse.q || "") + '" autocomplete="off"></div>';
 
     html += '<div class="vault-filter-group">';
     html += '<div class="vault-filter-label">Content type</div>';

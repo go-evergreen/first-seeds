@@ -252,6 +252,9 @@ html {
   padding: 13px 14px;
   outline: none;
   transition: border-color 0.15s, box-shadow 0.15s;
+  touch-action: auto;
+  -webkit-user-select: text;
+  user-select: text;
 }
 
 .lead-field input:focus {
