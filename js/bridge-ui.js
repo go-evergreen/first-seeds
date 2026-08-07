@@ -1982,7 +1982,8 @@ window.FS = window.FS || {};
     }
 
     renderLibrary();
-    if (state.data.calendarEditing) renderCalEditor();
+    /* Do not rebuild the open card editor here — re-rendering destroys text
+       selection and scrolls the sheet back to the top (auth refresh, grid nav). */
   }
 
   function renderLibrary() {
@@ -2240,6 +2241,8 @@ window.FS = window.FS || {};
       html += '<figcaption class="cal-lib-sheet-cap">Photo stays with this card — save/share it from your device when you post.</figcaption>';
       html += "</figure>";
     }
+    /* Use <div class="field"> for text inputs — nesting textarea/input in
+       <label> makes iOS clear selection after one word and jump the sheet. */
     html +=
       '<div class="vault-field-row">' +
         '<label class="field"><span class="field-label">Type</span>' +
@@ -2250,14 +2253,14 @@ window.FS = window.FS || {};
       '<label class="field"><span class="field-label">Format</span>' +
         '<select id="calFormat" class="cal-select">' + renderFormatOptions(item.format || "") + "</select></label>" +
       (isOutreach || item.person || item.type === "personal"
-        ? '<label class="field"><span class="field-label">Who</span>' +
-          '<input type="text" id="calPerson" class="cal-input" placeholder="Name…" value="' + esc(item.person || "") + '"></label>'
+        ? '<div class="field"><span class="field-label">Who</span>' +
+          '<input type="text" id="calPerson" class="cal-input" placeholder="Name…" value="' + esc(item.person || "") + '"></div>'
         : '<input type="hidden" id="calPerson" value="' + esc(item.person || "") + '">') +
-      '<label class="field"><span class="field-label">Title</span>' +
-        '<input type="text" id="calTitle" class="cal-input" placeholder="Optional short label" value="' + esc(item.title || "") + '"></label>' +
-      '<label class="field"><span class="field-label">' + (isOutreach ? "Message" : "Draft") + "</span>" +
+      '<div class="field"><span class="field-label">Title</span>' +
+        '<input type="text" id="calTitle" class="cal-input" placeholder="Optional short label" value="' + esc(item.title || "") + '"></div>' +
+      '<div class="field"><span class="field-label">' + (isOutreach ? "Message" : "Draft") + "</span>" +
         '<textarea id="calDraft" rows="8" placeholder="Write it in your voice…">' + esc(item.draft || "") + "</textarea>" +
-        '<span class="claim-check" id="calClaim"></span></label>' +
+        '<span class="claim-check" id="calClaim"></span></div>' +
       '<div class="cal-status-row">' +
         Cal.STATUSES.map(function (s) {
           return '<button type="button" class="cal-status-btn' + (item.status === s.id ? " on" : "") + '" data-cal-status="' + s.id + '">' + esc(s.label) + "</button>";
@@ -3582,11 +3585,11 @@ window.FS = window.FS || {};
         '<label class="field"><span class="field-label">Promoting</span>' +
           '<select id="libPromoting" class="' + promotingSelectClass(ed.promoting || "").replace("vault-inline-select", "vault-sheet-select") + '">' + renderPromotingOptions(ed.promoting || "") + "</select></label>" +
       "</div>" +
-      '<label class="field"><span class="field-label">Title</span>' +
-        '<input type="text" id="libTitle" class="cal-input" placeholder="Optional short label" value="' + esc(ed.title || "") + '"></label>' +
-      '<label class="field"><span class="field-label">Full draft</span>' +
+      '<div class="field"><span class="field-label">Title</span>' +
+        '<input type="text" id="libTitle" class="cal-input" placeholder="Optional short label" value="' + esc(ed.title || "") + '"></div>' +
+      '<div class="field"><span class="field-label">Full draft</span>' +
         '<textarea id="libDraft" rows="12" placeholder="Rewrite until it sounds like you…">' + esc(ed.body || "") + "</textarea>" +
-        '<span class="cal-lib-sheet-hint">Steal the structure — rewrite in your voice. Edits stay here until you add this to a day.</span></label>' +
+        '<span class="cal-lib-sheet-hint">Steal the structure — rewrite in your voice. Edits stay here until you add this to a day.</span></div>' +
       '<p class="cal-lib-sheet-target">Will add to <strong>' + esc(selectedDayLabel(st)) + "</strong>.</p>" +
       '<div class="cal-sheet-actions">' +
         '<button type="button" class="btn" data-lib-commit>Add to day</button>' +
@@ -3625,7 +3628,7 @@ window.FS = window.FS || {};
     var draftIn = $("libDraft");
     if (draftIn) {
       setTimeout(function () {
-        try { draftIn.focus(); draftIn.setSelectionRange(0, 0); } catch (e) {}
+        try { draftIn.focus(); } catch (e) {}
       }, 50);
     }
   }

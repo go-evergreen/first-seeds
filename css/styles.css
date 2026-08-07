@@ -1022,6 +1022,13 @@ textarea::placeholder{color:#b3a894}
 .cal-sheet-body .field{margin-bottom:12px}
 .cal-sheet-body textarea{width:100%;border:1.5px solid var(--sand);border-radius:12px;background:var(--white);padding:12px 14px;font-family:inherit;font-size:14.5px;color:var(--green);resize:vertical;min-height:140px}
 .cal-sheet-body textarea:focus{outline:none;border-color:var(--moss)}
+/* Let long-press select/copy work inside the card sheet (body uses touch-action:manipulation). */
+.cal-sheet-body textarea,
+.cal-sheet-body input.cal-input{
+  touch-action:auto;
+  -webkit-user-select:text;
+  user-select:text;
+}
 body.cal-sheet-open{overflow:hidden}
 
 .cal-library{margin:18px 0 22px;padding:16px 16px 14px;background:var(--white);border:1.5px solid var(--sand);border-radius:16px;box-shadow:var(--shadow)}

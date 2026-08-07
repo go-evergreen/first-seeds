@@ -2952,6 +2952,8 @@
   }
 
   function settleViewTop() {
+    /* Never steal focus from an open calendar/vault card — that clears copy selection. */
+    if (document.body.classList.contains("cal-sheet-open")) return;
     try {
       if (document.activeElement && document.activeElement.blur) document.activeElement.blur();
     } catch (e) {}
