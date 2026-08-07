@@ -3302,7 +3302,8 @@ window.FS = window.FS || {};
         partnerLastName: local.settings.partnerLastName || Cloud.user().last_name || "",
         growthMoment: typeof local.settings.growthMoment === "boolean" ? local.settings.growthMoment : true,
         growthToast: typeof local.settings.growthToast === "boolean" ? local.settings.growthToast : true,
-        weekStartsOn: local.settings.weekStartsOn === "monday" ? "monday" : "sunday"
+        weekStartsOn: local.settings.weekStartsOn === "monday" ? "monday" : "sunday",
+        boundUserId: (user && user.id) || local.settings.boundUserId || ""
       },
       tourDone: local.tourDone || Cloud.user().tour_done,
       cheers: remote.cheers || []

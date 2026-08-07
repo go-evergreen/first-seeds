@@ -244,8 +244,32 @@
     paintSyncChrome();
   }
 
+  /* Rough “how much runway work is in this snapshot?” — used when guest signs into
+     an account that already has a local bucket on this device. */
+  function snapshotProgressScore(snap) {
+    if (!snap) return 0;
+    var d = snap.data || {};
+    var s = snap.settings || {};
+    var score = 0;
+    if ((s.partnerName || "").trim()) score += 30;
+    if ((s.partnerLastName || "").trim()) score += 10;
+    if ((s.hubMode || "").trim()) score += 40;
+    ["why", "moment", "said_yes", "page_story", "customers", "warm"].forEach(function (k) {
+      score += Math.min(200, ((d[k] || "") + "").trim().length);
+    });
+    if (d.calendar && typeof d.calendar === "object") {
+      Object.keys(d.calendar).forEach(function (date) {
+        var items = (d.calendar[date] && d.calendar[date].items) || [];
+        score += items.length * 25;
+      });
+    }
+    if (d.tree && Array.isArray(d.tree)) score += d.tree.length * 15;
+    return score;
+  }
+
   /* Switch local runway bucket when the signed-in account changes.
-     Guest → first account keeps current draft. Account A → B loads B’s bucket (or blank). */
+     Guest → first account keeps current draft. Account A → B loads B’s bucket (or blank).
+     Guest → existing account keeps the richer local draft (cloud merge reconciles). */
   function bindProgressAccount(userId) {
     userId = (userId || "").trim();
     ensureSettings();
@@ -261,8 +285,13 @@
     if (userId) {
       var existing = readSnapshot(progressKeyFor(userId));
       if (existing) {
-        applyStateSnapshot(existing);
-        state.settings.boundUserId = userId;
+        if (!prev && snapshotProgressScore(snapshotFromState()) > snapshotProgressScore(existing)) {
+          /* Guest typed more since last visit than this account’s stale local bucket. */
+          state.settings.boundUserId = userId;
+        } else {
+          applyStateSnapshot(existing);
+          state.settings.boundUserId = userId;
+        }
       } else if (!prev) {
         /* First sign-in from guest: keep what they already typed. */
         state.settings.boundUserId = userId;
@@ -282,8 +311,17 @@
     }
     try { localStorage.setItem(activeAccountKey(), userId || ""); } catch (e) {}
     writeSnapshot(progressKeyFor(userId || null), snapshotFromState());
-    howGrowAnswers = {};
+    try {
+      howGrowAnswers = normalizeHowGrowAnswers(readHowGrowDraft());
+    } catch (e) {
+      howGrowAnswers = {};
+    }
     rehydrateDomFromState();
+    /* Mid-onboarding auth must refresh name/auth panes for the new bucket. */
+    try {
+      var gate = document.getElementById("onboarding");
+      if (gate && gate.classList.contains("open")) renderOnboardingStep();
+    } catch (e) {}
     return { switched: true };
   }
 
@@ -3900,11 +3938,6 @@
   }
 
   /* Step map: 0 welcome · 1 circle · 2 install · 3 name · 4 auth · 5 mode */
-  function advanceToInstallStep() {
-    onboardingStep = 2;
-    renderOnboardingStep();
-  }
-
   function advanceToNameStep() {
     onboardingStep = 3;
     renderOnboardingStep();
